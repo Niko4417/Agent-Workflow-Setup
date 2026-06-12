@@ -60,12 +60,25 @@ link_one "$REPO_DIR/codex"   "$TARGET/.codex"
 link_one "$REPO_DIR/claude"  "$TARGET/.claude"
 link_one "$REPO_DIR/.agents" "$TARGET/.agents"
 
+# Root entry docs both harnesses read at the repo root.
+# (Codex reads AGENTS.md as its project doc; Claude reads CLAUDE.md.)
+link_one "$REPO_DIR/AGENTS.md" "$TARGET/AGENTS.md"
+link_one "$REPO_DIR/CLAUDE.md" "$TARGET/CLAUDE.md"
+
+# Retire any stale old-workflow contract so there is no confusion.
+if [[ -f "$TARGET/project.md" && ! -L "$TARGET/project.md" ]]; then
+  echo "  ! retiring old-workflow project.md -> project.md.bak"
+  rm -f "$TARGET/project.md.bak"
+  mv "$TARGET/project.md" "$TARGET/project.md.bak"
+fi
+
 # Ensure the target locally ignores the symlinks WITHOUT touching its committed
 # .gitignore (keeps the target repo pristine — nothing becomes committable).
 if [[ -d "$TARGET/.git" ]]; then
   EXCLUDE="$TARGET/.git/info/exclude"
   mkdir -p "$(dirname "$EXCLUDE")"
-  for entry in "/.codex/" "/.claude/" "/.agents/"; do
+  # No trailing slash: must match symlinks, not just real directories.
+  for entry in "/.codex" "/.claude" "/.agents" "/.claude.bak" "/.codex.bak"; do
     if ! grep -qxF "$entry" "$EXCLUDE" 2>/dev/null; then
       echo "$entry" >> "$EXCLUDE"
     fi
