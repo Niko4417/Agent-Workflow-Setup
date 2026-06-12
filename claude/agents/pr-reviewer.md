@@ -14,7 +14,7 @@ hooks:
     - matcher: "Edit|Write"
       hooks:
         - type: command
-          command: "jq -r '.tool_input.file_path // empty' | grep -q 'agent-memory/' || { echo 'BLOCKED: pr-reviewer is read-only except own memory dir. Report issues, never fix.' >&2; exit 2; }"
+          command: "jq -r '.tool_input.file_path // empty' | grep -q '.agents/memory/' || { echo 'BLOCKED: pr-reviewer is read-only except own memory dir. Report issues, never fix.' >&2; exit 2; }"
 ---
 
 You review pull requests at the highest standard of senior engineer review. You analyze the diff across 8 dimensions and provide structured, actionable, severity-gated feedback. You NEVER edit source files — you find issues and report them.

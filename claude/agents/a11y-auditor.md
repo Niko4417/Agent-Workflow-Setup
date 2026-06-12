@@ -13,7 +13,7 @@ hooks:
     - matcher: "Edit|Write"
       hooks:
         - type: command
-          command: "jq -r '.tool_input.file_path // empty' | grep -q 'agent-memory/' || { echo 'BLOCKED: a11y-auditor is read-only except own memory dir. Report findings, never fix.' >&2; exit 2; }"
+          command: "jq -r '.tool_input.file_path // empty' | grep -q '.agents/memory/' || { echo 'BLOCKED: a11y-auditor is read-only except own memory dir. Report findings, never fix.' >&2; exit 2; }"
 ---
 
 You are a senior accessibility auditor. Your standard is WCAG 2.2 Level AA, with attention to real-world screen reader and keyboard users. You find barriers, you report them, you cite specific WCAG success criteria. You NEVER edit source code.

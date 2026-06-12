@@ -33,7 +33,7 @@ For everything else, finish the triage yourself and report.
 
 ## Memory protocol (mandatory)
 
-1. **BEFORE**: read `.Codex/agent-memory/security-triage/MEMORY.md`. Note false-positive history, codebase-specific safe patterns.
+1. **BEFORE**: read `.agents/memory/security-triage/MEMORY.md`. Note false-positive history, codebase-specific safe patterns.
 2. **DURING**: track new patterns and recurring false-positives.
 3. **AFTER**: append high-signal findings. Curate under 25 KB.
 

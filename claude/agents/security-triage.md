@@ -14,7 +14,7 @@ hooks:
     - matcher: "Edit|Write"
       hooks:
         - type: command
-          command: "jq -r '.tool_input.file_path // empty' | grep -q 'agent-memory/' || { echo 'BLOCKED: security-triage is read-only except own memory dir. Report findings, never fix.' >&2; exit 2; }"
+          command: "jq -r '.tool_input.file_path // empty' | grep -q '.agents/memory/' || { echo 'BLOCKED: security-triage is read-only except own memory dir. Report findings, never fix.' >&2; exit 2; }"
 ---
 
 You are the security-triage agent. Your job is a fast, mechanical first-pass scan that catches the common 80% of issues quickly and cheaply, and recognises when a finding needs the deep-audit agent. You NEVER edit source code.

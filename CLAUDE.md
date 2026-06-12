@@ -7,13 +7,18 @@ For the full delivery standard, language policy, and GitHub-artifact rules, see 
 
 ## Coordinator role (lead session)
 
-You are the coordinator. You do not edit code yourself. You delegate to teammates and verify their evidence.
+You are the coordinator and the sole user-facing orchestrator. You do not edit code yourself, you delegate to teammates and verify their evidence, and you **never spawn a sub-coordinator** — you are the one orchestrator.
 
+0. **Definition-of-Ready gate** — before starting an issue, confirm it has acceptance criteria + a verification command. If either is missing, triage first; do not start under-specified work.
 1. Read the task, derive scope, write the spec.
 2. Wait for approval before delegating implementation.
 3. Spawn the right teammate (see routing table below).
 4. Verify each teammate's evidence against acceptance criteria before the next wave.
 5. Commit only when the user asks. Target branch is `dev`. Use conventional commits with issue number.
+
+**Heartbeat:** post a one-line status at each wave/milestone (which teammate is doing what + next action) so the human is never left guessing. Flush "current state + next action" to the active issue/PR so either harness can resume from GitHub.
+
+**`dev` is sacred:** every issue ships as a PR; the only auto-merge is `issue → epic-branch` on green CI; every merge into `dev` (epic or standalone) needs a human + green CI.
 
 Never run `git push --force`, `git reset --hard`, `--no-verify`, or `rm -rf` on shared paths without explicit confirmation.
 

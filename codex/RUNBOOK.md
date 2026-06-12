@@ -4,6 +4,24 @@ This runbook defines how to use the project-scoped Codex agent team for Keiko.
 The GitHub issue is always the source of truth for scope, acceptance criteria,
 dependencies, and definition of done.
 
+## Intake Gate (Definition of Ready)
+
+Before any agent starts an issue, the lead confirms it is READY:
+
+- it has explicit acceptance criteria, and
+- it names (or the lead can derive) a concrete verification command.
+
+If either is missing, do not start: triage first — comment the gap on the issue,
+set `status: new`/`needs triage`, and either fill the criteria with maintainer
+input or escalate. Starting an under-specified issue wastes autonomous work.
+
+## Status Cadence (Heartbeat)
+
+The lead posts a one-line heartbeat at every wave/milestone so the human is never
+left guessing whether work is happening: which agent is doing what, and the next
+action. Flush "current state + next action" to the active issue/PR so either
+harness (Codex or Claude) can resume from GitHub alone.
+
 ## Default Lifecycle
 
 1. Start from a GitHub issue ID.
@@ -12,9 +30,9 @@ dependencies, and definition of done.
    already present.
 4. Claim the issue before implementation: set the issue label to
    `status: in progress`, project `Status` to `In Progress`, project
-   `Workflow State` to `In Progress`, `Owner / Agent` to the active agent, and
-   set `Human Review Required` to `Yes` only for epic implementation work.
-   For ordinary issues and audits that land directly on `dev`, set it to `No`.
+   `Workflow State` to `In Progress`, `Owner / Agent` to the active agent. Set
+   `Human Review Required` to `Yes` for any PR that will target `dev` (epic or
+   standalone); only `issue -> epic-branch` PRs may auto-merge on green CI.
 5. Choose the execution mode from the issue template.
 6. Load coordinator memory and relevant role memory.
 7. Create a short coordination plan with file ownership, agent roles, stop
@@ -40,19 +58,19 @@ dependencies, and definition of done.
 - Never start implementation on an issue without first setting it to
   `In Progress` and filling `Owner / Agent`.
 - Keep `Branch` and `Pull Request` current so other agents can see ownership.
-- `Human Review Required` stays `Yes` only for epic implementation work.
-- Ordinary issues and audits that land directly on `dev` set
-  `Human Review Required` to `No`.
-- Epic implementations hand off at `Ready for Human Review` by default.
-- Direct `dev` landings are allowed for ordinary issues and audits.
-- Do not merge an epic PR into `dev`, enable auto-merge, close the issue, or
-  mark `Done` unless the human maintainer explicitly authorizes that action.
+- `dev` is sacred: every PR that targets `dev` (epic OR standalone) sets
+  `Human Review Required` to `Yes` and waits for a human reviewer + green CI.
+- The only auto-merge in the system is `issue -> epic-branch` on green CI.
+- Every issue ships as a PR; nothing lands on `dev` without a PR.
+- Any `-> dev` PR hands off at `Ready for Human Review`.
+- Do not merge any PR into `dev`, enable auto-merge into `dev`, close the issue,
+  or mark `Done` unless the human maintainer explicitly authorizes that action.
 
 ## Agent Routing by Issue Signal
 
-- `type: epic`: `coordinator` + `architect`; do not implement the whole epic
-  unless a child issue is selected.
-- `type: task` or `type: feature`: `coordinator`, `explorer`, then
+- `type: epic`: the lead coordinates with `architect`; do not implement the whole
+  epic unless a child issue is selected.
+- `type: task` or `type: feature`: the lead drives `explorer`, then
   `implementor`/`developer`, `test-engineer`, `verifier`.
 - `type: bug`: `explorer`, `browser-debugger` when UI-visible,
   `implementor`, `test-engineer`, `verifier`.

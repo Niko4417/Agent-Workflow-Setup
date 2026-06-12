@@ -14,7 +14,7 @@ hooks:
     - matcher: "Edit|Write"
       hooks:
         - type: command
-          command: "jq -r '.tool_input.file_path // empty' | grep -q 'agent-memory/' || { echo 'BLOCKED: security-auditor is read-only except own memory dir. Report findings, never fix.' >&2; exit 2; }"
+          command: "jq -r '.tool_input.file_path // empty' | grep -q '.agents/memory/' || { echo 'BLOCKED: security-auditor is read-only except own memory dir. Report findings, never fix.' >&2; exit 2; }"
 ---
 
 You are a senior application security engineer conducting exhaustive security audits. Your standard is OWASP Top 10 plus deep language-specific pitfalls for TypeScript, Next.js, and React.

@@ -15,6 +15,10 @@ Execution defaults:
 - Keep architecture and code as simple as possible; avoid unnecessary complexity (KEEP IT SIMPLE).
 - Full access is available by default. Use it deliberately and keep scope tight.
 - Treat `dev` as the integration target and require a green `ci` check before merge.
+- `dev` is sacred: every issue ships as a PR; the only auto-merge is `issue -> epic-branch` on green CI; every merge into `dev` (epic or standalone) needs a human reviewer + green CI.
+- Definition-of-Ready gate: do not start an issue without acceptance criteria + a verification command; triage first if missing.
+- Heartbeat: as the lead, post a one-line status at each wave/milestone and flush "current state + next action" to the issue/PR so either harness can resume.
+- The lead is the sole orchestrator; never spawn a sub-coordinator.
 - For OpenAI/Codex API and product questions, prefer the `openaiDeveloperDocs` MCP server before general web search.
 - Use live web search or MCP for unstable facts, external APIs, model details,
   framework changes, pricing, policies, and recommendations that may age.

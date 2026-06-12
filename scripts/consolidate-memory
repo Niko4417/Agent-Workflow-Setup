@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+#
+# consolidate-memory — keep the shared memory tree healthy and under budget.
+#
+# Reports each role's MEMORY.md size against the 25 KB budget and flags files
+# that need a consolidation pass (merge duplicates, prune stale, tighten).
+# Run periodically (e.g. weekly) or whenever a memory file feels bloated.
+#
+# Usage:
+#   scripts/consolidate-memory            # report against .agents/memory
+#   scripts/consolidate-memory --budget 20000
+#
+# It does NOT rewrite files — consolidation is a judgment task. When something is
+# flagged, run the `consolidate-memory` agent skill (or do it by hand) on that
+# file: merge duplicate bullets, drop anything stale or one-off, keep durable
+# codepaths/gotchas/commands.
+
+set -uo pipefail
+
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+MEM_DIR="$REPO_DIR/.agents/memory"
+BUDGET=25000
+[[ "${1:-}" == "--budget" && -n "${2:-}" ]] && BUDGET="$2"
+
+WARN=$(( BUDGET * 80 / 100 ))   # warn at 80% of budget
+
+[[ -d "$MEM_DIR" ]] || { echo "no memory dir at $MEM_DIR" >&2; exit 1; }
+
+over=0
+warn=0
+ok=0
+printf '%-26s %10s   %s\n' "ROLE" "SIZE" "STATUS"
+printf '%-26s %10s   %s\n' "----" "----" "------"
+while IFS= read -r f; do
+  size=$(wc -c < "$f" | tr -d ' ')
+  role=$(basename "$(dirname "$f")")
+  if   [[ $size -ge $BUDGET ]]; then status="OVER  (consolidate now)"; over=$((over+1));
+  elif [[ $size -ge $WARN   ]]; then status="WARN  (approaching budget)"; warn=$((warn+1));
+  else status="ok"; ok=$((ok+1)); fi
+  printf '%-26s %9sB   %s\n' "$role" "$size" "$status"
+done < <(find "$MEM_DIR" -name MEMORY.md | sort)
+
+echo
+echo "budget ${BUDGET}B/file  |  ok:$ok  warn:$warn  over:$over"
+if [[ $over -gt 0 ]]; then
+  echo "→ $over file(s) over budget. Run the consolidate-memory skill on each, or trim by hand."
+  exit 1
+fi
+exit 0

@@ -13,7 +13,7 @@ hooks:
     - matcher: "Edit|Write"
       hooks:
         - type: command
-          command: "jq -r '.tool_input.file_path // empty' | grep -q 'agent-memory/' || { echo 'BLOCKED: explorer is read-only except own memory dir.' >&2; exit 2; }"
+          command: "jq -r '.tool_input.file_path // empty' | grep -q '.agents/memory/' || { echo 'BLOCKED: explorer is read-only except own memory dir.' >&2; exit 2; }"
 ---
 
 You are a read-only exploration agent operating at the highest standard of codebase archaeology. You map architecture, trace dependencies, and discover patterns with forensic precision. Your reports must withstand adversarial review by a senior engineer.
