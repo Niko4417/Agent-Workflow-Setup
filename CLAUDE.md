@@ -19,23 +19,24 @@ Never run `git push --force`, `git reset --hard`, `--no-verify`, or `rm -rf` on 
 
 ## Agent routing table
 
-| Task signal                                     | Spawn                                            |
-| ----------------------------------------------- | ------------------------------------------------ |
-| "explore", "where is", "how does this work"     | `explorer` (haiku, read-only)                    |
-| ADR / boundary / dependency-direction decision  | `architect` (sonnet, docs/adr only)              |
-| New feature with spec → impl → tests            | `developer` (opus, spec-first, TDD)              |
-| Well-scoped task with definition of done        | `implementor` (sonnet, minimal diff)             |
-| Test strategy / coverage gap                    | `test-engineer` (sonnet, test files only)        |
-| Behavior-preserving cleanup, complexity > 10    | `refactor-specialist` (sonnet)                   |
-| First-pass security scan (OWASP, secrets, deps) | `security-triage` (sonnet, read-only)            |
-| Deep security audit (crypto, auth, data-flow)   | `security-auditor` (opus, read-only — on demand) |
-| LCP / INP / CLS / bundle / N+1                  | `performance-engineer` (sonnet, read-only)       |
-| WCAG 2.2 AA review                              | `a11y-auditor` (haiku, read-only)                |
-| PR review (8-dimension)                         | `pr-reviewer` (sonnet, read-only)                |
-| Drive open PR to merge-ready                    | `pr-shepherd` (sonnet, delegates to implementor) |
-| Acceptance-criteria verification                | `verifier` (sonnet, read-only)                   |
-| Figma → React component                         | `ui-engineer` (sonnet)                           |
-| README / ADR / CHANGELOG / API docs             | `docs-writer` (haiku, docs only)                 |
+| Task signal                                     | Spawn                                                         |
+| ----------------------------------------------- | ------------------------------------------------------------- |
+| "explore", "where is", "how does this work"     | `explorer` (haiku, read-only)                                 |
+| ADR / boundary / dependency-direction decision  | `architect` (sonnet, docs/adr only)                           |
+| New feature with spec → impl → tests            | `developer` (opus, spec-first, TDD)                           |
+| Well-scoped task with definition of done        | `implementor` (sonnet, minimal diff)                          |
+| Test strategy / coverage gap                    | `test-engineer` (sonnet, test files only)                     |
+| Behavior-preserving cleanup, complexity > 10    | `refactor-specialist` (sonnet)                                |
+| First-pass security scan (OWASP, secrets, deps) | `security-triage` (sonnet, read-only)                         |
+| Deep security audit (crypto, auth, data-flow)   | `security-auditor` (opus, read-only — on demand)              |
+| LCP / INP / CLS / bundle / N+1                  | `performance-engineer` (sonnet, read-only)                    |
+| WCAG 2.2 AA review                              | `a11y-auditor` (haiku, read-only)                             |
+| PR review (8-dimension)                         | `pr-reviewer` (sonnet, read-only)                             |
+| Drive open PR to merge-ready                    | `pr-shepherd` (sonnet, delegates to implementor)              |
+| Acceptance-criteria verification                | `verifier` (sonnet, read-only)                                |
+| Figma → React component                         | `ui-engineer` (sonnet)                                        |
+| README / ADR / CHANGELOG / API docs             | `docs` (haiku, docs only)                                     |
+| Reproduce a UI bug in a real browser            | _capability_: drive Playwright / Chrome MCP — not a sub-agent |
 
 When a task spans multiple layers and the workers are independent, use an agent team (parallel) instead of sequential subagents. Default team size: 3–5 teammates. Three reusable team templates live in [.claude/teams/](.claude/teams/):
 
@@ -61,8 +62,8 @@ Every agent runs a 2-pass adversarial self-critique before reporting done. The p
 
 ## Memory protocol
 
-- Agent-specific memory: `.claude/agent-memory/<agent>/MEMORY.md` — each agent reads before, appends after, curates under 25 KB.
-- Shared memory: `.claude/agent-memory/_shared/` — cross-cutting findings useful to multiple agent roles (see [agent-memory/README.md](.claude/agent-memory/README.md) for the eligibility rule).
+- Agent-specific memory: `.agents/memory/<role>/MEMORY.md` — each agent reads before, appends after, curates under 25 KB. Keyed by the 16 canonical roles (see `.agents/roles.yaml`), shared with Codex.
+- Shared memory: `.agents/memory/_shared/` — cross-cutting findings useful to multiple agent roles (see [memory/README.md](.agents/memory/README.md) for the eligibility rule).
 - Project memory (this file plus AGENTS.md) is the source of truth for coordinator-level rules.
 - High-signal entries only: codepaths, gotchas, patterns. No session logs, no "I searched the repo".
 

@@ -25,7 +25,7 @@ Execution defaults:
   product/API work, Playwright/browser tooling for UI verification, and Figma
   MCP only when a design URL or design task exists.
 - Before and after substantial work, read and update role memory under
-  `.codex/agent-memory/<agent-name>/MEMORY.md`; do not store secrets,
+  `.agents/memory/<agent-name>/MEMORY.md`; do not store secrets,
   customer data, logs containing tokens, or raw private source in memory.
 - Use `.codex/RUNBOOK.md` as the project operating manual for agent-team
   delivery. Use `.codex/playbooks/feature.md`, `.codex/playbooks/audit.md`,
@@ -35,12 +35,12 @@ Execution defaults:
 When cluster mode is active:
 - Start with a short coordination plan that assigns ownership, file scopes,
   dependencies, and stop conditions.
-- Prefer read-heavy fan-out first: `explorer`, `architect`, `docs-researcher`,
-  `security-reviewer`, or `performance-engineer` when relevant.
+- Prefer read-heavy fan-out first: `explorer`, `architect`,
+  `security-auditor`, or `performance-engineer` when relevant.
 - Use write agents only for disjoint file scopes: `implementor` or `developer`.
 - Use `test-engineer` for test coverage and regression harnesses.
 - Use `pr-shepherd` for CI/review follow-up after a PR exists.
-- Finish write waves with `verifier`, `pr-reviewer`, or `security-reviewer`
+- Finish write waves with `verifier`, `pr-reviewer`, or `security-auditor`
   depending on risk.
 - Keep delegation shallow and predictable. Do not recurse unless the user
   explicitly asks for deeper nesting.

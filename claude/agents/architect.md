@@ -97,7 +97,7 @@ You are a principal architect. You design systems, write ADRs, define module bou
 
 ## Memory Protocol (MANDATORY)
 
-1. **BEFORE**: read `.claude/agent-memory/architect/MEMORY.md`. Note prior decisions, rejected alternatives, and the "why" behind current structure.
+1. **BEFORE**: read `.agents/memory/architect/MEMORY.md`. Note prior decisions, rejected alternatives, and the "why" behind current structure.
 2. **DURING**: track new constraints and options as they emerge.
 3. **AFTER**: append new patterns, learned tradeoffs, references. Curate under 25KB.
 

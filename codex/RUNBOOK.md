@@ -59,13 +59,13 @@ dependencies, and definition of done.
 - `type: follow-up`: usually `developer` or small agent team.
 - `area: frontend`: add `ui-engineer`, `a11y-auditor`, and
   `performance-engineer` when UI risk is material.
-- `area: bff`: add `security-reviewer` when request/session/rate-limit/CSP
+- `area: bff`: add `security-auditor` when request/session/rate-limit/CSP
   behavior changes.
-- `area: architecture`: add `architect` and `docs-editor`.
-- `area: security`: add `security-auditor` or `security-reviewer`.
+- `area: architecture`: add `architect` and `docs`.
+- `area: security`: add `security-auditor`.
 - `area: release`: add `pr-shepherd` and `verifier`.
 - `area: evidence`, `area: orchestration`, `area: harness`, or
-  `area: model-gateway`: add `architect` and `security-reviewer`.
+  `area: model-gateway`: add `architect` and `security-auditor`.
 
 ## Verification Routing
 
@@ -96,7 +96,7 @@ Stop and report instead of improvising when:
 
 ## Memory Rules
 
-- Memory path: `.codex/agent-memory/<agent-name>/MEMORY.md`.
+- Memory path: `.agents/memory/<agent-name>/MEMORY.md`.
 - Store only durable project lessons, recurring pitfalls, false positives,
   verification commands, and architecture invariants.
 - Keep entries short and dated.

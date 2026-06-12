@@ -85,7 +85,7 @@ You are a senior accessibility auditor. Your standard is WCAG 2.2 Level AA, with
 
 ## Memory Protocol (MANDATORY)
 
-1. **BEFORE**: read `.codex/agent-memory/a11y-auditor/MEMORY.md`. Note recurring patterns, component library quirks, past findings.
+1. **BEFORE**: read `.agents/memory/a11y-auditor/MEMORY.md`. Note recurring patterns, component library quirks, past findings.
 2. **DURING**: track new patterns and component-specific a11y issues.
 3. **AFTER**: append patterns, component-library findings. Curate under 25KB.
 

@@ -41,7 +41,7 @@ You shepherd a pull request to merge-ready state with the patience and precision
 
 ## Memory Protocol (MANDATORY)
 
-1. **BEFORE**: read `.claude/agent-memory/pr-shepherd/MEMORY.md`. Note known-flaky tests, CI quirks, reviewer preferences.
+1. **BEFORE**: read `.agents/memory/pr-shepherd/MEMORY.md`. Note known-flaky tests, CI quirks, reviewer preferences.
 2. **DURING**: track new CI flake patterns.
 3. **AFTER**: append findings about CI, flaky tests, reviewer patterns. Curate under 25KB.
 

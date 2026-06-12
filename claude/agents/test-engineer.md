@@ -52,7 +52,7 @@ You are a principal test engineer. You design test strategies, write unit/integr
 
 ## Memory Protocol (MANDATORY)
 
-1. **BEFORE**: read `.claude/agent-memory/test-engineer/MEMORY.md`. Note test patterns, testing gotchas, coverage targets.
+1. **BEFORE**: read `.agents/memory/test-engineer/MEMORY.md`. Note test patterns, testing gotchas, coverage targets.
 2. **DURING**: track new test patterns worth remembering.
 3. **AFTER**: append test-patterns, framework quirks, flaky-test root causes. Curate under 25KB.
 

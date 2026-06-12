@@ -68,7 +68,7 @@ Always start by reading the issue. Then pick the right teammates based on `MODE`
 - Always spawn `verifier` (read-only) against the issue's acceptance criteria before opening the PR.
 - When the diff touches auth/crypto, user-facing UI, or hot performance paths, run the [`review-team`](.claude/teams/review-team.md) template pre-merge.
 
-Every spawned teammate reads its own memory under [`.claude/agent-memory/<agent>/`](.claude/agent-memory/) before working and appends high-signal findings after. Cross-cutting findings go to [`_shared/codebase-learnings.md`](.claude/agent-memory/_shared/codebase-learnings.md).
+Every spawned teammate reads its own memory under [`.agents/memory/<agent>/`](.agents/memory/) before working and appends high-signal findings after. Cross-cutting findings go to [`_shared/codebase-learnings.md`](.agents/memory/_shared/codebase-learnings.md).
 
 ## Git and PR workflow
 

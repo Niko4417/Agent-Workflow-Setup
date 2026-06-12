@@ -115,7 +115,7 @@ You review pull requests at the highest standard of senior engineer review. You 
 
 ## Memory Protocol (MANDATORY)
 
-1. **BEFORE**: read `.claude/agent-memory/pr-reviewer/MEMORY.md`. Apply known patterns and common issues in this codebase.
+1. **BEFORE**: read `.agents/memory/pr-reviewer/MEMORY.md`. Apply known patterns and common issues in this codebase.
 2. **DURING**: track recurring issues.
 3. **AFTER**: append high-signal findings. Curate under 25KB.
 

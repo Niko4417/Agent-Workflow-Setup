@@ -26,7 +26,7 @@
       "Agent(a11y-auditor)",
       "Agent(refactor-specialist)",
       "Agent(ui-engineer)",
-      "Agent(docs-writer)",
+      "Agent(docs)",
       "mcp__claude_ai_Figma__*"
     ],
     "deny": [],
@@ -96,7 +96,7 @@
           },
           {
             "type": "command",
-            "command": "input=$(cat); agent=$(echo \"$input\" | jq -r '.agent_type // empty'); [ -z \"$agent\" ] && exit 0; mem=\".claude/agent-memory/$agent/MEMORY.md\"; [ ! -f \"$mem\" ] && exit 0; size=$(wc -c < \"$mem\" 2>/dev/null || echo 0); if [ \"$size\" -lt 800 ]; then echo \"[memory-reminder] $agent MEMORY.md is only ${size}B — append high-signal findings from this session before going idle. Aim for codebase-specific gotchas, patterns, or gotcha-workarounds. See .claude/agent-memory/README.md\" >&2; fi; exit 0"
+            "command": "input=$(cat); agent=$(echo \"$input\" | jq -r '.agent_type // empty'); [ -z \"$agent\" ] && exit 0; mem=\".agents/memory/$agent/MEMORY.md\"; [ ! -f \"$mem\" ] && exit 0; size=$(wc -c < \"$mem\" 2>/dev/null || echo 0); if [ \"$size\" -lt 800 ]; then echo \"[memory-reminder] $agent MEMORY.md is only ${size}B — append high-signal findings from this session before going idle. Aim for codebase-specific gotchas, patterns, or gotcha-workarounds. See .agents/memory/README.md\" >&2; fi; exit 0"
           }
         ]
       }
@@ -130,7 +130,7 @@
           },
           {
             "type": "command",
-            "command": "input=$(cat); agent=$(echo \"$input\" | jq -r '.agent_type // empty'); [ -z \"$agent\" ] && exit 0; mem=\".claude/agent-memory/$agent/MEMORY.md\"; [ ! -f \"$mem\" ] && exit 0; size=$(wc -c < \"$mem\" 2>/dev/null || echo 0); if [ \"$size\" -lt 800 ]; then echo \"[memory-reminder] teammate $agent MEMORY.md is only ${size}B — capture any reusable findings before idle\" >&2; fi; exit 0"
+            "command": "input=$(cat); agent=$(echo \"$input\" | jq -r '.agent_type // empty'); [ -z \"$agent\" ] && exit 0; mem=\".agents/memory/$agent/MEMORY.md\"; [ ! -f \"$mem\" ] && exit 0; size=$(wc -c < \"$mem\" 2>/dev/null || echo 0); if [ \"$size\" -lt 800 ]; then echo \"[memory-reminder] teammate $agent MEMORY.md is only ${size}B — capture any reusable findings before idle\" >&2; fi; exit 0"
           }
         ]
       }

@@ -73,7 +73,7 @@ You are a senior application security engineer conducting exhaustive security au
 
 ## Memory Protocol (MANDATORY)
 
-1. **BEFORE**: read `.codex/agent-memory/security-auditor/MEMORY.md`. Note previously-found issues, patterns, false-positive history.
+1. **BEFORE**: read `.agents/memory/security-auditor/MEMORY.md`. Note previously-found issues, patterns, false-positive history.
 2. **DURING**: track which files are hot (user input handling, auth, crypto, network).
 3. **AFTER**: append new finding patterns, codebase-specific conventions, resolved issues. Curate under 25KB.
 

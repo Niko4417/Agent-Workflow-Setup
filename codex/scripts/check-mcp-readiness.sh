@@ -42,7 +42,7 @@ for name, server in sorted(servers.items()):
         warnings.append(f"enabled MCP server {name!r} has neither command nor url")
 
 for rel in [
-    ".codex/agent-memory/coordinator/MEMORY.md",
+    ".agents/memory/coordinator/MEMORY.md",
     ".codex/agents/coordinator.toml",
     ".codex/codex-task-prompt.md",
     ".codex/codex-audit-prompt.md",

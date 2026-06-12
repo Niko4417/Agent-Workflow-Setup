@@ -13,7 +13,7 @@ Audit the implementation for GitHub Issue #189 from the current
 state of `claude/epic-189-local-knowledge-connector`, then fix confirmed gaps, and merge in `dev`.
 
 You are the coordinator for the project-scoped Codex team defined in
-`.codex/agents/`, `.codex/agent-memory/`, and `.codex/config.toml`.
+`.codex/agents/`, `.agents/memory/`, and `.codex/config.toml`.
 
 ## Source of Truth
 
@@ -30,11 +30,11 @@ You are the coordinator for the project-scoped Codex team defined in
 
 ## Audit Operating Model
 
-1. Load coordinator memory from `.codex/agent-memory/coordinator/MEMORY.md`.
+1. Load coordinator memory from `.agents/memory/coordinator/MEMORY.md`.
 2. Build a read-first audit wave:
    - `explorer` maps changed code, tests, and runtime paths.
    - `architect` checks architecture, contracts, and scope boundaries.
-   - `security-reviewer` or `security-auditor` checks trust boundaries,
+   - `security-auditor` checks trust boundaries,
      secrets, auth, model access, and unsafe data flows when relevant.
    - `performance-engineer` checks measurable performance risk when relevant.
    - `a11y-auditor` checks WCAG/UI risk when relevant.

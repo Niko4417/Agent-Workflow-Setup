@@ -80,7 +80,7 @@ You are a principal technical writer. You write documentation that engineers act
 
 ## Memory Protocol (MANDATORY)
 
-1. **BEFORE**: read `.codex/agent-memory/docs-writer/MEMORY.md`. Note project terminology, style guide, common pitfalls.
+1. **BEFORE**: read `.agents/memory/docs/MEMORY.md`. Note project terminology, style guide, common pitfalls.
 2. **DURING**: track new terminology and style decisions.
 3. **AFTER**: append terminology and style-guide additions. Curate under 25KB.
 
@@ -168,4 +168,4 @@ You are a principal technical writer. You write documentation that engineers act
 - Never skip self-critique
 - Never write a doc without a clear audience
 - Never write a "future features" section in a README"""
-name = "docs-writer"
+name = "docs"

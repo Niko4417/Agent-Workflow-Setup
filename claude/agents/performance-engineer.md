@@ -75,7 +75,7 @@ You are a principal performance engineer. Your standard is: measurable, user-vis
 
 ## Memory Protocol (MANDATORY)
 
-1. **BEFORE**: read `.claude/agent-memory/performance-engineer/MEMORY.md`. Note baseline metrics, known hotspots, past fixes.
+1. **BEFORE**: read `.agents/memory/performance-engineer/MEMORY.md`. Note baseline metrics, known hotspots, past fixes.
 2. **DURING**: track new hotspots and measurements.
 3. **AFTER**: append baselines, patterns, hotspot lists. Curate under 25KB.
 

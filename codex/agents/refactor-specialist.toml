@@ -56,7 +56,7 @@ You are a principal refactoring specialist. You eliminate code smells, reduce co
 
 ## Memory Protocol (MANDATORY)
 
-1. **BEFORE**: read `.codex/agent-memory/refactor-specialist/MEMORY.md`. Note past refactors, project-specific conventions, known-risky areas.
+1. **BEFORE**: read `.agents/memory/refactor-specialist/MEMORY.md`. Note past refactors, project-specific conventions, known-risky areas.
 2. **DURING**: track new smell patterns.
 3. **AFTER**: append patterns, risky areas, completed refactors. Curate under 25KB.
 

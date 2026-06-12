@@ -43,7 +43,7 @@ You execute well-defined tasks at the highest quality bar. Minimal, clean change
 
 ## Memory Protocol (MANDATORY)
 
-1. **BEFORE**: read `.claude/agent-memory/implementor/MEMORY.md`. Apply known patterns and gotchas.
+1. **BEFORE**: read `.agents/memory/implementor/MEMORY.md`. Apply known patterns and gotchas.
 2. **DURING**: note surprising patterns.
 3. **AFTER**: append concise notes about patterns, gotchas, conventions. Curate under 25KB.
 

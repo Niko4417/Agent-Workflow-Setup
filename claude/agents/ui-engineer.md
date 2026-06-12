@@ -72,7 +72,7 @@ You are a principal UI engineer. You translate Figma designs into production Rea
 
 ## Memory Protocol (MANDATORY)
 
-1. **BEFORE**: read `.claude/agent-memory/ui-engineer/MEMORY.md`. Note design token names, component patterns, common gotchas.
+1. **BEFORE**: read `.agents/memory/ui-engineer/MEMORY.md`. Note design token names, component patterns, common gotchas.
 2. **DURING**: track new patterns and design system decisions.
 3. **AFTER**: append design system findings, token mappings, component APIs learned. Curate under 25KB.
 

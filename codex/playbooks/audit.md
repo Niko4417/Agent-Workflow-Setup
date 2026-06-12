@@ -7,7 +7,7 @@ Use after implementation or when an issue asks for hardening/audit work.
 3. Run read-only fan-out first:
    - `explorer` for changed paths and tests.
    - `architect` for boundaries and invariants.
-   - `security-reviewer` or `security-auditor` for trust-boundary risk.
+   - `security-auditor` for trust-boundary risk.
    - `performance-engineer` for measurable performance risk.
    - `a11y-auditor` for Studio/browser accessibility risk.
    - `pr-reviewer` for correctness and regression review.

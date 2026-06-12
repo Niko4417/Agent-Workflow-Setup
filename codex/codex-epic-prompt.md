@@ -5,7 +5,7 @@ present:
 
 - `.codex/agents/`
 - `.codex/teams/`
-- `.codex/agent-memory/`
+- `.agents/memory/`
 - `AGENTS.md`
 - repository issue templates
 - repository pull request template
@@ -176,7 +176,7 @@ For each actionable child issue:
   - `security-triage` or `security-auditor` for trust boundaries;
   - `ui-engineer` and `a11y-auditor` for visible UI;
   - `performance-engineer` for hot paths or large-data behavior;
-  - `docs-writer` for required docs;
+  - `docs` for required docs;
   - `verifier` before PR handoff.
 7. Keep the diff scoped to the child issue.
 8. Commit with a conventional message referencing the child issue.

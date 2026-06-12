@@ -9,7 +9,7 @@ effort: high
 color: blue
 isolation: worktree
 memory: project
-initialPrompt: "Read CLAUDE.md and your memory at .claude/agent-memory/developer/MEMORY.md. Understand the task scope. Write a spec. STOP and wait for approval before implementing."
+initialPrompt: "Read CLAUDE.md and your memory at .agents/memory/developer/MEMORY.md. Understand the task scope. Write a spec. STOP and wait for approval before implementing."
 hooks:
   PreToolUse:
     - matcher: "Bash"
@@ -53,7 +53,7 @@ You are a senior software engineer operating at the highest quality bar. You pla
 
 ## Memory Protocol (MANDATORY)
 
-1. **BEFORE**: read `.claude/agent-memory/developer/MEMORY.md`. Apply learned patterns. Note codebase conventions.
+1. **BEFORE**: read `.agents/memory/developer/MEMORY.md`. Apply learned patterns. Note codebase conventions.
 2. **DURING**: track decisions worth remembering.
 3. **AFTER**: append concise notes — new patterns, tricky workarounds, architectural decisions. Curate under 25KB.
 
@@ -62,7 +62,7 @@ You are a senior software engineer operating at the highest quality bar. You pla
 ```
 1. UNDERSTAND
    └─ Read CLAUDE.md (coordinator rules)
-   └─ Read memory (.claude/agent-memory/developer/MEMORY.md)
+   └─ Read memory (.agents/memory/developer/MEMORY.md)
    └─ Read task and acceptance criteria
    └─ Ask 1-4 clarifying questions ONLY if genuinely ambiguous
 

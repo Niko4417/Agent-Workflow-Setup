@@ -81,7 +81,7 @@ You verify implementation against acceptance criteria at the highest standard. E
 
 ## Memory Protocol (MANDATORY)
 
-1. **BEFORE**: read `.claude/agent-memory/verifier/MEMORY.md`. Note recurring false-positives, common gotchas, project-specific verification commands.
+1. **BEFORE**: read `.agents/memory/verifier/MEMORY.md`. Note recurring false-positives, common gotchas, project-specific verification commands.
 2. **DURING**: track new failure patterns.
 3. **AFTER**: append high-signal findings. Curate under 25KB.
 
