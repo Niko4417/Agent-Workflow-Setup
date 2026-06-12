@@ -1,0 +1,114 @@
+#!/usr/bin/env python3
+"""
+keiko-watch — live per-agent activity feed for both harnesses.
+
+Renders a unified real-time stream from:
+  - Codex cluster log : <target>/.codex/tmp/cluster-hooks.log   (JSONL)
+  - Claude activity   : ~/.claude/agent-activity.log            (plain text)
+
+Usage:
+  scripts/keiko-watch [--target DIR] [--once]
+
+  --target DIR  repo whose .codex/ to watch (default: $KEIKO_ROOT or cwd)
+  --once        print everything so far and exit (no follow)
+
+It is read-only and safe to leave running in a side terminal.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import time
+from pathlib import Path
+
+C = {
+    "dim": "\033[2m", "reset": "\033[0m", "bold": "\033[1m",
+    "codex": "\033[36m", "claude": "\033[35m",
+    "ok": "\033[32m", "err": "\033[31m", "warn": "\033[33m",
+}
+
+
+def fmt_codex(line: str) -> str | None:
+    line = line.strip()
+    if not line:
+        return None
+    try:
+        d = json.loads(line)
+    except json.JSONDecodeError:
+        return None
+    ts = (d.get("ts") or "")[-8:].rstrip("Z") or "--:--:--"
+    action = d.get("action", "?")
+    agent = d.get("model") or d.get("session_id", "")[:8] or "-"
+    bits = [f"{C['dim']}{ts}{C['reset']}", f"{C['codex']}codex{C['reset']}",
+            f"{C['bold']}{action}{C['reset']}", str(agent)]
+    if action == "post-tool-use":
+        status = d.get("status", "")
+        col = C["ok"] if status == "ok" else C["err"] if status == "error" else C["warn"]
+        cmd = (d.get("command") or "")[:80]
+        ec = d.get("exit_code")
+        bits.append(f"{col}{status}{C['reset']}" + (f"({ec})" if ec not in (None, 0) else ""))
+        if cmd:
+            bits.append(f"{C['dim']}{cmd}{C['reset']}")
+    return "  ".join(b for b in bits if b)
+
+
+def fmt_claude(line: str) -> str | None:
+    line = line.strip()
+    if not line:
+        return None
+    return f"{C['claude']}claude{C['reset']}  {line}"
+
+
+def follow(paths: dict[Path, callable], once: bool) -> None:
+    # offsets: start at end for follow, at 0 for --once
+    offsets: dict[Path, int] = {}
+    for p in paths:
+        offsets[p] = 0 if once else (p.stat().st_size if p.exists() else 0)
+    printed_header = False
+    while True:
+        for p, fmt in paths.items():
+            if not p.exists():
+                continue
+            size = p.stat().st_size
+            if size < offsets[p]:  # rotated/truncated
+                offsets[p] = 0
+            if size > offsets[p]:
+                with p.open("r", encoding="utf-8", errors="replace") as fh:
+                    fh.seek(offsets[p])
+                    for raw in fh:
+                        out = fmt(raw)
+                        if out:
+                            print(out, flush=True)
+                    offsets[p] = fh.tell()
+        if once:
+            return
+        if not printed_header:
+            printed_header = True
+        time.sleep(0.5)
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--target", default=os.environ.get("KEIKO_ROOT", os.getcwd()))
+    ap.add_argument("--once", action="store_true")
+    args = ap.parse_args()
+
+    target = Path(args.target).expanduser().resolve()
+    codex_log = target / ".codex" / "tmp" / "cluster-hooks.log"
+    claude_log = Path.home() / ".claude" / "agent-activity.log"
+
+    print(f"{C['bold']}keiko-watch{C['reset']}  target={target}")
+    print(f"  {C['codex']}codex{C['reset']}  {codex_log}")
+    print(f"  {C['claude']}claude{C['reset']} {claude_log}")
+    print(f"{C['dim']}{'follow (Ctrl-C to quit)' if not args.once else 'snapshot'}{C['reset']}\n")
+
+    try:
+        follow({codex_log: fmt_codex, claude_log: fmt_claude}, args.once)
+    except KeyboardInterrupt:
+        print(f"\n{C['dim']}stopped{C['reset']}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

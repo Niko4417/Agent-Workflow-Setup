@@ -55,29 +55,48 @@ the PR exists. Status lives on the GitHub delivery board; learnings live in
 
 ## Status — what's done vs. next
 
-**Done (portable baseline):**
+**Done:**
+
 - Codex + Claude harness ported, **path-portable** (no machine-specific paths;
   `origin/main` → `dev` fixed).
 - 16-role canonical vocabulary + alias map + shared memory tree.
 - Governance contract + full design blueprint.
-- Symlink installer.
+- Symlink installer (also links root entry docs + retires old `project.md`).
+- **Agents consolidated** onto the 16 canonical roles; all routing + memory
+  references repointed to the shared `.agents/memory/` tree.
+- **Completion judge** upgraded to Sonnet + loop cap; **measurable quality bars +
+  2-pass self-critique** ported to Codex (`RUNBOOK.md`).
+- **MCP parity for Claude** (Context7 + Playwright via `.mcp.json`).
+- **`scripts/verify.sh`** — local CI mirror (no `package.json` change needed).
+- **`scripts/keiko-watch`** — live per-agent activity feed for both harnesses.
 
-**Next (tracked in [`docs/workflow-blueprint.md`](docs/workflow-blueprint.md) §5):**
-- Consolidate the harness agent files onto the 16 canonical roles (retire the
-  redundant Codex agents; merge `docs-writer` → `docs`; update routing tables).
-- `npm run verify` (CI mirror) + husky/lint-staged + PR-template evidence section
-  (these are *target-side* and affect shared workflow — coordinate before shipping).
-- Upgrade the Claude Stop-hook judge to a strong model + loop cap; port the gate
-  and the measurable quality bars to Codex.
-- MCP parity for Claude (Context7 / GitHub / Playwright).
-- `keiko-watch` live activity feed + orchestrator heartbeat + Codex notifications.
+**Next:**
+
+- Apply target-side gates (husky/lint-staged + PR-template evidence) — see
+  [`templates/`](templates/); needs maintainer coordination.
+- Orchestrator heartbeat discipline + Codex desktop notifications.
 - Value-adds: Definition-of-Ready gate, automated evidence capture, scheduled
   memory consolidation.
+- Explicit counter-based loop cap for the judge (current cap uses
+  `stop_hook_active`).
+- Decide `coordinator.toml` fate (currently kept as the lead-role doc; the
+  canonical set treats the lead as non-spawnable).
+
+## Tooling
+
+```bash
+# before opening a PR (run from the Keiko root):
+bash /path/to/Agent-Workflow-Setup/scripts/verify.sh
+
+# watch agents work in real time (side terminal):
+KEIKO_ROOT=/path/to/Keiko /path/to/Agent-Workflow-Setup/scripts/keiko-watch
+```
 
 ## Server-side prerequisites (repo admin only)
 
 The "full local agent access" posture is safe **because `dev` is protected**.
 That requires **admin** on the target repo — configure on `oscharko-dev/Keiko`:
+
 - `dev`: require PR, require green `ci` check, require human review for epic
   merges.
 

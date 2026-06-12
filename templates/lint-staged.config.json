@@ -1,0 +1,7 @@
+{
+  "$comment": "Merge this into the target package.json. Runs only on staged files for fast pre-commit feedback. Full CI mirror stays in scripts/verify.sh at the pre-PR gate.",
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,mjs,cjs,json,css,scss,md}": ["prettier --write"],
+    "*.{ts,tsx,js,jsx,mjs,cjs}": ["eslint --max-warnings=0 --fix"]
+  }
+}

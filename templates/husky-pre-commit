@@ -1,0 +1,15 @@
+#!/usr/bin/env sh
+# Copy to <target>/.husky/pre-commit (requires: npm i -D husky lint-staged && npx husky init)
+
+# 1. Fast formatting/lint on staged files only.
+npx lint-staged || exit 1
+
+# 2. Lightweight secret scan on staged content (blocks obvious leaks).
+staged=$(git diff --cached --name-only --diff-filter=ACM)
+if [ -n "$staged" ]; then
+  if git diff --cached -U0 -- $staged | grep -nE '(api[_-]?key|secret|token|password|BEGIN (RSA|EC|OPENSSH) PRIVATE KEY)["'"'"' ]*[:=]' >/dev/null 2>&1; then
+    echo "✗ pre-commit: possible secret in staged changes — review before committing." >&2
+    echo "  (override with: git commit --no-verify, only if you are certain)" >&2
+    exit 1
+  fi
+fi
