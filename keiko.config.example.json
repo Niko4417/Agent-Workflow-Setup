@@ -1,0 +1,28 @@
+{
+  "providers": [
+    {
+      "modelId": "gpt-oss-120b",
+      "baseUrl": "",
+      "apiKey": "",
+      "timeoutMs": 120000
+    },
+    {
+      "modelId": "mistral-large-3",
+      "baseUrl": "",
+      "apiKey": "",
+      "timeoutMs": 120000
+    },
+    {
+      "modelId": "llama-4-maverick-vision",
+      "baseUrl": "",
+      "apiKey": "",
+      "timeoutMs": 120000
+    },
+    {
+      "modelId": "text-embedding-3-large",
+      "baseUrl": "",
+      "apiKey": "",
+      "timeoutMs": 30000
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+# Harness-specific agent names -> canonical role (see roles.yaml).
+#
+# Use this map when reading/writing memory or routing work, so the primary
+# (.codex) and backup (.claude) harnesses share one vocabulary.
+
+version: 1
+
+aliases:
+  # Codex names that collapse into a canonical role:
+  security-reviewer: security-auditor   # diff/PR-scoped invocation of the auditor
+  docs-writer: docs
+  docs-editor: docs
+  docs-researcher: explorer             # external grounding is an explorer capability
+  ui-fixer: ui-engineer                 # small-fix scope of the same UI write capability
+
+  # Claude name that collapses:
+  # (docs-writer already mapped above; applies to both harnesses)
+
+  # Intentionally NOT a role — becomes lead-session operating instructions:
+  coordinator: __lead__
+
+# Roster delta vs the original two stacks:
+#   Codex  (21 -> 16 + lead): retire security-reviewer, docs-editor,
+#          docs-researcher, ui-fixer as separate agents (alias here);
+#          coordinator -> lead instructions. Keep browser-debugger.
+#   Claude (15 -> 16): merge docs-writer -> docs; add browser-debugger as a
+#          Playwright/Chrome-MCP capability pattern, not a new agent file.

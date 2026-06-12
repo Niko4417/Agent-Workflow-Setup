@@ -1,0 +1,203 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "defaultMode": "bypassPermissions",
+    "allow": [
+      "Bash",
+      "Edit",
+      "Write",
+      "Read",
+      "Glob",
+      "Grep",
+      "WebSearch",
+      "WebFetch",
+      "Agent",
+      "Agent(explorer)",
+      "Agent(developer)",
+      "Agent(implementor)",
+      "Agent(verifier)",
+      "Agent(pr-reviewer)",
+      "Agent(pr-shepherd)",
+      "Agent(architect)",
+      "Agent(security-triage)",
+      "Agent(security-auditor)",
+      "Agent(test-engineer)",
+      "Agent(performance-engineer)",
+      "Agent(a11y-auditor)",
+      "Agent(refactor-specialist)",
+      "Agent(ui-engineer)",
+      "Agent(docs-writer)",
+      "mcp__claude_ai_Figma__*"
+    ],
+    "deny": [],
+    "additionalDirectories": []
+  },
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
+    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "85",
+    "ENABLE_PROMPT_CACHING_1H": "1"
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'Context rehydrated. CLAUDE.md rules: coordinator role, spec-first, wait-for-approval, conventional commits, target branch dev, never edit code yourself, delegate to teammates.'"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "LOG=~/.claude/agent-activity.log; [ -f \"$LOG\" ] && [ \"$(wc -l < \"$LOG\" 2>/dev/null || echo 0)\" -gt 2000 ] && tail -1000 \"$LOG\" > \"$LOG.tmp\" && mv \"$LOG.tmp\" \"$LOG\" || true"
+          }
+        ]
+      }
+    ],
+    "InstructionsLoaded": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '[context] CLAUDE.md loaded - coordinator role active'"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '[quality-reminder] Before acting: (1) read memory, (2) scope the task, (3) check existing patterns, (4) consider edge cases'"
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "printf '[%s] Subagent spawned\\n' \"$(date +%H:%M:%S)\" >> ~/.claude/agent-activity.log"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "printf '[%s] Subagent finished\\n' \"$(date +%H:%M:%S)\" >> ~/.claude/agent-activity.log"
+          },
+          {
+            "type": "command",
+            "command": "input=$(cat); agent=$(echo \"$input\" | jq -r '.agent_type // empty'); [ -z \"$agent\" ] && exit 0; mem=\".claude/agent-memory/$agent/MEMORY.md\"; [ ! -f \"$mem\" ] && exit 0; size=$(wc -c < \"$mem\" 2>/dev/null || echo 0); if [ \"$size\" -lt 800 ]; then echo \"[memory-reminder] $agent MEMORY.md is only ${size}B — append high-signal findings from this session before going idle. Aim for codebase-specific gotchas, patterns, or gotcha-workarounds. See .claude/agent-memory/README.md\" >&2; fi; exit 0"
+          }
+        ]
+      }
+    ],
+    "TaskCreated": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'Task created - remember: verify before completing'"
+          }
+        ]
+      }
+    ],
+    "TaskCompleted": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'Task completed - verify evidence before proceeding to next wave'"
+          }
+        ]
+      }
+    ],
+    "TeammateIdle": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'Teammate idle - consider spawning next wave or cleanup'"
+          },
+          {
+            "type": "command",
+            "command": "input=$(cat); agent=$(echo \"$input\" | jq -r '.agent_type // empty'); [ -z \"$agent\" ] && exit 0; mem=\".claude/agent-memory/$agent/MEMORY.md\"; [ ! -f \"$mem\" ] && exit 0; size=$(wc -c < \"$mem\" 2>/dev/null || echo 0); if [ \"$size\" -lt 800 ]; then echo \"[memory-reminder] teammate $agent MEMORY.md is only ${size}B — capture any reusable findings before idle\" >&2; fi; exit 0"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "osascript -e 'display notification \"Claude Code needs your attention\" with title \"Claude Code - Keiko\"' 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'Context compaction starting - critical state should be saved to memory'"
+          }
+        ]
+      }
+    ],
+    "PostCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'Compaction complete. Reminder: you are the coordinator, never edit code yourself - delegate to teammates.'"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path // empty' | while read f; do case \"$f\" in *.ts|*.tsx|*.js|*.jsx|*.mjs|*.cjs|*.json|*.css|*.scss|*.md) npx --no-install prettier --write \"$f\" 2>/dev/null || true ;; esac; done"
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '[quality] tool failure - investigate root cause, never retry blindly' >&2"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "prompt",
+            "model": "claude-haiku-4-5",
+            "prompt": "You are the quality gate. Review the work completed this session against the original task. First determine whether this session produced a code diff (Edit/Write tool calls that modified source files). If NO code diff was produced (analysis-only, research, planning, or documentation session), treat criteria (4), (6), and (7) as \"n/a\" — they do not gate analysis tasks and must not be reported as unmet. Check: (1) All acceptance criteria met with evidence, (2) No uncovered edge cases (null, empty, boundary, concurrent, error paths), (3) Type-safety is strict (no any), (4) Tests cover changed behavior [n/a without code diff], (5) No refactoring debt introduced, (6) Security implications addressed [n/a without code diff], (7) Performance not regressed [n/a without code diff]. Respond with {\"ok\": true} only if every APPLICABLE criterion is at maximum quality (n/a criteria never block). Otherwise {\"ok\": false, \"reason\": \"concrete gap to address\"} so work continues."
+          }
+        ]
+      }
+    ]
+  },
+  "teammateMode": "in-process"
+}

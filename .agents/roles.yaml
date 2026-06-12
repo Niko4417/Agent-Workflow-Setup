@@ -1,0 +1,125 @@
+# Canonical agent role vocabulary (tool-neutral, source of truth).
+#
+# Both harnesses (.codex primary, .claude backup) map onto these 16 roles.
+# Harness-specific names resolve here via aliases.yaml.
+# Memory lives at .agents/memory/<role>/MEMORY.md, keyed by these names only.
+#
+# `coordinator` is intentionally NOT a role: it is the lead session's operating
+# instructions, never a spawnable agent (single-orchestrator contract).
+
+version: 1
+
+roles:
+  # ---- read / analyze ----
+  explorer:
+    kind: read
+    summary: >
+      Internal code mapping AND external doc/API/version grounding (Context7/web).
+    posture: read-only
+    model: { codex: gpt-5.4, claude: haiku }
+
+  architect:
+    kind: read
+    summary: ADRs, service boundaries, dependency direction, contract decisions.
+    posture: docs/adr only
+    model: { codex: gpt-5.4, claude: sonnet }
+
+  security-triage:
+    kind: read
+    summary: >
+      Fast first-pass scan: OWASP grep, dangerous primitives, secret leaks,
+      missing authz. Escalates to security-auditor.
+    posture: read-only
+    model: { codex: gpt-5.4, claude: sonnet }
+
+  security-auditor:
+    kind: read
+    summary: >
+      Deep audit: crypto/auth, data-flow tracing, trust boundaries, supply
+      chain. Also covers diff/PR-scoped security review.
+    posture: read-only
+    model: { codex: gpt-5.4, claude: opus }
+
+  performance-engineer:
+    kind: read
+    summary: LCP/INP/CLS, bundle, N+1, hot paths, large-data behavior.
+    posture: read-only
+    model: { codex: gpt-5.4, claude: sonnet }
+
+  a11y-auditor:
+    kind: read
+    summary: WCAG 2.2 AA review.
+    posture: read-only
+    model: { codex: gpt-5.4-mini, claude: haiku }
+
+  verifier:
+    kind: read
+    summary: >
+      Acceptance-criteria verification + automated evidence capture for the PR.
+    posture: read-only
+    model: { codex: gpt-5.4, claude: sonnet }
+
+  pr-reviewer:
+    kind: read
+    summary: Multi-dimension PR review before merge.
+    posture: read-only
+    model: { codex: gpt-5.4, claude: sonnet }
+
+  browser-debugger:
+    kind: read
+    summary: >
+      Real-browser reproduction + evidence capture. On Codex this is an agent;
+      on Claude it is a capability (lead/agent driving Playwright or Chrome MCP),
+      not a named sub-agent.
+    posture: reproduction
+    model: { codex: gpt-5.4-mini, claude: sonnet }
+
+  # ---- write ----
+  developer:
+    kind: write
+    summary: Spec-first, TDD, planning, research, end-to-end implementation (heavy).
+    posture: full
+    model: { codex: gpt-5.4, claude: opus }
+
+  implementor:
+    kind: write
+    summary: >
+      Scoped minimal-diff worker; precise definition of done; no planning,
+      no delegation.
+    posture: full
+    model: { codex: gpt-5.4, claude: sonnet }
+
+  test-engineer:
+    kind: write
+    summary: Test coverage, regression harnesses, mutation-robust tests.
+    posture: test files only
+    model: { codex: gpt-5.4, claude: sonnet }
+
+  ui-engineer:
+    kind: write
+    summary: >
+      Figma->code, component build, design-system consistency. Also small/
+      targeted UI fixes.
+    posture: full
+    model: { codex: gpt-5.4, claude: sonnet }
+
+  refactor-specialist:
+    kind: write
+    summary: Behavior-preserving cleanup (complexity reduction).
+    posture: full
+    model: { codex: gpt-5.4, claude: sonnet }
+
+  docs:
+    kind: write
+    summary: >
+      Write AND maintain docs: README, API, ADR, CHANGELOG, migration/
+      troubleshooting notes, link-aware maintenance.
+    posture: docs only
+    model: { codex: gpt-5.4-mini, claude: haiku }
+
+  # ---- drive ----
+  pr-shepherd:
+    kind: drive
+    summary: Drive an open PR to merge-ready; delegates fixes to implementor.
+    posture: full
+    model: { codex: gpt-5.4, claude: sonnet }

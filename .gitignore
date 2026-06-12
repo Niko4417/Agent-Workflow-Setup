@@ -1,0 +1,10 @@
+# Per-machine local overrides (never shared)
+claude/settings.local.json
+
+# Runtime / ephemeral
+codex/tmp/
+**/cluster-hooks.log
+**/.DS_Store
+
+# Per-issue exploration dumps are NOT memory — keep them out of the repo
+.agents/memory/**/scratch/
