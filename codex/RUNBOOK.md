@@ -115,3 +115,45 @@ Stop and report instead of improvising when:
 - Figma MCP only when the issue provides a design source or asks for design
   implementation.
 - Web search only for unstable external facts; prefer primary sources.
+
+## Quality Bar (hard rules)
+
+Applies to every write agent. Mirrors the Claude side so both harnesses ship at
+the same bar.
+
+- TypeScript strict mode. No `any`; use `unknown` with narrowing.
+- Cyclomatic complexity <= 10 per function. Function <= 50 LOC. File <= 400 LOC.
+- Edge cases explicit: null, undefined, empty, zero, boundary, concurrent,
+  error path.
+- Error handling at system boundaries only (user input, external API,
+  filesystem). No defensive try/catch in internal code.
+- Tests are mutation-robust: a single-line mutation in the implementation must be
+  caught by a test.
+- React: stable keys, correct hook dependencies, Server Components by default.
+- Next.js: Route Handlers and Server Actions have authz; no secrets in Client
+  Components.
+- No comments explaining WHAT — only WHY when non-obvious.
+- New behavior is test-driven: write the failing test before the implementation.
+- Conventional commits with issue number: `feat: ... (#123)`.
+
+## Self-Critique (mandatory)
+
+Every write agent runs a 2-pass adversarial self-critique before reporting done.
+Skipping is forbidden.
+
+- **Pass 1 — adversarial review.** Read your own diff as a hostile senior
+  reviewer: which edge case did I skip (null, empty, boundary, concurrent,
+  network fail)? Which error path is untested? Which assumption is unstated? Is
+  there a simpler implementation? Did I introduce refactoring debt? Is every new
+  branch covered by a test? Are types as strict as possible? Any security
+  implication I did not flag? Does this break an existing public API?
+- **Pass 2 — refinement.** For every weakness found, either fix it in the diff,
+  add a test, or document it explicitly as a known limitation. Never silently
+  leave a weakness.
+
+## Completion Gate
+
+A task is done only when, for each acceptance criterion, there is concrete
+evidence (file:line, test name, command output, or observed behavior). "Implemented"
+or "appears fixed" is not sufficient. Run `npm run verify` (the CI mirror) green
+locally before opening the PR; CI is confirmation, not discovery.

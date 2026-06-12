@@ -65,6 +65,9 @@ link_one "$REPO_DIR/.agents" "$TARGET/.agents"
 link_one "$REPO_DIR/AGENTS.md" "$TARGET/AGENTS.md"
 link_one "$REPO_DIR/CLAUDE.md" "$TARGET/CLAUDE.md"
 
+# Project MCP servers for Claude Code (read from the project root).
+link_one "$REPO_DIR/claude/mcp.json" "$TARGET/.mcp.json"
+
 # Retire any stale old-workflow contract so there is no confusion.
 if [[ -f "$TARGET/project.md" && ! -L "$TARGET/project.md" ]]; then
   echo "  ! retiring old-workflow project.md -> project.md.bak"
@@ -78,7 +81,7 @@ if [[ -d "$TARGET/.git" ]]; then
   EXCLUDE="$TARGET/.git/info/exclude"
   mkdir -p "$(dirname "$EXCLUDE")"
   # No trailing slash: must match symlinks, not just real directories.
-  for entry in "/.codex" "/.claude" "/.agents" "/.claude.bak" "/.codex.bak"; do
+  for entry in "/.codex" "/.claude" "/.agents" "/.mcp.json" "/AGENTS.md" "/CLAUDE.md" "/.claude.bak" "/.codex.bak"; do
     if ! grep -qxF "$entry" "$EXCLUDE" 2>/dev/null; then
       echo "$entry" >> "$EXCLUDE"
     fi

@@ -27,7 +27,9 @@
       "Agent(refactor-specialist)",
       "Agent(ui-engineer)",
       "Agent(docs)",
-      "mcp__claude_ai_Figma__*"
+      "mcp__claude_ai_Figma__*",
+      "mcp__context7__*",
+      "mcp__playwright__*"
     ],
     "deny": [],
     "additionalDirectories": []
@@ -192,8 +194,8 @@
         "hooks": [
           {
             "type": "prompt",
-            "model": "claude-haiku-4-5",
-            "prompt": "You are the quality gate. Review the work completed this session against the original task. First determine whether this session produced a code diff (Edit/Write tool calls that modified source files). If NO code diff was produced (analysis-only, research, planning, or documentation session), treat criteria (4), (6), and (7) as \"n/a\" — they do not gate analysis tasks and must not be reported as unmet. Check: (1) All acceptance criteria met with evidence, (2) No uncovered edge cases (null, empty, boundary, concurrent, error paths), (3) Type-safety is strict (no any), (4) Tests cover changed behavior [n/a without code diff], (5) No refactoring debt introduced, (6) Security implications addressed [n/a without code diff], (7) Performance not regressed [n/a without code diff]. Respond with {\"ok\": true} only if every APPLICABLE criterion is at maximum quality (n/a criteria never block). Otherwise {\"ok\": false, \"reason\": \"concrete gap to address\"} so work continues."
+            "model": "claude-sonnet-4-6",
+            "prompt": "You are the quality gate. Review the work completed this session against the original task. LOOP CAP: if `stop_hook_active` is true in your input, you have ALREADY blocked once this session — respond {\"ok\": true} now and let the session end (do not block a second time; escalate to the human instead of looping). First determine whether this session produced a code diff (Edit/Write tool calls that modified source files). If NO code diff was produced (analysis-only, research, planning, or documentation session), treat criteria (4), (6), and (7) as \"n/a\" — they do not gate analysis tasks and must not be reported as unmet. Check: (1) All acceptance criteria met with evidence, (2) No uncovered edge cases (null, empty, boundary, concurrent, error paths), (3) Type-safety is strict (no any), (4) Tests cover changed behavior [n/a without code diff], (5) No refactoring debt introduced, (6) Security implications addressed [n/a without code diff], (7) Performance not regressed [n/a without code diff]. Block ONLY for a concrete, material gap — never for style or polish. Respond with {\"ok\": true} unless an APPLICABLE criterion has a real defect. Otherwise {\"ok\": false, \"reason\": \"concrete gap to address\"} so work continues."
           }
         ]
       }
