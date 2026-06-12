@@ -69,18 +69,25 @@ the PR exists. Status lives on the GitHub delivery board; learnings live in
 - **MCP parity for Claude** (Context7 + Playwright via `.mcp.json`).
 - **`scripts/verify.sh`** — local CI mirror (no `package.json` change needed).
 - **`scripts/keiko-watch`** — live per-agent activity feed for both harnesses.
+- **Definition-of-Ready gate + status heartbeat** in both harness docs.
+- **Sacred-`dev` policy** corrected in the RUNBOOK (was: ordinary issues land
+  directly on `dev`).
+- **Automated PR evidence capture** wired into both verifier agents.
+- **`coordinator.toml` removed** (lead is the sole orchestrator); lead memory dir
+  added.
+- **`scripts/consolidate-memory`** — memory budget checker.
+- Codex desktop notifications already covered by the global `~/.codex` `notify`.
 
-**Next:**
+**Next (all require the Keiko maintainer / admin):**
 
 - Apply target-side gates (husky/lint-staged + PR-template evidence) — see
-  [`templates/`](templates/); needs maintainer coordination.
-- Orchestrator heartbeat discipline + Codex desktop notifications.
-- Value-adds: Definition-of-Ready gate, automated evidence capture, scheduled
-  memory consolidation.
+  [`templates/`](templates/).
+- Branch protection on `dev` (admin-only).
+
+**Optional polish:**
+
 - Explicit counter-based loop cap for the judge (current cap uses
   `stop_hook_active`).
-- Decide `coordinator.toml` fate (currently kept as the lead-role doc; the
-  canonical set treats the lead as non-spawnable).
 
 ## Tooling
 
