@@ -1,117 +1,94 @@
 # Agent Workflow Setup
 
-A portable, shareable agent-driven development workflow for the **Keiko**
-codebase — primary harness **Codex**, backup harness **Claude Code**.
+A portable, multi-agent development workflow for the **Keiko** codebase — primary
+harness **Codex**, backup harness **Claude Code**. Clone it, symlink it into a
+Keiko checkout, and drive epics and issues through one consistent, gated process.
 
-Clone this repo and symlink it into any Keiko checkout. Nothing is committed into
-the Keiko repo itself (its `.claude/` / `.codex/` are git-ignored by design); the
-setup travels here, learnings travel here, the target stays clean.
-
----
-
-## What's inside
-
-```
-.
-├─ docs/
-│  ├─ workflow-contract.md     # tool-neutral governance contract (the rules)
-│  └─ workflow-blueprint.md    # full design spec: every decision + tradeoff
-├─ .agents/                    # tool-neutral shared layer (symlinked to <target>/.agents)
-│  ├─ roles.yaml               # 16 canonical roles (source of truth)
-│  ├─ aliases.yaml             # harness name -> canonical role
-│  └─ memory/<role>/MEMORY.md  # shared curated memory, keyed by canonical role
-├─ codex/                      # PRIMARY harness (symlinked to <target>/.codex)
-│  ├─ config.toml · RUNBOOK.md · agents/*.toml · playbooks/ · hooks/
-├─ claude/                     # BACKUP harness (symlinked to <target>/.claude)
-│  ├─ settings.json · agents/*.md · teams/ · CLAUDE.md/AGENTS.md pointers
-├─ scripts/install.sh          # symlink installer
-└─ templates/                  # verify / husky / PR-template snippets (target-side)
-```
+Nothing is committed into the Keiko repo — its `.claude/`/`.codex/` are
+git-ignored by design. The setup, the agent roster, and accumulated learnings all
+live here; the target stays clean.
 
 ## Install
 
 ```bash
-git clone git@github.com:<you>/Agent-Workflow-Setup.git
+git clone git@github.com:Niko4417/Agent-Workflow-Setup.git
 cd Agent-Workflow-Setup
-./scripts/install.sh /path/to/Keiko       # or: KEIKO_ROOT=/path/to/Keiko ./scripts/install.sh
+./scripts/install.sh /path/to/Keiko        # or: KEIKO_ROOT=/path/to/Keiko ./scripts/install.sh
 ```
 
-This symlinks `<target>/.codex`, `<target>/.claude`, `<target>/.agents` to this
-repo (live iteration — edit here, active immediately). An existing
-`.claude/settings.local.json` is preserved as a per-machine, git-ignored file.
+The installer symlinks the harness into the target (live — edit here, active
+immediately) and keeps the target git-clean:
 
-Confirm the target's `.gitignore` lists `/.codex/`, `/.claude/`, `/.agents/`.
+- `<target>/.codex`, `.claude`, `.agents` → this repo
+- `<target>/.mcp.json`, `AGENTS.md`, `CLAUDE.md` → this repo; old `project.md` retired
+- project skills mirrored into `~/.codex/skills/` so Codex and Claude share them
+- an existing `.claude/settings.local.json` is preserved (per-machine, git-ignored)
 
-## The model in one paragraph
+## Quick start
 
-The lead session is the sole **orchestrator** the human talks to. It routes work
-to **16 canonical roles** (`.agents/roles.yaml`) at the smallest effective shape
-— solo for small work, a cluster for multi-module/epic work. Every issue gets a
-PR; **`dev` is sacred** (human + green CI on every merge into it; the only
-auto-merge is `issue -> epic-branch`). A tiered quality gate (lint-staged →
-self-critique → `npm run verify` → completion judge → CI) keeps CI green before
-the PR exists. Status lives on the GitHub delivery board; learnings live in
-`.agents/memory/`. Full detail: [`docs/workflow-contract.md`](docs/workflow-contract.md).
+Tell the orchestrator what to work on; it invokes the matching skill.
 
-## Status — what's done vs. next
+```text
+Act as the orchestrator for Keiko and run epic #532.
+Act as the orchestrator for Keiko and resolve issue #178.
+```
 
-**Done:**
+See **[docs/example-workflow.md](docs/example-workflow.md)** for full example
+prompts and a step-by-step walkthrough of what happens.
 
-- Codex + Claude harness ported, **path-portable** (no machine-specific paths;
-  `origin/main` → `dev` fixed).
-- 16-role canonical vocabulary + alias map + shared memory tree.
-- Governance contract + full design blueprint.
-- Symlink installer (also links root entry docs + retires old `project.md`).
-- **Agents consolidated** onto the 16 canonical roles; all routing + memory
-  references repointed to the shared `.agents/memory/` tree.
-- **Completion judge** upgraded to Sonnet + loop cap; **measurable quality bars +
-  2-pass self-critique** ported to Codex (`RUNBOOK.md`).
-- **MCP parity for Claude** (Context7 + Playwright via `.mcp.json`).
-- **`scripts/verify.sh`** — local CI mirror (no `package.json` change needed).
-- **`scripts/keiko-watch`** — live per-agent activity feed for both harnesses.
-- **Definition-of-Ready gate + status heartbeat** in both harness docs.
-- **Sacred-`dev` policy** corrected in the RUNBOOK (was: ordinary issues land
-  directly on `dev`).
-- **Automated PR evidence capture** wired into both verifier agents.
-- **`coordinator.toml` removed** (lead is the sole orchestrator); lead memory dir
-  added.
-- **`scripts/consolidate-memory`** — memory budget checker.
-- Codex desktop notifications already covered by the global `~/.codex` `notify`.
+## Skills & tooling
 
-**Next (all require the Keiko maintainer / admin):**
-
-- Apply target-side gates (husky/lint-staged + PR-template evidence) — see
-  [`templates/`](templates/).
-- Branch protection on `dev` (admin-only).
-
-**Optional polish:**
-
-- Explicit counter-based loop cap for the judge (current cap uses
-  `stop_hook_active`).
-
-## Tooling
+| Command                      | What it does                                                                                              |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `keiko-epic <N>`             | Drive a multi-issue epic: plan children, run each on an epic branch, hand off one green epic PR to `dev`. |
+| `keiko-issue <N>`            | Drive one issue/task/bug/finding end-to-end to a PR.                                                      |
+| `keiko-issue-audit <N>`      | Mandatory pre-PR-ready audit wave (also on-demand).                                                       |
+| `scripts/verify.sh`          | Local CI mirror — run from the Keiko root before a PR.                                                    |
+| `scripts/keiko-watch`        | Live per-agent activity feed (side terminal).                                                             |
+| `scripts/consolidate-memory` | Memory budget checker (<25 KB/role).                                                                      |
 
 ```bash
-# before opening a PR (run from the Keiko root):
-bash /path/to/Agent-Workflow-Setup/scripts/verify.sh
-
-# watch agents work in real time (side terminal):
+bash /path/to/Agent-Workflow-Setup/scripts/verify.sh                 # from Keiko root, pre-PR
 KEIKO_ROOT=/path/to/Keiko /path/to/Agent-Workflow-Setup/scripts/keiko-watch
 ```
 
-## Server-side prerequisites (repo admin only)
+## How it works
 
-The "full local agent access" posture is safe **because `dev` is protected**.
-That requires **admin** on the target repo — configure on `oscharko-dev/Keiko`:
+- **One orchestrator.** The lead session is the only agent the human talks to; it
+  plans, delegates, and reports. It never spawns a sub-coordinator.
+- **16 canonical roles.** Work routes to roles in `.agents/roles.yaml` at the
+  smallest effective shape — solo for small work, a cluster for multi-module/epic
+  work. Both harnesses share one role vocabulary and one memory tree.
+- **`dev` is sacred.** Every issue ships as a PR. The only auto-merge is
+  `issue → epic-branch` on green CI; every merge into `dev` needs a human + green CI.
+- **Layered quality gates.** lint-staged → 2-pass self-critique → `verify.sh` →
+  `keiko-issue-audit` → completion judge → CI on protected `dev`.
+- **Status in GitHub, learnings in memory.** The delivery board is the durable
+  source of truth; `.agents/memory/<role>/` holds curated, committed learnings.
 
-- `dev`: require PR, require green `ci` check, require human review for epic
-  merges.
+Rules: [docs/workflow-contract.md](docs/workflow-contract.md) ·
+Design + tradeoffs: [docs/workflow-blueprint.md](docs/workflow-blueprint.md)
 
-Until that exists, the server-side backstop is absent; treat agent merges into
-`dev` with extra care.
+## What's inside
+
+```
+docs/        workflow-contract.md (rules) · workflow-blueprint.md (design) · example-workflow.md
+.agents/     roles.yaml · aliases.yaml · memory/<role>/   (tool-neutral shared layer)
+codex/       config.toml · RUNBOOK.md · agents/*.toml · playbooks/ · hooks/   (primary)
+claude/      settings.json · agents/*.md · teams/ · skills/<name>/SKILL.md     (backup)
+scripts/     install.sh · verify.sh · keiko-watch · consolidate-memory
+templates/   target-side gate snippets (husky / lint-staged / PR evidence)
+```
+
+## Server-side prerequisite (repo admin)
+
+The full-local-access posture is safe **because `dev` is protected** — and that
+requires `admin` on the target repo. On `oscharko-dev/Keiko`, protect `dev`:
+require a PR, the green `ci` check, and human review. Until then the server-side
+backstop is absent; treat agent merges toward `dev` with extra care.
 
 ## Sharing
 
-This repo is self-contained and path-free, so a collaborator can clone it and run
-`install.sh` against their own Keiko checkout. Per-machine bits
-(`settings.local.json`) stay local and git-ignored.
+The repo is path-free and self-contained: a collaborator clones it and runs
+`install.sh` against their own Keiko checkout. Per-machine bits stay local and
+git-ignored.
