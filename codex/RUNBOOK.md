@@ -4,6 +4,18 @@ This runbook defines how to use the project-scoped Codex agent team for Keiko.
 The GitHub issue is always the source of truth for scope, acceptance criteria,
 dependencies, and definition of done.
 
+## Workflow Skills (how to execute selected work)
+
+When the operator selects work, invoke the matching skill from `~/.codex/skills/`
+rather than improvising the procedure:
+
+- `keiko-epic <N>` — drive a multi-issue epic end-to-end.
+- `keiko-issue <N>` — drive a single issue / task / bug / finding.
+- `keiko-issue-audit <N>` — mandatory pre-PR-ready audit (also on-demand).
+
+The skills carry the executable procedure; this runbook and the contract carry
+the always-on rules they follow. The sections below are the rules.
+
 ## Intake Gate (Definition of Ready)
 
 Before any agent starts an issue, the lead confirms it is READY:
