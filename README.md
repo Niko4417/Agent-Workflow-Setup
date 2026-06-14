@@ -88,6 +88,13 @@ requires `admin` on the target repo. On `oscharko-dev/Keiko`, protect `dev`:
 require a PR, the green `ci` check, and human review. Until then the server-side
 backstop is absent; treat agent merges toward `dev` with extra care.
 
+By design, the authoritative guarantees live here, server-side — local hooks and
+the `audit-gate` are **fast feedback**, not the source of truth. The airtight
+version of proof-of-audit also belongs here: have the audit emit PR-visible
+evidence (a check or label) and make it a **required status check** on `dev`.
+That is the only unbypassable form, and it lands the same place as branch
+protection — with the maintainer.
+
 ## Sharing
 
 The repo is path-free and self-contained: a collaborator clones it and runs
