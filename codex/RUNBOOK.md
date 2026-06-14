@@ -42,12 +42,16 @@ harness (Codex or Claude) can resume from GitHub alone.
 9. Assign write agents only to disjoint scopes.
 10. Integrate work in the coordinator thread.
 11. Run the narrowest meaningful checks locally, then verify GitHub `ci`.
-12. When epic implementation work uses a PR, fill project `Branch` and
+12. Before an issue can be considered PR-ready / `Ready for Human Review`, run
+    the `keiko-issue-audit` skill as the final issue-scoped audit pass. It may
+    confirm zero findings, but the pass is mandatory.
+13. When implementation work uses a PR, fill project `Branch` and
     `Pull Request`, then set `Workflow State` to `PR Open`.
-13. When an epic PR is ready for maintainer review, set `Workflow State` to
+14. When a `-> dev` PR has passed `keiko-issue-audit`, has green required
+    checks, and is ready for maintainer review, set `Workflow State` to
     `Ready for Human Review` and the issue label to
     `status: ready for human review`.
-14. Update durable memory. Do not store secrets, customer data, raw source dumps,
+15. Update durable memory. Do not store secrets, customer data, raw source dumps,
     or token-bearing logs.
 
 ## Delivery Board Rules
@@ -62,7 +66,9 @@ harness (Codex or Claude) can resume from GitHub alone.
   `Human Review Required` to `Yes` and waits for a human reviewer + green CI.
 - The only auto-merge in the system is `issue -> epic-branch` on green CI.
 - Every issue ships as a PR; nothing lands on `dev` without a PR.
-- Any `-> dev` PR hands off at `Ready for Human Review`.
+- No issue becomes `Ready for Human Review` until `keiko-issue-audit` has run.
+- Any `-> dev` PR hands off at `Ready for Human Review` only after that audit
+  pass and green required checks.
 - Do not merge any PR into `dev`, enable auto-merge into `dev`, close the issue,
   or mark `Done` unless the human maintainer explicitly authorizes that action.
 
@@ -88,6 +94,7 @@ harness (Codex or Claude) can resume from GitHub alone.
 ## Verification Routing
 
 - Always required before merge: GitHub check `ci`.
+- Always required before `Ready for Human Review`: `keiko-issue-audit`.
 - Studio UI or BFF browser behavior: Studio browser quality gate.
 - Monaco/editor performance, rendering, large-file behavior: Studio perf/memory.
 - Visible UI structure: Studio visual regression.

@@ -13,8 +13,9 @@ Resolve GitHub Issue `<ISSUE_NUMBER>` end-to-end from the current state of
 `origin/dev`.
 
 Default delivery mode:
-- Ordinary issues land directly on `dev` without a human reviewer.
-- Epic implementation work requires a human reviewer and a PR targeting `dev`.
+- Every issue ships as a PR.
+- Any PR targeting `dev` requires a human reviewer.
+- Before an issue is considered PR-ready, run `keiko-issue-audit`.
 
 You are the coordinator for the project-scoped Codex team defined in
 `.codex/agents/`, `.agents/memory/`, and `.codex/config.toml`.
@@ -44,9 +45,7 @@ You are the coordinator for the project-scoped Codex team defined in
    - set project `Workflow State` to `In Progress`;
    - set `Status` to `In Progress`;
    - set `Owner / Agent` to the active agent or coordinator name;
-   - set `Human Review Required` to `Yes` only for epic implementation work;
-   - set `Human Review Required` to `No` for ordinary issues that land
-     directly on `dev`.
+   - set `Human Review Required` to `Yes` for any PR that will target `dev`.
 4. Build the smallest effective agent team:
    - `explorer` for code-path and test-surface discovery.
    - `architect` for durable design or cross-service tradeoffs.
@@ -92,21 +91,24 @@ You are the coordinator for the project-scoped Codex team defined in
 1. Make only issue-scoped changes.
 2. Commit with a Conventional Commit message that references
    `#<ISSUE_NUMBER>`.
-3. For ordinary issues, land directly on `dev` and verify green `ci`.
-4. For epic implementation work, branch from `origin/dev` using
+3. Branch from `origin/dev` using
    `codex/issue-<ISSUE_NUMBER>-<short-description>`, push the branch, and open
    or update a PR targeting `dev`.
-5. Fill the project `Branch` field when a branch is used.
-6. Fill the project `Pull Request` field and set `Workflow State` to `PR Open`
+4. Fill the project `Branch` field when a branch is used.
+5. Fill the project `Pull Request` field and set `Workflow State` to `PR Open`
    when a PR is used.
+6. Run `keiko-issue-audit` before the issue is considered PR-ready /
+   `Ready for Human Review`. The audit may confirm zero findings, but the pass
+   is mandatory.
 7. Include `Resolves #<ISSUE_NUMBER>` in the PR body when the issue should close
    on merge.
 8. Diagnose and repair CI failures with bounded attempts. Stop after three
    failed CI repair attempts and report the blocker.
-9. When epic implementation and checks are ready for maintainer review, set
+9. When implementation, `keiko-issue-audit`, and required checks are ready for
+   maintainer review, set
    `Workflow State` to `Ready for Human Review` and replace the issue status
    label with `status: ready for human review`.
-10. Do not merge an epic PR into `dev`, enable auto-merge, close the issue, or
+10. Do not merge a PR into `dev`, enable auto-merge, close the issue, or
     mark the item `Done` unless the human maintainer explicitly authorizes that
     action in the active task.
 
@@ -126,8 +128,8 @@ Return:
 - Team used and why
 - Files changed
 - Tests/checks run
-- Delivery path used: direct `dev` landing or PR
-- GitHub PR and `ci` status when a PR exists
+- `keiko-issue-audit` status
+- GitHub PR and `ci` status
 - Delivery board status, owner, branch, and PR fields when applicable
 - Any additional relevant gate status
 - Residual risks or follow-ups

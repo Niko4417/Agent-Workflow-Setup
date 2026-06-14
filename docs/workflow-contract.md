@@ -45,8 +45,10 @@ fan-out first; only disjoint write scopes in parallel.
 3. **Branch + claim** on the delivery board (`status: in progress`, owner, branch).
 4. **Implement.** Measurable bars: complexity <=10, function <=50 LOC,
    file <=400 LOC, no `any`, TDD. Mandatory 2-pass self-critique before "done".
-5. **Verify (pre-PR gate).** `npm run verify` (full CI mirror) must be green
-   locally. Verifier auto-fills the PR template with evidence.
+5. **Verify (pre-PR-ready gate).** `npm run verify` (full CI mirror) must be green
+   locally. Before an issue can be considered PR-ready / `Ready for Human Review`,
+   run the `keiko-issue-audit` skill as a final issue-scoped audit pass. Verifier
+   auto-fills the PR template with evidence.
 6. **PR.** `issue -> epic` auto-merges on green CI; any `-> dev` waits for a human.
 7. **Completion judge.** Strong-model gate vs acceptance criteria; <=2 re-loops
    then escalate.

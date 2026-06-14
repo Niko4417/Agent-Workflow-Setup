@@ -14,8 +14,8 @@ Use for issue-scoped implementation work.
 7. Assign `test-engineer` to coverage when behavior risk is non-trivial.
 8. Run or request relevant verification.
 9. Use `verifier` or `pr-reviewer` before final delivery.
-10. Ordinary issues land directly on `dev` and require green `ci`.
-11. Epic implementation work uses a PR targeting `dev` and requires a human
-    reviewer.
+10. Before the issue is considered PR-ready / `Ready for Human Review`, run the
+    `keiko-issue-audit` skill as a final issue-scoped audit pass.
+11. Every issue uses a PR; any `-> dev` PR requires green `ci` and human review.
 
 Do not add product scope that is not in the issue.

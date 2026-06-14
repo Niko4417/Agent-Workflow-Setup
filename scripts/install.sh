@@ -68,6 +68,17 @@ link_one "$REPO_DIR/CLAUDE.md" "$TARGET/CLAUDE.md"
 # Project MCP servers for Claude Code (read from the project root).
 link_one "$REPO_DIR/claude/mcp.json" "$TARGET/.mcp.json"
 
+# Cross-harness skills. Claude finds them under .claude/skills/ (via the .claude
+# symlink already created above). Codex skills are GLOBAL, so mirror each one
+# into ~/.codex/skills/ so both harnesses invoke the same skill by name.
+if [[ -d "$REPO_DIR/claude/skills" ]]; then
+  mkdir -p "$HOME/.codex/skills"
+  for skill in "$REPO_DIR"/claude/skills/*/; do
+    [[ -d "$skill" ]] || continue
+    link_one "${skill%/}" "$HOME/.codex/skills/$(basename "$skill")"
+  done
+fi
+
 # Retire any stale old-workflow contract so there is no confusion.
 if [[ -f "$TARGET/project.md" && ! -L "$TARGET/project.md" ]]; then
   echo "  ! retiring old-workflow project.md -> project.md.bak"
