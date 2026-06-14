@@ -50,14 +50,19 @@ the lead files a linked issue (`status: new`); never expand scope.
 
 ## 5. Verify, audit, ship (per contract — sacred-`dev`)
 
-1. `scripts/verify.sh` green locally (CI mirror).
-2. **Run `keiko-issue-audit` `#N`** — mandatory before PR-ready, even if it finds nothing.
+1. `.keiko-scripts/verify.sh` green locally (CI mirror).
+2. **Run `keiko-issue-audit` `#N`** — mandatory before PR-ready, even if it finds
+   nothing. It writes the audit receipt for HEAD as its last step.
 3. Branch `issue/<N>-<short>` off `dev`; Conventional Commit referencing `#N`;
    `verifier` fills the PR "Verification evidence" section.
-4. Open PR. **Every merge into `dev` is human-gated + green CI** — never
+4. **Proof-of-audit gate.** Before opening the PR, `.keiko-scripts/audit-gate.sh`
+   must pass — it's enforced by a PreToolUse hook that **blocks `gh pr create`**
+   unless a valid audit receipt exists at HEAD. If you committed after the audit,
+   re-run `keiko-issue-audit` (the receipt is SHA-bound and goes stale).
+5. Open PR. **Every merge into `dev` is human-gated + green CI** — never
    auto-merge to `dev`, never enable auto-merge. `pr-shepherd` drives CI/review
    to merge-ready; bounded CI repair (stop after 3 distinct failed attempts).
-5. Set `Workflow State` = `PR Open` → `Ready for Human Review`; flush
+6. Set `Workflow State` = `PR Open` → `Ready for Human Review`; flush
    current-state + next-action to the issue/PR.
 
 ## Escalate (stop, report)

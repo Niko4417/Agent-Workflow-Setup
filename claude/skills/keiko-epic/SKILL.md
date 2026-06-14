@@ -49,7 +49,9 @@ are cut **off the epic branch**, not off `dev`.
 When all required children are integrated and verified on the epic branch:
 
 1. Sync `dev` into the epic branch; resolve conflicts without dropping others' work.
-2. `scripts/verify.sh` green; run `keiko-issue-audit` on the integrated surface.
+2. `.keiko-scripts/verify.sh` green; run `keiko-issue-audit` on the integrated
+   surface (it writes the audit receipt for the epic branch's HEAD as its last
+   step). The proof-of-audit gate **blocks the epic PR** without a receipt at HEAD.
 3. Open one epic PR `epic/<name> -> dev`. **Sacred-`dev`: human review + green CI
    required.** Body includes the child-issue matrix, summary by capability,
    verification evidence, known limitations/follow-ups, and that it is the

@@ -68,6 +68,10 @@ link_one "$REPO_DIR/CLAUDE.md" "$TARGET/CLAUDE.md"
 # Project MCP servers for Claude Code (read from the project root).
 link_one "$REPO_DIR/claude/mcp.json" "$TARGET/.mcp.json"
 
+# Scripts reachable from the target root (verify.sh, keiko-watch, audit-gate, ...).
+# Hooks and skills call them as .keiko-scripts/<name>.
+link_one "$REPO_DIR/scripts" "$TARGET/.keiko-scripts"
+
 # Cross-harness skills. Claude finds them under .claude/skills/ (via the .claude
 # symlink already created above). Codex skills are GLOBAL, so mirror each one
 # into ~/.codex/skills/ so both harnesses invoke the same skill by name.
@@ -92,7 +96,7 @@ if [[ -d "$TARGET/.git" ]]; then
   EXCLUDE="$TARGET/.git/info/exclude"
   mkdir -p "$(dirname "$EXCLUDE")"
   # No trailing slash: must match symlinks, not just real directories.
-  for entry in "/.codex" "/.claude" "/.agents" "/.mcp.json" "/AGENTS.md" "/CLAUDE.md" "/.claude.bak" "/.codex.bak"; do
+  for entry in "/.codex" "/.claude" "/.agents" "/.mcp.json" "/.keiko-scripts" "/AGENTS.md" "/CLAUDE.md" "/.claude.bak" "/.codex.bak"; do
     if ! grep -qxF "$entry" "$EXCLUDE" 2>/dev/null; then
       echo "$entry" >> "$EXCLUDE"
     fi

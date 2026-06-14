@@ -13,11 +13,13 @@ You can drive it two ways — both end up running the same skill:
 - **Explicit:** invoke the skill directly — `keiko-issue 178`.
 
 **You do not need to ask for the audit.** `keiko-issue` and `keiko-epic` invoke
-`keiko-issue-audit` themselves as a mandatory step. Invoke `keiko-issue-audit`
-directly only for a standalone audit (Example C). It's an instruction in the
-skill, not a hard gate, so the chains below show exactly where it fires — and if
-you want belt-and-suspenders you can add "and run keiko-issue-audit before the
-PR" to your prompt.
+`keiko-issue-audit` themselves as a mandatory step, and it's a **hard gate**: the
+audit writes a SHA-bound receipt, and a PreToolUse hook **blocks `gh pr create`**
+on an `issue/*`/`epic/*` branch unless a receipt exists for the current HEAD. So
+an issue can't reach PR-ready without proof the audit ran against the shipped
+code — and if you commit after auditing, the receipt goes stale and you must
+re-audit. Invoke `keiko-issue-audit` directly only for a standalone audit
+(Example C).
 
 ---
 

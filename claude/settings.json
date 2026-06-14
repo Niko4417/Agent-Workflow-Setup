@@ -40,6 +40,17 @@
     "ENABLE_PROMPT_CACHING_1H": "1"
   },
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cmd=$(jq -r '.tool_input.command // empty'); printf '%s' \"$cmd\" | grep -qiE 'gh pr (create|ready)' || exit 0; [ -x .keiko-scripts/audit-gate.sh ] || exit 0; .keiko-scripts/audit-gate.sh >&2 || { echo '[audit-gate] PR blocked — run keiko-issue-audit first (proof of audit required before PR-ready).' >&2; exit 2; }; exit 0"
+          }
+        ]
+      }
+    ],
     "SessionStart": [
       {
         "matcher": "compact",

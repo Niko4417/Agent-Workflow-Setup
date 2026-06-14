@@ -11,6 +11,7 @@ point back to.
 ---
 
 ## Roles
+
 - **Human operator** — selects one epic / issue / finding, talks **only** to the
   orchestrator, is interrupted only for true blockers after recovery attempts.
 - **Orchestrator = the lead session** — the sole user-facing agent. Plans,
@@ -21,14 +22,16 @@ point back to.
   blockers upward. (Canonical roles: see `.agents/roles.yaml`.)
 
 ## Delegation (task-shaped)
+
 Default to the **smallest effective shape**. Single-agent for small/one-file
 work; cluster (explorer -> writer -> verifier, or a team) for multi-module,
 epic, security, or UI work. Route by issue `type`/`area` labels. Read-heavy
 fan-out first; only disjoint write scopes in parallel.
 
 ## Branching & delivery
+
 - Branch names are **tool-neutral**: `issue/<id>-<name>`, `epic/<name>`, base `dev`.
-  (Both harnesses continue the *same* branch for one issue; git author metadata
+  (Both harnesses continue the _same_ branch for one issue; git author metadata
   gives provenance.)
 - **Every issue gets a PR. Merge only on green CI.**
 - `issue -> epic-branch`: **auto-merge** on green CI, no human.
@@ -39,8 +42,9 @@ fan-out first; only disjoint write scopes in parallel.
   branch; final epic PR -> `dev` is the human-gated handoff.
 
 ## Issue lifecycle
+
 1. **Intake (Definition-of-Ready gate).** The issue must have acceptance criteria
-   + a verification command. If missing -> triage first, do not start.
+   - a verification command. If missing -> triage first, do not start.
 2. **Route.** Pick execution shape by labels.
 3. **Branch + claim** on the delivery board (`status: in progress`, owner, branch).
 4. **Implement.** Measurable bars: complexity <=10, function <=50 LOC,
@@ -56,6 +60,7 @@ fan-out first; only disjoint write scopes in parallel.
    issue/PR (continuous-flush) so any harness can resume.
 
 ## Out-of-scope blockers
+
 - Worktree agent reports the blocker upward with a proposed title/scope —
   **never** expands scope or files directly.
 - Orchestrator dedups against open issues -> files via the issue template ->
@@ -65,20 +70,28 @@ fan-out first; only disjoint write scopes in parallel.
   (file, continue in-scope).
 
 ## Escalation
+
 A blocker becomes human-visible only after **3 materially distinct recovery
 attempts** on the same issue. Re-scoping/splitting counts toward the threshold;
 it does not reset it. Escalation summarizes: what was attempted, why each
 failed, why further autonomous recovery is unlikely.
 
 ## Quality gate stack
+
 1. lint-staged pre-commit (changed files: prettier + eslint + tsc) — instant.
 2. Mandatory 2-pass adversarial self-critique — per agent.
-3. `npm run verify` (full CI mirror) — hard pre-PR gate.
-4. Strong-model completion judge (Stop-hook, loop-capped <=2).
-5. CI on protected `dev` — unbypassable server-side backstop *(requires repo
-   admin to configure; see README "Server-side prerequisites")*.
+3. `verify.sh` (full CI mirror) — hard pre-PR gate.
+4. **Proof-of-audit gate** — `keiko-issue-audit` writes a SHA-bound receipt
+   (`.git/keiko-audit/<branch>.json`); a PreToolUse hook blocks `gh pr create` on
+   an `issue/*` or `epic/*` branch unless a receipt exists for the current HEAD.
+   An issue cannot become PR-ready without proof the audit ran against the exact
+   code being shipped.
+5. Strong-model completion judge (Stop-hook, loop-capped <=2).
+6. CI on protected `dev` — unbypassable server-side backstop _(requires repo
+   admin to configure; see README "Server-side prerequisites")_.
 
 ## Status & memory
+
 - **GitHub delivery board** is the single durable status source of truth.
   No local state store. Activation discipline (don't start `blocked` work) is
   read off board states.
@@ -87,16 +100,19 @@ failed, why further autonomous recovery is unlikely.
   Audit trail = GitHub (PRs/comments/evidence); memory = learnings only.
 
 ## Observability
+
 - A live activity feed renders the harness hook logs into a per-agent stream.
 - The orchestrator posts a one-line heartbeat at each wave/milestone.
 - Desktop notifications fire on attention / done.
 
 ## Git transport
+
 SSH-first. On SSH failure, attempt local repair (agent identities, SSH config,
 key registration) before falling back to HTTPS. Do not silently normalize to
 HTTPS.
 
 ## Safety posture
+
 Agents run with full local access for velocity; the dangerous outcome is made
 impossible **server-side** (protected `dev`: PR-only, green CI, human review for
 `-> dev`). Local guardrails: deny-list for irreversible ops (force-push, history

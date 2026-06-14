@@ -42,8 +42,9 @@ prompts and a step-by-step walkthrough of what happens.
 | ---------------------------- | --------------------------------------------------------------------------------------------------------- |
 | `keiko-epic <N>`             | Drive a multi-issue epic: plan children, run each on an epic branch, hand off one green epic PR to `dev`. |
 | `keiko-issue <N>`            | Drive one issue/task/bug/finding end-to-end to a PR.                                                      |
-| `keiko-issue-audit <N>`      | Mandatory pre-PR-ready audit wave (also on-demand).                                                       |
+| `keiko-issue-audit <N>`      | Mandatory pre-PR-ready audit wave (also on-demand). Writes a SHA-bound audit receipt.                     |
 | `scripts/verify.sh`          | Local CI mirror — run from the Keiko root before a PR.                                                    |
+| `scripts/audit-gate.sh`      | Proof-of-audit check — blocks `gh pr create` unless `keiko-issue-audit` ran against the current HEAD.     |
 | `scripts/keiko-watch`        | Live per-agent activity feed (side terminal).                                                             |
 | `scripts/consolidate-memory` | Memory budget checker (<25 KB/role).                                                                      |
 

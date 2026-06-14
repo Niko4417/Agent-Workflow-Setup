@@ -54,15 +54,30 @@ findings are not blockers.
 
 ## Verify & ship (follow the contract — do not duplicate gate wording)
 
-1. Run `scripts/verify.sh` (the CI-mirror) green locally before the PR.
+1. Run `.keiko-scripts/verify.sh` (the CI-mirror) green locally before the PR.
 2. `verifier` confirms every acceptance criterion with evidence and **fills the
    PR body's "Verification evidence" section**.
-3. Branch `issue/<N>-audit` off `dev`; Conventional Commit referencing `#N`.
-   Use `Refs #N` when the audit does not close the issue, `Resolves #N` only when
-   it should close on merge.
-4. Open/update a PR per the contract's **sacred-`dev`** rule: green CI required;
+3. When this audit ships its own PR (standalone mode): branch `issue/<N>-audit`
+   off `dev`; Conventional Commit referencing `#N` (`Refs #N`, or `Resolves #N`
+   only when it should close on merge). When embedded in `keiko-issue`, fixes go
+   on the parent branch and the parent opens the PR.
+4. Open/update any PR per the contract's **sacred-`dev`** rule: green CI required;
    any `-> dev` PR is human-gated. `pr-shepherd` drives CI/review to merge-ready.
 5. Bounded CI repair: stop after 3 distinct failed repair attempts and escalate.
+
+## Proof of audit (REQUIRED — last action)
+
+As the **final** step, after every audit fix is committed, write the receipt:
+
+```
+.keiko-scripts/audit-receipt.sh <N>
+```
+
+This binds the audit to the current HEAD commit. The PR gate
+(`.keiko-scripts/audit-gate.sh`, wired into a PreToolUse hook) **blocks any
+issue/epic PR** whose HEAD has no matching receipt — so an issue cannot become
+PR-ready without proof the audit ran against the exact code being shipped. If you
+commit again after this, re-run the audit (the receipt goes stale by design).
 
 ## Memory
 
