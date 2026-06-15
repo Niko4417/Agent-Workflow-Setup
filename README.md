@@ -26,7 +26,9 @@ immediately) and keeps the target git-clean:
 - a `post-checkout` git hook is installed so **every `git worktree add` re-links the
   harness** — a fresh worktree does not inherit the symlinks, so without this an
   agent launched in a worktree would lose CLAUDE.md, skills, memory, and the
-  audit gate (see `scripts/link-worktree.sh`; run it by hand to relink one)
+  audit gate (see `scripts/link-worktree.sh`; run it by hand to relink one);
+  note: `git worktree add --no-checkout` never fires `post-checkout`, so run
+  `scripts/link-worktree.sh <worktree-path>` manually afterward
 
 ## Quick start
 

@@ -11,12 +11,25 @@
 # Invoked automatically by the post-checkout hook (installed by install.sh), and
 # safe to run by hand:  scripts/link-worktree.sh [worktree-dir]
 #
+# NOTE: if you use `git worktree add --no-checkout`, the post-checkout hook never
+# fires. Run `scripts/link-worktree.sh <worktree-path>` manually afterward.
+#
 # Contract: idempotent, non-destructive (never clobbers a real file already at
 # the path), and never fails the caller — always exits 0. The symlink targets are
 # absolute, so the same links work from any worktree location, and the worktree
 # inherits the shared .git/info/exclude so they stay locally ignored.
 
-REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# Resolve the script's own symlink chain before computing REPO_DIR so that
+# invoking this script via `.keiko-scripts/link-worktree.sh` (itself a symlink)
+# does not land REPO_DIR in the target repo rather than this harness repo.
+# Uses a portable loop instead of `readlink -f` (not available on macOS/BSD).
+SELF="${BASH_SOURCE[0]}"
+while [[ -L "$SELF" ]]; do
+  DIR="$(cd -P "$(dirname "$SELF")" && pwd)"
+  SELF="$(readlink "$SELF")"
+  [[ "$SELF" != /* ]] && SELF="$DIR/$SELF"
+done
+REPO_DIR="$(cd -P "$(dirname "$SELF")/.." && pwd)"
 TARGET="${1:-$PWD}"
 TOP="$(git -C "$TARGET" rev-parse --show-toplevel 2>/dev/null || echo "$TARGET")"
 

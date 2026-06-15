@@ -111,8 +111,12 @@ fi
 if [[ -d "$TARGET/.git" ]]; then
   HOOKS_PATH="$(git -C "$TARGET" config --get core.hooksPath || true)"
   if [[ -n "$HOOKS_PATH" ]]; then
-    echo "  ! core.hooksPath is set to '$HOOKS_PATH' — install the post-checkout"
-    echo "    hook there manually (it must call $REPO_DIR/scripts/link-worktree.sh)."
+    echo "  ! core.hooksPath is set to '$HOOKS_PATH' — the post-checkout hook was NOT installed."
+    echo "    To propagate the harness into new worktrees automatically, add a post-checkout"
+    echo "    hook in your custom hooks directory that contains:"
+    echo "      \"$REPO_DIR/scripts/link-worktree.sh\" \"\$(git rev-parse --show-toplevel)\""
+    echo "    Or run it by hand after each \`git worktree add\`:"
+    echo "      $REPO_DIR/scripts/link-worktree.sh <worktree-path>"
   else
     COMMON="$(git -C "$TARGET" rev-parse --git-common-dir)"
     # --git-common-dir is relative to the target; make it absolute.
@@ -121,11 +125,16 @@ if [[ -d "$TARGET/.git" ]]; then
     mkdir -p "$HOOK_DIR"
     HOOK="$HOOK_DIR/post-checkout"
     MARKER="# agent-workflow-setup:link-worktree"
-    CHAIN=""
     if [[ -e "$HOOK" ]] && ! grep -qF "$MARKER" "$HOOK" 2>/dev/null; then
       echo "  ! backing up existing post-checkout hook -> post-checkout.pre-keiko"
       rm -f "$HOOK.pre-keiko"
       mv "$HOOK" "$HOOK.pre-keiko"
+    fi
+    # Compute CHAIN from whether the backup exists, independent of whether this
+    # is a first-install or re-run — so a second install.sh invocation doesn't
+    # silently drop the call to the still-present pre-keiko hook (M1 fix).
+    CHAIN=""
+    if [[ -e "$HOOK.pre-keiko" ]]; then
       CHAIN="\"\$(dirname \"\$0\")/post-checkout.pre-keiko\" \"\$@\" || true"
     fi
     cat > "$HOOK" <<EOF
