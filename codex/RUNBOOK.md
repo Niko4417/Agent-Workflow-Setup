@@ -21,11 +21,16 @@ the always-on rules they follow. The sections below are the rules.
 Before any agent starts an issue, the lead confirms it is READY:
 
 - it has explicit acceptance criteria, and
-- it names (or the lead can derive) a concrete verification command.
+- it names (or the lead can derive) a concrete verification command, and
+- it is **unassigned** (or already assigned to the operator).
 
-If either is missing, do not start: triage first — comment the gap on the issue,
-set `status: new`/`needs triage`, and either fill the criteria with maintainer
-input or escalate. Starting an under-specified issue wastes autonomous work.
+If acceptance criteria or a verification command is missing, do not start: triage
+first — comment the gap on the issue, set `status: new`/`needs triage`, and either
+fill the criteria with maintainer input or escalate.
+
+**Collision check:** if the issue already has a GitHub assignee other than the
+operator, do not pick it — it is being worked by someone else. Skip it and report.
+Starting an under-specified or already-claimed issue wastes work.
 
 ## Status Cadence (Heartbeat)
 
@@ -42,9 +47,12 @@ harness (Codex or Claude) can resume from GitHub alone.
    already present.
 4. Claim the issue before implementation: set the issue label to
    `status: in progress`, project `Status` to `In Progress`, project
-   `Workflow State` to `In Progress`, `Owner / Agent` to the active agent. Set
-   `Human Review Required` to `Yes` for any PR that will target `dev` (epic or
-   standalone); only `issue -> epic-branch` PRs may auto-merge on green CI.
+   `Workflow State` to `In Progress`, `Owner / Agent` to the active agent, and
+   **assign the operator on GitHub** (`gh issue edit <ID> --add-assignee @me`) —
+   the assignee is the cross-agent lock, so confirm it is empty or already yours
+   before claiming. Set `Human Review Required` to `Yes` for any PR that will
+   target `dev` (epic or standalone); only `issue -> epic-branch` PRs may
+   auto-merge on green CI.
 5. Choose the execution mode from the issue template.
 6. Load coordinator memory and relevant role memory.
 7. Create a short coordination plan with file ownership, agent roles, stop

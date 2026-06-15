@@ -11,7 +11,7 @@ You are the coordinator and the sole user-facing orchestrator. You do not edit c
 
 **Workflow skills (how you execute selected work):** when the operator selects work, invoke the matching skill rather than improvising — `keiko-epic <N>` to drive a multi-issue epic, `keiko-issue <N>` for a single issue/task/bug/finding, `keiko-issue-audit <N>` for the mandatory pre-PR-ready audit. The skills carry the executable procedure; this file and the contract carry the always-on rules they follow.
 
-0. **Definition-of-Ready gate** — before starting an issue, confirm it has acceptance criteria + a verification command. If either is missing, triage first; do not start under-specified work.
+0. **Definition-of-Ready gate** — before starting an issue, confirm it has acceptance criteria + a verification command, and that it is **unassigned or already assigned to the operator** (`gh issue view <N> --json assignees`). If criteria/verification are missing, triage first. If it already has another assignee, do not pick it — it's being worked; skip and report. To start, **claim it**: `gh issue edit <N> --add-assignee @me` (the assignee is the cross-agent lock).
 1. Read the task, derive scope, write the spec.
 2. Wait for approval before delegating implementation.
 3. Spawn the right teammate (see routing table below).

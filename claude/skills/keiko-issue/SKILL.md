@@ -25,9 +25,17 @@ acceptance criteria + a verification command. If missing → triage first
 skill — use `keiko-epic`. If ambiguous or conflicting with governance, stop and
 report.
 
+**Collision check (do this first):** if `#N` already has a GitHub assignee other
+than the operator, **do not start** — it's being worked by someone else. Skip and
+report. (`gh issue view <N> --json assignees`.)
+
 ## 2. Claim on the delivery board
 
-Add to `Keiko Product Delivery` if missing; `status: in progress`; `Workflow
+Claiming is mandatory before any implementation:
+
+- **Assign the operator on GitHub** — `gh issue edit <N> --add-assignee @me`. The
+  assignee is the cross-agent lock; never start an issue you haven't claimed.
+- Add to `Keiko Product Delivery` if missing; `status: in progress`; `Workflow
 State`/`Status` = `In Progress`; `Owner / Agent` = active agent; `Human Review
 Required` = `Yes` for any PR targeting `dev`; fill `Branch` once created.
 

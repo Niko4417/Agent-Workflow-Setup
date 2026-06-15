@@ -22,10 +22,13 @@ Do not edit code yourself; delegate child execution to `keiko-issue`.
 Fetch `#E`: body, comments, labels, child issues (sub-issues + linked), linked
 PRs, board state. Build the execution plan:
 
-- list every child with state, labels, area, likely file ownership, dependencies, verification;
-- classify each: `ready` / `blocked` / `done` / `needs-triage`;
+- list every child with state, labels, area, likely file ownership, dependencies, verification, **and current GitHub assignee**;
+- classify each: `ready` / `blocked` / `done` / `needs-triage`; treat a child already assigned to someone other than the operator as **owned — skip it** (someone else is on it);
 - respect the epic's required order; detect safe parallelism **only** when children have disjoint file ownership, independent acceptance criteria, and no ordering dependency.
   If the epic has no executable children and scope isn't clear enough to create them, stop and report.
+
+Each `keiko-issue` child run assigns the operator (`--add-assignee @me`) as it
+claims, and skips any child that's already assigned to someone else.
 
 ## 2. Epic branch
 

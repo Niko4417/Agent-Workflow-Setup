@@ -45,8 +45,12 @@ fan-out first; only disjoint write scopes in parallel.
 
 1. **Intake (Definition-of-Ready gate).** The issue must have acceptance criteria
    - a verification command. If missing -> triage first, do not start.
+     **Collision check:** do not pick an issue that already has a GitHub assignee
+     other than the operator — it is being worked. Skip it and report.
 2. **Route.** Pick execution shape by labels.
-3. **Branch + claim** on the delivery board (`status: in progress`, owner, branch).
+3. **Branch + claim.** Claiming is mandatory before implementation:
+   `gh issue edit <N> --add-assignee @me` (assign the operator), set the board
+   `status: in progress`, owner, and branch. No assignee = not claimed.
 4. **Implement.** Measurable bars: complexity <=10, function <=50 LOC,
    file <=400 LOC, no `any`, TDD. Mandatory 2-pass self-critique before "done".
 5. **Verify (pre-PR-ready gate).** `npm run verify` (full CI mirror) must be green
