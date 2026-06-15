@@ -104,5 +104,44 @@ if [[ -d "$TARGET/.git" ]]; then
   echo "  > ensured /.codex/ /.claude/ /.agents/ are in .git/info/exclude (local only)"
 fi
 
+# Worktree harness propagation. A linked worktree is a fresh working directory
+# that does NOT inherit the git-ignored symlinks above, so an agent launched in
+# one would lose the entire harness. A post-checkout hook (shared via the common
+# .git/hooks across every worktree) recreates the symlinks on `git worktree add`.
+if [[ -d "$TARGET/.git" ]]; then
+  HOOKS_PATH="$(git -C "$TARGET" config --get core.hooksPath || true)"
+  if [[ -n "$HOOKS_PATH" ]]; then
+    echo "  ! core.hooksPath is set to '$HOOKS_PATH' — install the post-checkout"
+    echo "    hook there manually (it must call $REPO_DIR/scripts/link-worktree.sh)."
+  else
+    COMMON="$(git -C "$TARGET" rev-parse --git-common-dir)"
+    # --git-common-dir is relative to the target; make it absolute.
+    [[ "$COMMON" = /* ]] || COMMON="$TARGET/$COMMON"
+    HOOK_DIR="$COMMON/hooks"
+    mkdir -p "$HOOK_DIR"
+    HOOK="$HOOK_DIR/post-checkout"
+    MARKER="# agent-workflow-setup:link-worktree"
+    CHAIN=""
+    if [[ -e "$HOOK" ]] && ! grep -qF "$MARKER" "$HOOK" 2>/dev/null; then
+      echo "  ! backing up existing post-checkout hook -> post-checkout.pre-keiko"
+      rm -f "$HOOK.pre-keiko"
+      mv "$HOOK" "$HOOK.pre-keiko"
+      CHAIN="\"\$(dirname \"\$0\")/post-checkout.pre-keiko\" \"\$@\" || true"
+    fi
+    cat > "$HOOK" <<EOF
+#!/usr/bin/env bash
+$MARKER
+# Recreate workflow symlinks in every git worktree (they are not inherited).
+# Args: \$1 old-HEAD  \$2 new-HEAD  \$3 flag (1 = branch checkout incl. worktree add).
+$CHAIN
+[ "\$3" = "1" ] || exit 0
+"$REPO_DIR/scripts/link-worktree.sh" "\$(git rev-parse --show-toplevel 2>/dev/null || pwd)" >/dev/null 2>&1 || true
+exit 0
+EOF
+    chmod +x "$HOOK"
+    echo "  + installed post-checkout hook -> $HOOK"
+  fi
+fi
+
 echo
 echo "Done. Verify with:  ls -la \"$TARGET\"/.codex \"$TARGET\"/.claude \"$TARGET\"/.agents"

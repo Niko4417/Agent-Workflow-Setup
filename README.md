@@ -23,6 +23,10 @@ immediately) and keeps the target git-clean:
 - `<target>/.mcp.json`, `AGENTS.md`, `CLAUDE.md` → this repo; old `project.md` retired
 - project skills mirrored into `~/.codex/skills/` so Codex and Claude share them
 - an existing `.claude/settings.local.json` is preserved (per-machine, git-ignored)
+- a `post-checkout` git hook is installed so **every `git worktree add` re-links the
+  harness** — a fresh worktree does not inherit the symlinks, so without this an
+  agent launched in a worktree would lose CLAUDE.md, skills, memory, and the
+  audit gate (see `scripts/link-worktree.sh`; run it by hand to relink one)
 
 ## Quick start
 
@@ -77,7 +81,7 @@ docs/        workflow-contract.md (rules) · workflow-blueprint.md (design) · e
 .agents/     roles.yaml · aliases.yaml · memory/<role>/   (tool-neutral shared layer)
 codex/       config.toml · RUNBOOK.md · agents/*.toml · playbooks/ · hooks/   (primary)
 claude/      settings.json · agents/*.md · teams/ · skills/<name>/SKILL.md     (backup)
-scripts/     install.sh · verify.sh · keiko-watch · consolidate-memory
+scripts/     install.sh · link-worktree.sh · verify.sh · audit-gate.sh · keiko-watch · consolidate-memory
 templates/   target-side gate snippets (husky / lint-staged / PR evidence)
 ```
 
