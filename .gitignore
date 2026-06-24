@@ -6,5 +6,7 @@ codex/tmp/
 **/cluster-hooks.log
 **/.DS_Store
 
-# Per-issue exploration dumps are NOT memory — keep them out of the repo
-.agents/memory/**/scratch/
+# Agent memory is LOCAL-ONLY — never pushed (user directive).
+# Every role + _shared memory dir is ignored; only the memory/README.md
+# (documentation about the memory system) stays tracked.
+.agents/memory/*/
