@@ -46,6 +46,7 @@ Smallest effective shape:
 - `fix` with unclear root cause → debug fan-out (competing hypotheses) before any fix; reproduce first when steps exist.
 - `fix` known/scoped → `implementor` (minimal diff).
 - `feature` single-scope → `developer` (spec-first, TDD); cross-layer → feature team with strict, disjoint file ownership.
+- **User-facing component** change → `ui-engineer` builds against the Keiko Design System (`docs/design-system/`); `a11y-auditor` reviews **WCAG + design-system fidelity** (token conformance, `state-matrix.md` coverage, evidence).
 - Add `security-triage`→`security-auditor`, `performance-engineer`, `a11y-auditor`, `architect`, `docs` only when the changed surface creates that risk.
   Assign explicit, disjoint file ownership before any write agent starts.
 
@@ -53,8 +54,11 @@ Smallest effective shape:
 
 Quality bars (per contract): complexity ≤10, function ≤50 LOC, file ≤400 LOC,
 no `any`, TDD for new behavior, mandatory 2-pass self-critique. Issue-scoped only;
-no unrelated refactors, TODOs, or placeholders. Out-of-scope blockers → report up,
-the lead files a linked issue (`status: new`); never expand scope.
+no unrelated refactors, TODOs, or placeholders. **User-facing components** conform
+to the Keiko Design System (`docs/design-system/`): semantic/component tokens only
+(no raw Tier-1 primitives or hex), full `state-matrix.md` coverage, governance
+change-rules. Out-of-scope blockers → report up, the lead files a linked issue
+(`status: new`); never expand scope.
 
 ## 5. Verify, audit, ship (per contract — sacred-`dev`)
 
@@ -62,7 +66,9 @@ the lead files a linked issue (`status: new`); never expand scope.
 2. **Run `keiko-issue-audit` `#N`** — mandatory before PR-ready, even if it finds
    nothing. It writes the audit receipt for HEAD as its last step.
 3. Branch `issue/<N>-<short>` off `dev`; Conventional Commit referencing `#N`;
-   `verifier` fills the PR "Verification evidence" section.
+   `verifier` fills the PR "Verification evidence" section. For a user-facing
+   change, capture design-system evidence under `docs/design-system/evidence/<N>/`
+   (theme screenshots + `*-fidelity-proof.json` + `a11y-proof.json`, ADR-0049/0051).
 4. **Proof-of-audit gate.** Before opening the PR, `.keiko-scripts/audit-gate.sh`
    must pass — it's enforced by a PreToolUse hook that **blocks `gh pr create`**
    unless a valid audit receipt exists at HEAD. If you committed after the audit,

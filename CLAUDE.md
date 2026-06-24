@@ -60,6 +60,7 @@ When a task spans multiple layers and the workers are independent, use an agent 
 - Tests are mutation-robust: a single-line mutation in the implementation must be caught.
 - React: stable keys, correct hook dependencies, Server Components by default.
 - Next.js: Route Handlers and Server Actions have authz; no secrets in Client Components.
+- Design-system conformance (user-facing UI): changes to user-facing components conform to the Keiko Design System (`docs/design-system/`) — consume Tier-2/3/4 semantic/component tokens in `globals.css`, never raw Tier-1 primitives or hex literals; cover every state in `state-matrix.md`; follow the `governance.md` change-rules and component register. Produce the fidelity + a11y evidence under `docs/design-system/evidence/<N>/` that ADR-0049 (fidelity gates), ADR-0050 (component state & governance contract), and ADR-0051 (visual-regression & acceptance gate) require.
 - No comments explaining WHAT — only WHY when non-obvious.
 - Conventional commits with issue number: `feat: ... (#123)`.
 

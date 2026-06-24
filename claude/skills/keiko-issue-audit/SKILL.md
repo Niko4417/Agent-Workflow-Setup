@@ -36,7 +36,11 @@ Run the read wave; right-size each role to relevance, but default to running the
 3. `security-auditor` — trust boundaries, secrets, auth, model access, unsafe
    data flows (escalated from `security-triage` when the issue is security-light).
 4. `performance-engineer` — measurable performance risk, when relevant.
-5. `a11y-auditor` — WCAG / UI risk, when the issue touches UI.
+5. `a11y-auditor` — when the issue touches **user-facing UI**, audit both axes:
+   WCAG 2.2 AA **and** Keiko Design System fidelity against `docs/design-system/`
+   (semantic/component token conformance, `state-matrix.md` coverage, no rogue
+   styling layer, and the `docs/design-system/evidence/<N>/` dir populated per
+   ADR-0049/0051 — a user-facing change with no evidence is a blocker).
 6. `pr-reviewer` — review the implementation diff for correctness and regression
    risk (8-dimension).
 
@@ -56,7 +60,10 @@ findings are not blockers.
 
 1. Run `.keiko-scripts/verify.sh` (the CI-mirror) green locally before the PR.
 2. `verifier` confirms every acceptance criterion with evidence and **fills the
-   PR body's "Verification evidence" section**.
+   PR body's "Verification evidence" section**. For a **user-facing-component**
+   change, the audit is not complete until design-system fidelity is confirmed and
+   the `docs/design-system/evidence/<N>/` evidence (theme screenshots +
+   `*-fidelity-proof.json` + `a11y-proof.json`) is captured (ADR-0049/0051).
 3. When this audit ships its own PR (standalone mode): branch `issue/<N>-audit`
    off `dev`; Conventional Commit referencing `#N` (`Refs #N`, or `Resolves #N`
    only when it should close on merge). When embedded in `keiko-issue`, fixes go

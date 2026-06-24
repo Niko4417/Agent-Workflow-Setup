@@ -102,7 +102,10 @@ harness (Codex or Claude) can resume from GitHub alone.
   `implementor`, `test-engineer`, `verifier`.
 - `type: follow-up`: usually `developer` or small agent team.
 - `area: frontend`: add `ui-engineer`, `a11y-auditor`, and
-  `performance-engineer` when UI risk is material.
+  `performance-engineer` when UI risk is material. For user-facing components,
+  `ui-engineer` builds against the Keiko Design System (`docs/design-system/`) and
+  `a11y-auditor` audits **WCAG + design-system fidelity** (token conformance,
+  `state-matrix.md` coverage, evidence dir populated).
 - `area: bff`: add `security-auditor` when request/session/rate-limit/CSP
   behavior changes.
 - `area: architecture`: add `architect` and `docs`.
@@ -118,6 +121,9 @@ harness (Codex or Claude) can resume from GitHub alone.
 - Studio UI or BFF browser behavior: Studio browser quality gate.
 - Monaco/editor performance, rendering, large-file behavior: Studio perf/memory.
 - Visible UI structure: Studio visual regression.
+- User-facing component change: Keiko Design System fidelity gate — token
+  conformance + `state-matrix.md` coverage verified against `docs/design-system/`,
+  with evidence captured under `docs/design-system/evidence/<N>/` (ADR-0049/0051).
 - Markdown docs: markdown link check.
 - W0.2 workflow/evidence/model behavior: W0.2 release gate.
 - W0.3 workflow/Studio hardening behavior: W0.3 release gate.
@@ -177,6 +183,12 @@ the same bar.
 - React: stable keys, correct hook dependencies, Server Components by default.
 - Next.js: Route Handlers and Server Actions have authz; no secrets in Client
   Components.
+- Design-system conformance (user-facing UI): changes to user-facing components
+  conform to the Keiko Design System (`docs/design-system/`) — Tier-2/3/4
+  semantic/component tokens in `globals.css`, never raw Tier-1 primitives or hex
+  literals; full `state-matrix.md` coverage; `governance.md` change-rules. Capture
+  the fidelity + a11y evidence under `docs/design-system/evidence/<N>/` that
+  ADR-0049/0050/0051 require.
 - No comments explaining WHAT — only WHY when non-obvious.
 - New behavior is test-driven: write the failing test before the implementation.
 - Conventional commits with issue number: `feat: ... (#123)`.

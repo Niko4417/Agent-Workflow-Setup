@@ -53,10 +53,16 @@ fan-out first; only disjoint write scopes in parallel.
    `status: in progress`, owner, and branch. No assignee = not claimed.
 4. **Implement.** Measurable bars: complexity <=10, function <=50 LOC,
    file <=400 LOC, no `any`, TDD. Mandatory 2-pass self-critique before "done".
+   **User-facing components** additionally conform to the Keiko Design System
+   (`docs/design-system/`): semantic/component tokens only (no raw Tier-1
+   primitives or hex literals), full `state-matrix.md` coverage, `governance.md`
+   change-rules.
 5. **Verify (pre-PR-ready gate).** `npm run verify` (full CI mirror) must be green
    locally. Before an issue can be considered PR-ready / `Ready for Human Review`,
    run the `keiko-issue-audit` skill as a final issue-scoped audit pass. Verifier
-   auto-fills the PR template with evidence.
+   auto-fills the PR template with evidence. **A user-facing-component change is
+   not verified until its design-system fidelity + a11y evidence is captured under
+   `docs/design-system/evidence/<N>/` (ADR-0049/0050/0051).**
 6. **PR.** `issue -> epic` auto-merges on green CI; any `-> dev` waits for a human.
 7. **Completion judge.** Strong-model gate vs acceptance criteria; <=2 re-loops
    then escalate.
