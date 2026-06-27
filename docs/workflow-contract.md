@@ -33,13 +33,20 @@ fan-out first; only disjoint write scopes in parallel.
 - Branch names are **tool-neutral**: `issue/<id>-<name>`, `epic/<name>`, base `dev`.
   (Both harnesses continue the _same_ branch for one issue; git author metadata
   gives provenance.)
-- **Every issue gets a PR. Merge only on green CI.**
-- `issue -> epic-branch`: **auto-merge** on green CI, no human.
+- **Every issue gets a PR.** A PR into `dev` merges only on **green CI**; a child
+  PR into an `epic/*` branch is gated by the **audit**, not CI (GitHub CI does not
+  run on `epic/*` PRs — see the epic model below).
+- `issue -> epic-branch`: **audit-gated**, not CI. A **non-user-facing** child with
+  no unresolved `keiko-issue-audit` findings **auto-merges** (no human); a
+  **user-facing** child (touches UI / needs design-system evidence) runs the audit
+  and then requires **human review + merge**. This is the only auto-merge in the
+  system, and only for the non-UI case.
 - **`dev` is sacred**: every merge into `dev` (epic or standalone) requires a
-  **human reviewer + green CI**. The only auto-merge in the system is
-  `issue -> epic-branch`.
+  **human reviewer + green CI**.
 - Epic model: long-lived `epic/<name>` off `dev`; child `issue/...` off the epic
-  branch; final epic PR -> `dev` is the human-gated handoff.
+  branch; final epic PR -> `dev` is the human-gated handoff (full CI + human). The
+  child→epic audit gate runs `verify.sh` (the CI mirror) locally; real GitHub CI
+  re-runs on the accumulated epic at the epic->`dev` PR.
 
 ## Issue lifecycle
 
@@ -66,7 +73,9 @@ fan-out first; only disjoint write scopes in parallel.
    auto-fills the PR template with evidence. **A user-facing-component change is
    not verified until its design-system fidelity + a11y evidence is captured under
    `docs/design-system/evidence/<N>/` (ADR-0049/0050/0051).**
-6. **PR.** `issue -> epic` auto-merges on green CI; any `-> dev` waits for a human.
+6. **PR.** `issue -> epic` is **audit-gated** (non-UI: auto-merge on a clean
+   `keiko-issue-audit`; UI: audit + human review/merge); any `-> dev` waits for a
+   human + green CI.
 7. **Completion judge.** Strong-model gate vs acceptance criteria; <=2 re-loops
    then escalate.
 8. **Flush + report.** Orchestrator writes current state + next action to the

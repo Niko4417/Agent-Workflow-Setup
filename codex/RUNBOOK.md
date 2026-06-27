@@ -52,7 +52,9 @@ harness (Codex or Claude) can resume from GitHub alone.
    the assignee is the cross-agent lock, so confirm it is empty or already yours
    before claiming. Set `Human Review Required` to `Yes` for any PR that will
    target `dev` (epic or standalone); only `issue -> epic-branch` PRs may
-   auto-merge on green CI.
+   auto-merge, and that merge is **audit-gated** (non-user-facing child:
+   auto-merge on a clean `keiko-issue-audit`; user-facing child: audit + human
+   review/merge — GitHub CI does not run on `epic/*` PRs).
 5. Choose the execution mode from the issue template.
 6. Load coordinator memory and relevant role memory.
 7. Create a short coordination plan with file ownership, agent roles, stop
@@ -84,7 +86,10 @@ harness (Codex or Claude) can resume from GitHub alone.
 - Keep `Branch` and `Pull Request` current so other agents can see ownership.
 - `dev` is sacred: every PR that targets `dev` (epic OR standalone) sets
   `Human Review Required` to `Yes` and waits for a human reviewer + green CI.
-- The only auto-merge in the system is `issue -> epic-branch` on green CI.
+- The only auto-merge in the system is `issue -> epic-branch`, and it is
+  audit-gated: a non-user-facing child auto-merges on a clean `keiko-issue-audit`;
+  a user-facing child runs the audit then needs human review + merge. (GitHub CI
+  does not run on `epic/*` PRs; the audit runs `verify.sh` locally instead.)
 - Every issue ships as a PR; nothing lands on `dev` without a PR.
 - No issue becomes `Ready for Human Review` until `keiko-issue-audit` has run.
 - Any `-> dev` PR hands off at `Ready for Human Review` only after that audit

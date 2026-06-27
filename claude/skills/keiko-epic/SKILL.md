@@ -38,11 +38,20 @@ are cut **off the epic branch**, not off `dev`.
 
 ## 3. Child loop (per `ready` child)
 
-1. Run **`keiko-issue` `#child`** on its branch off the epic branch.
-2. The child PR targets the **epic branch**. `issue -> epic-branch` is the **only
-   auto-merge** in the system — merge on green CI, no human.
-3. After merge, confirm the epic branch still builds; add a child comment linking
-   PR/commit + evidence; update the board.
+1. Run **`keiko-issue` `#child`** on its branch off the epic branch (it runs
+   `verify.sh` + `keiko-issue-audit` as part of its flow).
+2. The child PR targets the **epic branch**. CI does not run on `epic/*` PRs, so
+   the child→epic gate is the **audit**, not GitHub CI:
+   - **Non-user-facing child (no UI):** if `keiko-issue-audit` leaves no unresolved
+     confirmed findings, **auto-merge** into the epic branch, no human.
+   - **User-facing child** (touches user-facing UI / needs design-system evidence):
+     run the audit, then **request human review** — a human merges into the epic
+     branch. No auto-merge.
+
+   The non-UI case is the only auto-merge in the system.
+
+3. After merge, confirm the epic branch still builds (`verify.sh`); add a child
+   comment linking PR/commit + evidence; update the board.
 4. Rebase/merge `dev` into the epic branch regularly (esp. before the final PR).
    Activate a child only when its dependencies are satisfied; never start `blocked`
    work. Parallelize children only when section 1's safety conditions all hold.
