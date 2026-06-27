@@ -48,7 +48,10 @@ are cut **off the epic branch**, not off `dev`.
      run the audit, then **request human review** — a human merges into the epic
      branch. No auto-merge.
 
-   The non-UI case is the only auto-merge in the system.
+   The non-UI case is the only auto-merge in the system, and it is **enforced**:
+   the audit records `--findings`/`--user-facing` in the receipt, and
+   `epic-merge-gate.sh` (a PreToolUse hook on `gh pr merge`) blocks an agent
+   auto-merge into `epic/*` unless `findings=0` and `user_facing=false`.
 
 3. After merge, confirm the epic branch still builds (`verify.sh`); add a child
    comment linking PR/commit + evidence; update the board.

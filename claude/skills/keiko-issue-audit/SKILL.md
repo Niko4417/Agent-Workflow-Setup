@@ -77,8 +77,17 @@ findings are not blockers.
 As the **final** step, after every audit fix is committed, write the receipt:
 
 ```
-.keiko-scripts/audit-receipt.sh <N>
+.keiko-scripts/audit-receipt.sh <N> --findings <unresolved-count> --user-facing <true|false>
 ```
+
+- `--findings` = number of **unresolved confirmed** findings after the fix wave (`0` when clean).
+- `--user-facing` = `true` if the issue touches user-facing UI / needs design-system evidence, else `false`.
+
+Both are optional (default `unknown`); omit them for a standalone audit. They feed
+the **epic auto-merge** decision (`.keiko-scripts/epic-merge-gate.sh`): a child PR
+into an `epic/*` branch may auto-merge **only** when the receipt shows `findings=0`
+**and** `user_facing=false` — otherwise a human must review and merge. Fail-closed:
+`unknown` never auto-merges.
 
 This binds the audit to the current HEAD commit. The PR gate
 (`.keiko-scripts/audit-gate.sh`, wired into a PreToolUse hook) **blocks any
