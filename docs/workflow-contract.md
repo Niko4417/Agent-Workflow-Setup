@@ -44,7 +44,10 @@ fan-out first; only disjoint write scopes in parallel.
 ## Issue lifecycle
 
 1. **Intake (Definition-of-Ready gate).** The issue must have acceptance criteria
-   - a verification command. If missing -> triage first, do not start.
+   - a verification command. If missing -> triage first, do not start. Acceptance
+     criteria + verification together cover the relevant **test dimensions**:
+     happy path, important negative paths, accessibility + design-system fidelity,
+     security / governance, and integration behavior.
      **Collision check:** do not pick an issue that already has a GitHub assignee
      other than the operator — it is being worked. Skip it and report.
 2. **Route.** Pick execution shape by labels.
@@ -67,7 +70,10 @@ fan-out first; only disjoint write scopes in parallel.
 7. **Completion judge.** Strong-model gate vs acceptance criteria; <=2 re-loops
    then escalate.
 8. **Flush + report.** Orchestrator writes current state + next action to the
-   issue/PR (continuous-flush) so any harness can resume.
+   issue/PR (continuous-flush) so any harness can resume. On completion, record
+   **closure evidence** on the issue/PR: acceptance status, verification results,
+   audit outcome, reuse / extension / generalization notes, known limitations,
+   PR link / branch, and follow-up items.
 
 ## Out-of-scope blockers
 
@@ -127,3 +133,11 @@ Agents run with full local access for velocity; the dangerous outcome is made
 impossible **server-side** (protected `dev`: PR-only, green CI, human review for
 `-> dev`). Local guardrails: deny-list for irreversible ops (force-push, history
 rewrite, `rm -rf` on shared paths) + secret-scan pre-commit.
+
+## Product integrity
+
+- **Fail closed for trust-sensitive flows.** Never present unverifiable evidence
+  as verified; degrade to an explicit error or recovery state instead of a
+  false-confident result.
+- **Native, frictionless desktop behavior.** Desktop-facing features must behave
+  natively and without friction on both Windows and macOS.

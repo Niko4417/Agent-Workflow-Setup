@@ -10,3 +10,6 @@ codex/tmp/
 # Every role + _shared memory dir is ignored; only the memory/README.md
 # (documentation about the memory system) stays tracked.
 .agents/memory/*/
+
+# Personal local debug config (absolute paths, per-machine)
+claude/launch.json
