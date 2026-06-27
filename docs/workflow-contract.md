@@ -33,14 +33,16 @@ fan-out first; only disjoint write scopes in parallel.
 - Branch names are **tool-neutral**: `issue/<id>-<name>`, `epic/<name>`, base `dev`.
   (Both harnesses continue the _same_ branch for one issue; git author metadata
   gives provenance.)
-- **Every issue gets a PR.** A PR into `dev` merges only on **green CI**; a child
-  PR into an `epic/*` branch is gated by the **audit**, not CI (GitHub CI does not
-  run on `epic/*` PRs — see the epic model below).
-- `issue -> epic-branch`: **audit-gated**, not CI. A **non-user-facing** child with
-  no unresolved `keiko-issue-audit` findings **auto-merges** (no human); a
-  **user-facing** child (touches UI / needs design-system evidence) runs the audit
-  and then requires **human review + merge**. This is the only auto-merge in the
-  system, and only for the non-UI case.
+- **Every issue gets a PR.** The merge gate depends on the PR's **target branch**
+  and whether the issue is **user-facing** (touches user-facing UI / needs
+  design-system evidence):
+  - **-> `dev`** (any issue): green GitHub CI **+ human review** — always, no
+    exceptions (sacred `dev`).
+  - **-> `epic/*`, non-user-facing**: a clean `keiko-issue-audit` is sufficient —
+    **auto-merge**, no human, no GitHub CI (CI does not run on `epic/*`; the audit
+    runs `verify.sh`, the CI mirror, locally). This is the system's only auto-merge.
+  - **-> `epic/*`, user-facing**: `keiko-issue-audit` **+ human review**, then a
+    human merges.
 - **`dev` is sacred**: every merge into `dev` (epic or standalone) requires a
   **human reviewer + green CI**.
 - Epic model: long-lived `epic/<name>` off `dev`; child `issue/...` off the epic
