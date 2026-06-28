@@ -74,10 +74,14 @@ findings are not blockers.
 
 ## Proof of audit (REQUIRED — last action)
 
-As the **final** step, after every audit fix is committed, write the receipt:
+As the **final** step, after every audit fix is committed, **re-verify** and write
+both receipts at the post-fix HEAD (audit fixes change HEAD, so the verify receipt
+must be refreshed — the epic-merge gate requires a green verify receipt at the
+audited commit):
 
 ```
-.keiko-scripts/audit-receipt.sh <N> --findings <unresolved-count> --user-facing <true|false> --ui-verified <true|false>
+.keiko-scripts/verify-receipt.sh <N>          # re-runs verify.sh; writes the verify receipt only if green
+.keiko-scripts/audit-receipt.sh  <N> --findings <unresolved-count> --user-facing <true|false> --ui-verified <true|false>
 ```
 
 - `--findings` = number of **unresolved confirmed** findings after the fix wave (`0` when clean).

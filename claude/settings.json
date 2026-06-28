@@ -50,6 +50,10 @@
           },
           {
             "type": "command",
+            "command": "cmd=$(jq -r '.tool_input.command // empty'); printf '%s' \"$cmd\" | grep -qiE 'gh pr (create|ready)' || exit 0; [ -x .keiko-scripts/verify-gate.sh ] || exit 0; .keiko-scripts/verify-gate.sh >&2 || { echo '[verify-gate] PR blocked — verify.sh must pass green (run verify-receipt.sh, loop until green) before PR.' >&2; exit 2; }; exit 0"
+          },
+          {
+            "type": "command",
             "command": "cmd=$(jq -r '.tool_input.command // empty'); printf '%s' \"$cmd\" | grep -qiE 'gh pr merge' || exit 0; [ -x .keiko-scripts/epic-merge-gate.sh ] || exit 0; .keiko-scripts/epic-merge-gate.sh \"$cmd\" >&2 || exit 2; exit 0"
           }
         ]

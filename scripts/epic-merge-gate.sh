@@ -2,8 +2,10 @@
 #
 # epic-merge-gate.sh — gate the agent/CLI `gh pr merge` path:
 #   * into dev / main / release  -> ALWAYS blocked (a human merges via the UI).
-#   * into an epic / integration -> allowed only when the keiko-issue-audit receipt
-#     branch (any other base)        is clean (findings=0) AND either:
+#   * into an epic / integration -> allowed only when verify.sh passed green at the
+#     branch (any other base)        audited commit (verify receipt) AND the
+#                                     keiko-issue-audit receipt is clean (findings=0)
+#                                     AND either:
 #                                      - the issue is non-user-facing, OR
 #                                      - it is user-facing AND ui_verified=true
 #                                        (its Playwright test plan passed) AND a
@@ -64,6 +66,16 @@ ui_verified="$(sed -n 's/.*"ui_verified":"\([^"]*\)".*/\1/p' "$receipt")"
 
 if [ "$findings" != "0" ]; then
   printf '[epic-merge-gate] BLOCKED: audit findings=%s for %s (need 0 to auto-merge into %s). Resolve findings, re-audit, or have a human merge.\n' "${findings:-unknown}" "$head" "$base" >&2
+  exit 1
+fi
+
+# verify.sh must have passed green at the SAME commit the audit covered (audit
+# fixes change HEAD, so re-verification is required before auto-merge).
+audited="$(sed -n 's/.*"audited_sha":"\([^"]*\)".*/\1/p' "$receipt")"
+vreceipt="$gd/keiko-verify/$slug.json"
+verified="$(sed -n 's/.*"verified_sha":"\([^"]*\)".*/\1/p' "$vreceipt" 2>/dev/null || true)"
+if [ ! -f "$vreceipt" ] || [ -z "$verified" ] || [ "$verified" != "$audited" ]; then
+  printf '[epic-merge-gate] BLOCKED: no green verify receipt at the audited commit for %s (verified=%s, audited=%s). Run verify-receipt.sh, then re-audit.\n' "$head" "${verified:-none}" "${audited:-none}" >&2
   exit 1
 fi
 

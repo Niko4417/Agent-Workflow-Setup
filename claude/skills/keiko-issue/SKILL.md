@@ -62,9 +62,13 @@ change-rules. Out-of-scope blockers → report up, the lead files a linked issue
 
 ## 5. Verify, audit, ship (per contract — sacred-`dev`)
 
-1. `.keiko-scripts/verify.sh` green locally (CI mirror).
+1. **Verify-green loop.** Run `.keiko-scripts/verify-receipt.sh #N` — it runs
+   `verify.sh` (the CI mirror) and writes the verify receipt **only if green**. If
+   red, fix and re-run, **looping until green** (bounded by 3 distinct attempts →
+   escalate). The PR-create **verify-gate** blocks `gh pr create`/`gh pr ready`
+   until a green verify receipt exists at HEAD.
 2. **Run `keiko-issue-audit` `#N`** — mandatory before PR-ready, even if it finds
-   nothing. It writes the audit receipt for HEAD as its last step.
+   nothing. It re-verifies and writes the audit receipt for HEAD as its last step.
 3. Branch `issue/<N>-<short>` off `dev`; Conventional Commit referencing `#N`;
    `verifier` fills the PR "Verification evidence" section. For a user-facing
    change, capture design-system evidence under `docs/design-system/evidence/<N>/`

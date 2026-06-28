@@ -115,7 +115,10 @@ failed, why further autonomous recovery is unlikely.
 
 1. lint-staged pre-commit (changed files: prettier + eslint + tsc) — instant.
 2. Mandatory 2-pass adversarial self-critique — per agent.
-3. `verify.sh` (full CI mirror) — hard pre-PR gate.
+3. **Proof-of-verify gate** — `verify-receipt.sh` runs `verify.sh` (the full CI
+   mirror) and writes a SHA-bound receipt **only when green**; a PreToolUse hook
+   blocks `gh pr create`/`gh pr ready` on `issue/*`/`epic/*` unless a green verify
+   receipt exists at HEAD. Loop verify→fix until green before the PR.
 4. **Proof-of-audit gate** — `keiko-issue-audit` writes a SHA-bound receipt
    (`.git/keiko-audit/<branch>.json`); a PreToolUse hook blocks `gh pr create` on
    an `issue/*` or `epic/*` branch unless a receipt exists for the current HEAD.
@@ -124,7 +127,8 @@ failed, why further autonomous recovery is unlikely.
    `ui_verified`; the **epic-merge gate** (`epic-merge-gate.sh`, a PreToolUse hook
    on `gh pr merge`) **always blocks** an agent merge into `dev`/`main`/`release`
    (human-only, via the GitHub UI), and into an epic / integration branch (any
-   other base) allows the merge only when `findings=0` **and** either
+   other base) allows the merge only when a **green verify receipt** exists at the
+   audited commit **and** `findings=0` **and** either
    `user_facing=false`, or `user_facing=true` with `ui_verified=true` and a marked
    `<!-- keiko:manual-test-plan -->` comment present on the PR (the gate checks that
    comment for real via `gh`). Fail-closed; a human merging via the GitHub UI
