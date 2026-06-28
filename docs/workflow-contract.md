@@ -57,7 +57,11 @@ fan-out first; only disjoint write scopes in parallel.
 - Epic model: long-lived `epic/<name>` off `dev`; child `issue/...` off the epic
   branch; final epic PR -> `dev` is the human-gated handoff (full CI + human). The
   child→epic audit gate runs `verify.sh` (the CI mirror) locally; real GitHub CI
-  re-runs on the accumulated epic at the epic->`dev` PR.
+  re-runs on the accumulated epic at the epic->`dev` PR. **The epic->`dev` PR only
+  opens after `dev` is rebased into the epic and the integrated surface passes,
+  at HEAD, the full local set — green verify, audit `findings=0`, and (user-facing)
+  a green ui-verify Playwright run (`epic-pr-gate` enforces findings=0 + ui-verify;
+  `verify-gate` enforces verify). Then GitHub CI must go green before human review.**
 
 ## Issue lifecycle
 
@@ -135,6 +139,11 @@ failed, why further autonomous recovery is unlikely.
    `<!-- keiko:manual-test-plan -->` comment present on the PR (the gate checks that
    comment for real via `gh`). Fail-closed; a human merging via the GitHub UI
    bypasses the local hook by design — that is the human-review path.
+   4b. **Epic->dev PR gate** — `epic-pr-gate.sh` (PreToolUse on `gh pr create`/`ready`
+   from an `epic/*` branch) blocks the epic->`dev` PR unless, at HEAD, the
+   integrated audit is clean (`findings=0`) and — when the epic is user-facing — a
+   green ui-verify receipt exists. With `verify-gate`, the epic PR cannot open until
+   verify + audit + (UI) Playwright are all clean against the dev-integrated HEAD.
 5. Strong-model completion judge (Stop-hook, loop-capped <=2).
 6. CI on protected `dev` — unbypassable server-side backstop _(requires repo
    admin to configure; see README "Server-side prerequisites")_.

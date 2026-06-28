@@ -18,6 +18,12 @@
           },
           {
             "type": "command",
+            "command": "cmd=$(jq -r '.tool_input.command // empty'); printf '%s' \"$cmd\" | grep -qiE 'gh pr (create|ready)' || exit 0; gate=\"$(git rev-parse --show-toplevel)/.keiko-scripts/epic-pr-gate.sh\"; [ -x \"$gate\" ] || exit 0; \"$gate\" >&2 || exit 2; exit 0",
+            "timeout": 10,
+            "statusMessage": "Epic PR gate"
+          },
+          {
+            "type": "command",
             "command": "cmd=$(jq -r '.tool_input.command // empty'); printf '%s' \"$cmd\" | grep -qE '(>>?|tee)[^|;&]*agent-memory' && { echo '[memory-path] BLOCKED: write agent memory to .agents/memory/<role>/, not the legacy .claude/agent-memory/.' >&2; exit 2; }; exit 0",
             "timeout": 10,
             "statusMessage": "Memory path guard"

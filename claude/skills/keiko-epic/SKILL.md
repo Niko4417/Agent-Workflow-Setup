@@ -84,17 +84,29 @@ are cut **off the epic branch**, not off `dev`.
 
 ## 4. Final epic PR (human-gated)
 
-When all required children are integrated and verified on the epic branch:
+When all required children are integrated on the epic branch:
 
-1. Sync `dev` into the epic branch; resolve conflicts without dropping others' work.
-2. `.keiko-scripts/verify.sh` green; run `keiko-issue-audit` on the integrated
-   surface (it writes the audit receipt for the epic branch's HEAD as its last
-   step). The proof-of-audit gate **blocks the epic PR** without a receipt at HEAD.
-3. Open one epic PR `epic/<name> -> dev`. **Sacred-`dev`: human review + green CI
-   required.** Body includes the child-issue matrix, summary by capability,
-   verification evidence, known limitations/follow-ups, and that it is the
-   accumulated epic branch.
-4. Set the epic and remaining children to `Ready for Human Review`. Do **not**
+1. **Rebase/merge the latest `dev` into the epic branch FIRST** — resolve conflicts
+   without dropping others' work. Everything below runs against this integrated
+   HEAD; if `dev` moves again, re-integrate and re-run the loops.
+2. **Run the airtight loops on the integrated epic, until all clean** (the receipts
+   are SHA-bound, so they must cover the post-rebase HEAD):
+   - `.keiko-scripts/verify-receipt.sh` — loop verify→fix until green.
+   - `keiko-issue-audit` on the integrated surface — loop fix→re-audit until
+     `findings=0` (it re-verifies and writes the audit receipt at HEAD as its last
+     step).
+   - **user-facing epic:** `.keiko-scripts/ui-verify-receipt.sh #E -- <playwright cmd>`
+     — the integrated Playwright plan must actually run green.
+3. **Open the epic PR `epic/<name> -> dev` — it will not open unless all of the
+   above are clean at HEAD.** Three PreToolUse gates enforce it on `gh pr create`:
+   `verify-gate` (green verify), `epic-pr-gate` (audit `findings=0` + ui-verify when
+   user-facing), and the proof-of-audit gate (audit ran at HEAD). Body: child-issue
+   matrix, summary by capability, verification evidence, known limitations/follow-ups.
+4. **Watch the real GitHub CI and drive it green** (`pr-shepherd`) — bounded repair,
+   stop after 3 distinct failed attempts and escalate. A new commit re-stales the
+   receipts; if you must re-open, re-run the loops first.
+5. **Only once CI is green**, set the epic and remaining children to `Ready for
+Human Review`. **Sacred-`dev`: human review + green CI required.** Do **not**
    merge the epic PR or close the epic without explicit maintainer authorization.
 
 ## Escalate (stop, report)
