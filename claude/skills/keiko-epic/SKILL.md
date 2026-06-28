@@ -51,9 +51,15 @@ are cut **off the epic branch**, not off `dev`.
      attempts** (the contract's escalation threshold); if it is still not clean,
      **stop and escalate to the human — do not merge**.
    - **User-facing child** (touches user-facing UI / needs design-system evidence):
-     run the audit (it fixes confirmed gaps as usual), then **request human
-     review** — a human merges into the epic branch. No auto-merge, no
-     loop-to-green; the human gates it.
+     drive the audit clean the **same way** (fix findings + re-audit until
+     `findings=0`, bounded by the 3-attempt rule), but then **require human review
+     — no auto-merge**. Before handing off, post a **step-by-step manual test plan**
+     on the PR for the reviewer: concrete `do X → expect Y` steps covering the
+     acceptance criteria and the user-facing surfaces a human must eyeball —
+     `state-matrix.md` states (default / hover / focus / active / disabled /
+     loading / empty / error), keyboard + screen-reader paths, light / dark /
+     high-contrast themes, and responsive breakpoints. The human follows the
+     steps, then merges.
 
    The non-UI case is the only auto-merge in the system, and it is **enforced**:
    the audit records `--findings`/`--user-facing` in the receipt, and
