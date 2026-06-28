@@ -53,8 +53,9 @@ are cut **off the epic branch**, not off `dev`.
    - **User-facing child** (touches user-facing UI / needs design-system evidence):
      drive the audit clean the **same way** (fix findings + re-audit until
      `findings=0`, bounded by the 3-attempt rule), but then **require human review
-     — no auto-merge**. Before handing off, post a **step-by-step manual test plan**
-     on the PR for the reviewer: concrete `do X → expect Y` steps covering the
+     — no auto-merge**. Before handing off, post a **PR comment** with a
+     **step-by-step manual test plan** for the reviewer: numbered, concrete
+     `do X → expect Y` steps (action + expected result) covering the
      acceptance criteria and the user-facing surfaces a human must eyeball —
      `state-matrix.md` states (default / hover / focus / active / disabled /
      loading / empty / error), keyboard + screen-reader paths, light / dark /

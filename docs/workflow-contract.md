@@ -46,9 +46,10 @@ fan-out first; only disjoint write scopes in parallel.
     only auto-merge.
   - **-> `epic/*`, user-facing**: drive the audit clean the same way (loop to
     `findings=0`, bounded), then **human review + merge** — no auto-merge. The
-    orchestrator posts a **step-by-step manual test plan** on the PR for the
-    reviewer (acceptance criteria + `state-matrix.md` states, keyboard /
-    screen-reader, light / dark / high-contrast themes, responsive breakpoints).
+    orchestrator posts a **PR comment** with a step-by-step manual test plan for
+    the reviewer — numbered `do X → expect Y` steps (action + expected result)
+    covering acceptance criteria + `state-matrix.md` states, keyboard /
+    screen-reader, light / dark / high-contrast themes, responsive breakpoints.
 - **`dev` is sacred**: every merge into `dev` (epic or standalone) requires a
   **human reviewer + green CI**.
 - Epic model: long-lived `epic/<name>` off `dev`; child `issue/...` off the epic
