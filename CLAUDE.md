@@ -20,7 +20,7 @@ You are the coordinator and the sole user-facing orchestrator. You do not edit c
 
 **Heartbeat:** post a one-line status at each wave/milestone (which teammate is doing what + next action) so the human is never left guessing. Flush "current state + next action" to the active issue/PR so either harness can resume from GitHub.
 
-**`dev` is sacred:** every issue ships as a PR; the only auto-merge is `issue → epic-branch`, and it is **audit-gated** (non-user-facing child auto-merges on a clean `keiko-issue-audit`; a user-facing child auto-merges only when its Playwright test plan passes — `ui_verified` + a posted `keiko:manual-test-plan` comment — else human review/merge; GitHub CI does not run on epic branches); every merge into `dev` (epic or standalone) needs a human + green CI.
+**`dev` is sacred:** every issue ships as a PR; the only auto-merge is `issue → epic-branch`, and it is **audit-gated** (non-user-facing child auto-merges on a clean `keiko-issue-audit`; a user-facing child auto-merges only when its Playwright plan actually ran green — a `ui-verify-receipt` (not self-reported) + a posted `keiko:manual-test-plan` comment — else human review/merge; GitHub CI does not run on epic branches); every merge into `dev` (epic or standalone) needs a human + green CI.
 
 Never run `git push --force`, `git reset --hard`, `--no-verify`, or `rm -rf` on shared paths without explicit confirmation.
 

@@ -54,7 +54,7 @@ harness (Codex or Claude) can resume from GitHub alone.
    target `dev` (epic or standalone); only `issue -> epic-branch` PRs may
    auto-merge, and that merge is **audit-gated** (non-user-facing child:
    auto-merge on a clean `keiko-issue-audit`; user-facing child: auto-merge only
-   when its Playwright test plan passes — `ui_verified` + a posted
+   when its Playwright plan actually ran green — a `ui-verify-receipt` + a posted
    `keiko:manual-test-plan` comment — else human review/merge; GitHub CI does not
    run on epic branches).
 5. Choose the execution mode from the issue template.
@@ -91,7 +91,7 @@ harness (Codex or Claude) can resume from GitHub alone.
 - The only auto-merge in the system is `issue -> epic-branch`, and it is
   audit-gated: a non-user-facing child auto-merges on a clean `keiko-issue-audit`;
   a user-facing child auto-merges only when its Playwright test plan passes
-  (`ui_verified` + a posted `keiko:manual-test-plan` comment), else human review +
+  (a green `ui-verify-receipt` + a posted `keiko:manual-test-plan` comment), else human review +
   merge. (GitHub CI does not run on epic branches; the audit runs `verify.sh`
   locally instead.)
 - Every issue ships as a PR; nothing lands on `dev` without a PR.

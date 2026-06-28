@@ -80,19 +80,22 @@ must be refreshed — the epic-merge gate requires a green verify receipt at the
 audited commit):
 
 ```
-.keiko-scripts/verify-receipt.sh <N>          # re-runs verify.sh; writes the verify receipt only if green
-.keiko-scripts/audit-receipt.sh  <N> --findings <unresolved-count> --user-facing <true|false> --ui-verified <true|false>
+.keiko-scripts/verify-receipt.sh <N>                          # re-runs verify.sh; writes the verify receipt only if green
+# user-facing only — re-run the Playwright plan at the post-fix HEAD:
+.keiko-scripts/ui-verify-receipt.sh <N> -- <playwright cmd>   # runs the spec; writes the ui-verify receipt only on green
+.keiko-scripts/audit-receipt.sh  <N> --findings <unresolved-count> --user-facing <true|false>
 ```
 
 - `--findings` = number of **unresolved confirmed** findings after the fix wave (`0` when clean).
 - `--user-facing` = `true` if the issue touches user-facing UI / needs design-system evidence, else `false`.
-- `--ui-verified` = `true` only when a user-facing change's **Playwright test plan ran green** (every expected result asserted). Leave `false`/omit otherwise.
 
-All optional (default `unknown`); omit them for a standalone audit. They feed the
-**epic auto-merge** decision (`.keiko-scripts/epic-merge-gate.sh`): a child PR into
-an epic / integration branch (any base other than `dev`/`main`/`release`) may
-auto-merge **only** when `findings=0` **and** either `user_facing=false`, or
-`user_facing=true` with `ui_verified=true` and a marked
+`--findings`/`--user-facing` are optional (default `unknown`); omit them for a
+standalone audit. They feed the **epic auto-merge** decision
+(`.keiko-scripts/epic-merge-gate.sh`): a child PR into an epic / integration branch
+(any base other than `dev`/`main`/`release`) may auto-merge **only** when a green
+verify receipt and `findings=0` hold **and** either `user_facing=false`, or
+`user_facing=true` with a **green ui-verify receipt at this commit** (the Playwright
+plan actually ran green — not self-reported) and a marked
 `<!-- keiko:manual-test-plan -->` comment on the PR — otherwise a human reviews and
 merges. Fail-closed: `unknown` never auto-merges.
 

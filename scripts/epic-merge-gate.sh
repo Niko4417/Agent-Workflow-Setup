@@ -7,23 +7,25 @@
 #                                     keiko-issue-audit receipt is clean (findings=0)
 #                                     AND either:
 #                                      - the issue is non-user-facing, OR
-#                                      - it is user-facing AND ui_verified=true
-#                                        (its Playwright test plan passed) AND a
+#                                      - it is user-facing AND a green ui-verify
+#                                        receipt (the Playwright plan actually ran
+#                                        green) exists at the audited commit AND a
 #                                        marked manual-test-plan comment is on the PR.
 #
 # Rationale: GitHub CI does not run on epic integration-branch PRs, so the
 # child->epic gate is the audit. A clean non-user-facing child auto-merges. A
-# user-facing child auto-merges only when its Playwright-reviewable test plan ran
-# green (ui_verified) and the documentation comment exists; otherwise a human
-# merges via the GitHub UI (which does not run this hook). Subjective visual /
-# screen-reader review happens at the epic->dev human gate.
+# user-facing child auto-merges only when its Playwright plan actually ran green
+# (a ui-verify receipt at the audited commit) and the documentation comment
+# exists; otherwise a human merges via the GitHub UI (which does not run this
+# hook). Subjective visual / screen-reader review happens at the epic->dev gate.
 #
 # Wired to a PreToolUse hook on `gh pr merge`. Also runnable by hand.
 #   exit 0 = allowed / not applicable      exit 1 = blocked
 #
-# Floor-raising, not adversarially airtight: findings/user_facing/ui_verified are
-# self-reported by the audit skill (the comment presence is checked for real via
-# gh). Authoritative enforcement is server-side (protected dev + the epic->dev PR).
+# Trust model: verify and ui-verify are REAL runs (the receipt scripts execute
+# verify.sh / Playwright and stamp only on green); the test-plan comment is checked
+# for real via gh. findings/user_facing remain self-reported by the audit skill.
+# Authoritative enforcement is server-side (protected dev + the epic->dev PR).
 
 set -uo pipefail
 
@@ -62,7 +64,6 @@ fi
 
 findings="$(sed -n 's/.*"findings":"\([^"]*\)".*/\1/p' "$receipt")"
 user_facing="$(sed -n 's/.*"user_facing":"\([^"]*\)".*/\1/p' "$receipt")"
-ui_verified="$(sed -n 's/.*"ui_verified":"\([^"]*\)".*/\1/p' "$receipt")"
 
 if [ "$findings" != "0" ]; then
   printf '[epic-merge-gate] BLOCKED: audit findings=%s for %s (need 0 to auto-merge into %s). Resolve findings, re-audit, or have a human merge.\n' "${findings:-unknown}" "$head" "$base" >&2
@@ -84,8 +85,10 @@ case "$user_facing" in
     printf '[epic-merge-gate] OK: clean, non-user-facing audit for %s -> %s; auto-merge allowed.\n' "$head" "$base"
     exit 0 ;;
   true)
-    if [ "$ui_verified" != "true" ]; then
-      printf '[epic-merge-gate] BLOCKED: %s is user-facing but ui_verified=%s — its Playwright test plan did not pass green. A human must review and merge.\n' "$head" "${ui_verified:-unknown}" >&2
+    uvreceipt="$gd/keiko-ui-verify/$slug.json"
+    uv_sha="$(sed -n 's/.*"ui_verified_sha":"\([^"]*\)".*/\1/p' "$uvreceipt" 2>/dev/null || true)"
+    if [ ! -f "$uvreceipt" ] || [ "$uv_sha" != "$audited" ]; then
+      printf '[epic-merge-gate] BLOCKED: %s is user-facing but has no green Playwright (ui-verify) receipt at the audited commit (ui_verified=%s, audited=%s). Run ui-verify-receipt.sh, or have a human review and merge.\n' "$head" "${uv_sha:-none}" "${audited:-none}" >&2
       exit 1
     fi
     comments="$(ghpr --json comments -q '.comments[].body' 2>/dev/null || true)"

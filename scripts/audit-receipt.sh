@@ -8,27 +8,25 @@
 # reads the findings/user_facing fields before an epic auto-merge.
 #
 # Usage (from the target repo root):
-#   audit-receipt.sh [issue-number] [--findings N] [--user-facing true|false] \
-#                    [--ui-verified true|false]
+#   audit-receipt.sh [issue-number] [--findings N] [--user-facing true|false]
 #
-# All flags are optional and default to "unknown". They are inputs to the
-# epic-merge auto-merge decision, so omitting them is fail-closed. The merge gate
-# auto-merges into an epic branch only when findings=0 AND either user_facing=false,
-# or user_facing=true with ui_verified=true (the Playwright test plan passed) plus a
-# manual-test-plan comment on the PR. A standalone audit can omit them safely.
+# Flags are optional and default to "unknown" (fail-closed). They feed the
+# epic-merge auto-merge decision: it auto-merges into an epic branch only when
+# findings=0 AND either user_facing=false, or user_facing=true with a green
+# ui-verify receipt (the Playwright plan actually ran green, see
+# ui-verify-receipt.sh) at this commit plus a manual-test-plan comment on the PR.
+# A standalone audit can omit the flags safely.
 
 set -euo pipefail
 
 issue=""
 findings="unknown"
 user_facing="unknown"
-ui_verified="unknown"
 
 while [ $# -gt 0 ]; do
   case "$1" in
     --findings) findings="${2:-unknown}"; shift 2 ;;
     --user-facing) user_facing="${2:-unknown}"; shift 2 ;;
-    --ui-verified) ui_verified="${2:-unknown}"; shift 2 ;;
     *) [ -z "$issue" ] && issue="$1"; shift ;;
   esac
 done
@@ -40,8 +38,8 @@ sha="$(git rev-parse HEAD)"
 dir="$gd/keiko-audit"
 mkdir -p "$dir"
 
-printf '{"branch":"%s","issue":"%s","audited_sha":"%s","findings":"%s","user_facing":"%s","ui_verified":"%s","ts":"%s"}\n' \
-  "$branch" "$issue" "$sha" "$findings" "$user_facing" "$ui_verified" "$(date -u +%FT%TZ)" > "$dir/$slug.json"
+printf '{"branch":"%s","issue":"%s","audited_sha":"%s","findings":"%s","user_facing":"%s","ts":"%s"}\n' \
+  "$branch" "$issue" "$sha" "$findings" "$user_facing" "$(date -u +%FT%TZ)" > "$dir/$slug.json"
 
-printf 'audit receipt written: %s @ %s (findings=%s, user_facing=%s, ui_verified=%s)\n' \
-  "$branch" "${sha:0:8}" "$findings" "$user_facing" "$ui_verified"
+printf 'audit receipt written: %s @ %s (findings=%s, user_facing=%s)\n' \
+  "$branch" "${sha:0:8}" "$findings" "$user_facing"

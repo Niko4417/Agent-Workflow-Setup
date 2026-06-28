@@ -53,28 +53,28 @@ are cut **off the epic branch**, not off `dev`.
    - **User-facing child** (touches user-facing UI / needs design-system evidence):
      drive the audit clean the **same way** (fix findings + re-audit until
      `findings=0`, bounded by the 3-attempt rule), then verify it locally:
-     1. Write a **Playwright-reviewable** test plan — numbered, concrete
-        `do X → expect Y` steps (action + expected result) for the user-facing
-        behavior Playwright can assert (visible text/DOM, navigation, computed
-        styles, focus order, ARIA, responsive viewports, visual snapshots),
-        covering the acceptance criteria. Keep it automatable — subjective
-        visual / screen-reader judgment is **deferred to the epic→`dev` human
-        review**, not the child plan.
-     2. Post it as a **PR comment** marked `<!-- keiko:manual-test-plan -->`
-        (documentation, and the gate checks the marker exists).
-     3. **Drive the plan with Playwright** locally (the repo's `test:e2e` harness /
-        Playwright MCP) and assert every expected result.
-     - All expected results green → record `--ui-verified true` → **auto-merge**.
-     - Any failure (or a result Playwright cannot assert) → leave `ui_verified`
-       false → **human review + merge** (the fallback).
+     1. Write a **runnable Playwright spec** for the test plan — numbered
+        `do X → expect Y` steps Playwright can assert (visible text/DOM,
+        navigation, computed styles, focus order, ARIA, responsive viewports,
+        visual snapshots), covering the acceptance criteria. Keep it automatable —
+        subjective visual / screen-reader judgment is **deferred to the epic→`dev`
+        human review**, not the child plan.
+     2. Post the plan as a **PR comment** marked `<!-- keiko:manual-test-plan -->`
+        (documentation; the merge gate checks the marker exists).
+     3. Run it via **`.keiko-scripts/ui-verify-receipt.sh #child -- <playwright cmd>`**
+        — it executes the spec and writes the ui-verify receipt **only on a real
+        green exit** (the result is not self-reported).
+     - ui-verify receipt green at HEAD **and** comment present → **auto-merge**.
+     - Playwright red, or a result it cannot assert → **human review + merge** (the
+       fallback).
 
    Auto-merge is the only place merges happen without a human, and it is
    **enforced** by `epic-merge-gate.sh` (a PreToolUse hook on `gh pr merge`): it
    **always blocks** an agent merge into `dev`/`main`/`release` (human-only via the
-   UI); into an epic / integration branch it allows the merge only when
-   `findings=0` **and** either `user_facing=false`, or `user_facing=true` with
-   `ui_verified=true` **and** the marked test-plan comment present on the PR. The
-   audit records `--findings`/`--user-facing`/`--ui-verified` in the receipt.
+   UI); into an epic / integration branch it allows the merge only when a green
+   verify receipt and (`findings=0`) hold **and** either `user_facing=false`, or
+   `user_facing=true` with a **green ui-verify receipt at the audited commit** (the
+   Playwright plan actually ran green) **and** the marked test-plan comment present.
 
 3. After merge, confirm the epic branch still builds (`verify.sh`); add a child
    comment linking PR/commit + evidence; update the board.

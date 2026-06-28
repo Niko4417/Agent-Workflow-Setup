@@ -19,15 +19,20 @@ git checkout -q -b issue/999-demo
 
 pass=0 fail=0
 
-mkreceipt() { # findings user_facing ui_verified  (audited_sha is "x")
+mkreceipt() { # findings user_facing  (audited_sha is "x")
   mkdir -p .git/keiko-audit
-  printf '{"branch":"issue/999-demo","issue":"999","audited_sha":"x","findings":"%s","user_facing":"%s","ui_verified":"%s","ts":"t"}\n' \
-    "$1" "$2" "$3" > .git/keiko-audit/issue_999-demo.json
+  printf '{"branch":"issue/999-demo","issue":"999","audited_sha":"x","findings":"%s","user_facing":"%s","ts":"t"}\n' \
+    "$1" "$2" > .git/keiko-audit/issue_999-demo.json
 }
 mkverify() { # verified_sha  ("" => no verify receipt)
   mkdir -p .git/keiko-verify
   if [ -z "${1:-}" ]; then rm -f .git/keiko-verify/issue_999-demo.json; return; fi
   printf '{"branch":"issue/999-demo","verified_sha":"%s","ts":"t"}\n' "$1" > .git/keiko-verify/issue_999-demo.json
+}
+mkuiverify() { # ui_verified_sha  ("" => no ui-verify receipt)
+  mkdir -p .git/keiko-ui-verify
+  if [ -z "${1:-}" ]; then rm -f .git/keiko-ui-verify/issue_999-demo.json; return; fi
+  printf '{"branch":"issue/999-demo","ui_verified_sha":"%s","ts":"t"}\n' "$1" > .git/keiko-ui-verify/issue_999-demo.json
 }
 # stubgh BASE COMMENT  — BASE="" simulates an unresolvable PR; COMMENT=present|absent
 stubgh() {
@@ -52,20 +57,20 @@ expect() { # description expected-exit
   else fail=$((fail+1)); echo "FAIL - $1 (expected $2, got $got)"; fi
 }
 
-stubgh dev;            mkreceipt 0 false unknown; mkverify x;  expect "dev base -> blocked"               1
-stubgh main;           mkreceipt 0 false unknown; mkverify x;  expect "main base -> blocked"              1
-stubgh release/1.2;    mkreceipt 0 false unknown; mkverify x;  expect "release base -> blocked"           1
-stubgh feat/x-123;     mkreceipt 0 false unknown; mkverify x;  expect "clean non-UI + verify -> allow"    0
-stubgh feat/x-123;     mkreceipt 2 false unknown; mkverify x;  expect "findings>0 -> block"               1
-stubgh feat/x-123;     mkreceipt 0 false unknown; mkverify "";  expect "no verify receipt -> block"       1
-stubgh feat/x-123;     mkreceipt 0 false unknown; mkverify y;   expect "verify sha mismatch -> block"     1
-stubgh feat/x-123 present; mkreceipt 0 true true;  mkverify x;  expect "UI verified+comment+verify -> allow" 0
-stubgh feat/x-123 absent;  mkreceipt 0 true true;  mkverify x;  expect "UI verified, no comment -> block"  1
-stubgh feat/x-123 present; mkreceipt 0 true false; mkverify x;  expect "UI not verified -> block"          1
-stubgh feat/x-123 present; mkreceipt 0 true unknown; mkverify x; expect "UI ui_verified unknown -> block"  1
-stubgh feat/x-123;     mkreceipt 0 unknown unknown; mkverify x; expect "user_facing unknown -> block"      1
-stubgh feat/x-123;     rm -f .git/keiko-audit/*.json; mkverify x; expect "no audit receipt -> block"       1
-stubgh "";             mkreceipt 0 false unknown; mkverify x;  expect "unresolvable PR -> fail open"        0
+stubgh dev;            mkreceipt 0 false; mkverify x; mkuiverify x; expect "dev base -> blocked"             1
+stubgh main;           mkreceipt 0 false; mkverify x; mkuiverify x; expect "main base -> blocked"            1
+stubgh release/1.2;    mkreceipt 0 false; mkverify x; mkuiverify x; expect "release base -> blocked"         1
+stubgh feat/x-123;     mkreceipt 0 false; mkverify x; mkuiverify x; expect "clean non-UI + verify -> allow"  0
+stubgh feat/x-123;     mkreceipt 2 false; mkverify x; mkuiverify x; expect "findings>0 -> block"             1
+stubgh feat/x-123;     mkreceipt 0 false; mkverify "";  mkuiverify x; expect "no verify receipt -> block"    1
+stubgh feat/x-123;     mkreceipt 0 false; mkverify y;   mkuiverify x; expect "verify sha mismatch -> block"  1
+stubgh feat/x-123 present; mkreceipt 0 true; mkverify x; mkuiverify x; expect "UI: comment+verify+ui-verify -> allow" 0
+stubgh feat/x-123 absent;  mkreceipt 0 true; mkverify x; mkuiverify x; expect "UI: no comment -> block"      1
+stubgh feat/x-123 present; mkreceipt 0 true; mkverify x; mkuiverify ""; expect "UI: no ui-verify receipt -> block" 1
+stubgh feat/x-123 present; mkreceipt 0 true; mkverify x; mkuiverify y;  expect "UI: ui-verify sha mismatch -> block" 1
+stubgh feat/x-123;     mkreceipt 0 unknown; mkverify x; mkuiverify x; expect "user_facing unknown -> block"  1
+stubgh feat/x-123;     rm -f .git/keiko-audit/*.json; mkverify x; mkuiverify x; expect "no audit receipt -> block" 1
+stubgh "";             mkreceipt 0 false; mkverify x; mkuiverify x; expect "unresolvable PR -> fail open"     0
 
 echo "---"
 echo "passed=$pass failed=$fail"
