@@ -42,11 +42,18 @@ are cut **off the epic branch**, not off `dev`.
    `verify.sh` + `keiko-issue-audit` as part of its flow).
 2. The child PR targets the **epic branch**. CI does not run on `epic/*` PRs, so
    the child→epic gate is the **audit**, not GitHub CI:
-   - **Non-user-facing child (no UI):** if `keiko-issue-audit` leaves no unresolved
-     confirmed findings, **auto-merge** into the epic branch, no human.
+   - **Non-user-facing child (no UI):** run `keiko-issue-audit`; when it reports
+     confirmed findings, **fix them and re-audit, looping until the audit is clean**
+     (`findings=0`), then **auto-merge** into the epic branch, no human. Each loop
+     fixes the findings (scoped `implementor`/`developer`/`test-engineer`),
+     re-runs the audit (which re-runs `verify.sh` and re-writes the SHA-bound
+     receipt), and continues. **Bound the loop to 3 materially distinct fix
+     attempts** (the contract's escalation threshold); if it is still not clean,
+     **stop and escalate to the human — do not merge**.
    - **User-facing child** (touches user-facing UI / needs design-system evidence):
-     run the audit, then **request human review** — a human merges into the epic
-     branch. No auto-merge.
+     run the audit (it fixes confirmed gaps as usual), then **request human
+     review** — a human merges into the epic branch. No auto-merge, no
+     loop-to-green; the human gates it.
 
    The non-UI case is the only auto-merge in the system, and it is **enforced**:
    the audit records `--findings`/`--user-facing` in the receipt, and

@@ -40,7 +40,10 @@ fan-out first; only disjoint write scopes in parallel.
     exceptions (sacred `dev`).
   - **-> `epic/*`, non-user-facing**: a clean `keiko-issue-audit` is sufficient —
     **auto-merge**, no human, no GitHub CI (CI does not run on `epic/*`; the audit
-    runs `verify.sh`, the CI mirror, locally). This is the system's only auto-merge.
+    runs `verify.sh`, the CI mirror, locally). The orchestrator drives the audit
+    clean — fix findings and re-audit in a loop until `findings=0`, bounded by the
+    3-attempt escalation rule (else escalate, do not merge). This is the system's
+    only auto-merge.
   - **-> `epic/*`, user-facing**: `keiko-issue-audit` **+ human review**, then a
     human merges.
 - **`dev` is sacred**: every merge into `dev` (epic or standalone) requires a
