@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
 #
-# epic-merge-gate.sh — block an AGENT auto-merge of a child PR into an epic/*
-# branch unless its keiko-issue-audit receipt is clean (findings=0) AND the
-# issue is non-user-facing (user_facing=false).
+# epic-merge-gate.sh — block an AGENT auto-merge of a child PR into an epic /
+# integration branch (any base that is not dev/main/release) unless its
+# keiko-issue-audit receipt is clean (findings=0) AND the issue is non-user-facing
+# (user_facing=false).
 #
-# Rationale: GitHub CI does not run on epic/* PRs, so the child->epic gate is the
-# audit. A non-user-facing child with a clean audit may auto-merge; a user-facing
-# or unclean child must be merged by a HUMAN (e.g. via the GitHub UI, which does
-# not run this hook). This is the only place auto-merge is permitted.
+# Rationale: GitHub CI does not run on epic integration-branch PRs, so the
+# child->epic gate is the audit. A non-user-facing child with a clean audit may
+# auto-merge; a user-facing or unclean child must be merged by a HUMAN (e.g. via
+# the GitHub UI, which does not run this hook). This is the only place auto-merge
+# is permitted.
 #
 # Wired to a PreToolUse hook on `gh pr merge`. Also runnable by hand.
 #   exit 0 = allowed / not applicable      exit 1 = blocked
@@ -33,9 +35,12 @@ fi
 base="$(printf '%s' "$info" | sed -n 's/.*"baseRefName":"\([^"]*\)".*/\1/p')"
 head="$(printf '%s' "$info" | sed -n 's/.*"headRefName":"\([^"]*\)".*/\1/p')"
 
+# Branch naming is not standardized (epics are feat/<name>-<n>, children vary), so
+# detect by elimination: dev / main / release are gated elsewhere (human + CI); any
+# OTHER base is an epic / integration branch, where this audit gate applies.
 case "$base" in
-  epic/*) ;;            # enforce only on merges INTO an epic branch
-  *) exit 0 ;;
+  dev|main|master|release/*) exit 0 ;;
+  *) ;;
 esac
 
 gd="$(git rev-parse --git-dir 2>/dev/null)"
