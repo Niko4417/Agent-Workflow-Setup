@@ -36,8 +36,9 @@ expect() { # description expected-exit
   else fail=$((fail+1)); echo "FAIL - $1 (expected $2, got $got)"; fi
 }
 
-stubgh dev;           mkreceipt 2 true;   expect "dev base passes through"            0
-stubgh release/1.2;   mkreceipt 2 true;   expect "release base passes through"        0
+stubgh dev;           mkreceipt 0 false;  expect "dev base -> blocked (no auto-merge)"     1
+stubgh main;          mkreceipt 0 false;  expect "main base -> blocked (no auto-merge)"    1
+stubgh release/1.2;   mkreceipt 0 false;  expect "release base -> blocked (no auto-merge)" 1
 stubgh feat/x-123;    mkreceipt 0 false;  expect "clean non-user-facing -> allow"     0
 stubgh feat/x-123;    mkreceipt 2 false;  expect "findings>0 -> block"                1
 stubgh feat/x-123;    mkreceipt 0 true;   expect "user-facing -> block"               1

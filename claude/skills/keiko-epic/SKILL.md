@@ -63,9 +63,10 @@ are cut **off the epic branch**, not off `dev`.
 
    The non-UI case is the only auto-merge in the system, and it is **enforced**:
    the audit records `--findings`/`--user-facing` in the receipt, and
-   `epic-merge-gate.sh` (a PreToolUse hook on `gh pr merge`) blocks an agent
-   auto-merge into an epic / integration branch (any base other than
-   `dev`/`main`/`release`) unless `findings=0` and `user_facing=false`.
+   `epic-merge-gate.sh` (a PreToolUse hook on `gh pr merge`) **always blocks** an
+   agent merge into `dev`/`main`/`release` (human-only via the UI), and into an
+   epic / integration branch allows it only when `findings=0` and
+   `user_facing=false`.
 
 3. After merge, confirm the epic branch still builds (`verify.sh`); add a child
    comment linking PR/commit + evidence; update the board.

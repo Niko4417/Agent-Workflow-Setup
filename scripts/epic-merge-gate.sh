@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 #
-# epic-merge-gate.sh — block an AGENT auto-merge of a child PR into an epic /
-# integration branch (any base that is not dev/main/release) unless its
-# keiko-issue-audit receipt is clean (findings=0) AND the issue is non-user-facing
-# (user_facing=false).
+# epic-merge-gate.sh — gate the agent/CLI `gh pr merge` path:
+#   * into dev / main / release      -> ALWAYS blocked (human merges via the UI).
+#   * into an epic / integration     -> allowed only when the keiko-issue-audit
+#     branch (any other base)           receipt is clean (findings=0) AND the issue
+#                                        is non-user-facing (user_facing=false).
 #
 # Rationale: GitHub CI does not run on epic integration-branch PRs, so the
 # child->epic gate is the audit. A non-user-facing child with a clean audit may
@@ -36,10 +37,14 @@ base="$(printf '%s' "$info" | sed -n 's/.*"baseRefName":"\([^"]*\)".*/\1/p')"
 head="$(printf '%s' "$info" | sed -n 's/.*"headRefName":"\([^"]*\)".*/\1/p')"
 
 # Branch naming is not standardized (epics are feat/<name>-<n>, children vary), so
-# detect by elimination: dev / main / release are gated elsewhere (human + CI); any
-# OTHER base is an epic / integration branch, where this audit gate applies.
+# detect by elimination. dev / main / release are sacred: never auto-merge there
+# from the agent/CLI path — a human reviews and merges via the GitHub UI (which
+# does not run this hook). Any OTHER base is an epic / integration branch, where
+# the audit gate below applies.
 case "$base" in
-  dev|main|master|release/*) exit 0 ;;
+  dev|main|master|release/*)
+    printf '[epic-merge-gate] BLOCKED: never auto-merge into %s. A human must review and merge via the GitHub UI.\n' "$base" >&2
+    exit 1 ;;
   *) ;;
 esac
 

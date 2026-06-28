@@ -119,9 +119,10 @@ failed, why further autonomous recovery is unlikely.
    an `issue/*` or `epic/*` branch unless a receipt exists for the current HEAD.
    An issue cannot become PR-ready without proof the audit ran against the exact
    code being shipped. The same receipt records `findings` + `user_facing`; the
-   **epic-merge gate** (`epic-merge-gate.sh`, a PreToolUse hook on `gh pr merge`)
-   blocks an agent auto-merge into an epic / integration branch (any base other
-   than `dev`/`main`/`release`) unless `findings=0` and `user_facing=false`
+   **epic-merge gate** (`epic-merge-gate.sh`, a PreToolUse hook on `gh pr merge`):
+   it **always blocks** an agent merge into `dev`/`main`/`release` (those are
+   human-only, via the GitHub UI), and into an epic / integration branch (any other
+   base) it allows the merge only when `findings=0` and `user_facing=false`
    (fail-closed; a human merging via the GitHub UI bypasses the local hook by
    design — that is the human-review path).
 5. Strong-model completion judge (Stop-hook, loop-capped <=2).
