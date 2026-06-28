@@ -77,17 +77,20 @@ findings are not blockers.
 As the **final** step, after every audit fix is committed, write the receipt:
 
 ```
-.keiko-scripts/audit-receipt.sh <N> --findings <unresolved-count> --user-facing <true|false>
+.keiko-scripts/audit-receipt.sh <N> --findings <unresolved-count> --user-facing <true|false> --ui-verified <true|false>
 ```
 
 - `--findings` = number of **unresolved confirmed** findings after the fix wave (`0` when clean).
 - `--user-facing` = `true` if the issue touches user-facing UI / needs design-system evidence, else `false`.
+- `--ui-verified` = `true` only when a user-facing change's **Playwright test plan ran green** (every expected result asserted). Leave `false`/omit otherwise.
 
-Both are optional (default `unknown`); omit them for a standalone audit. They feed
-the **epic auto-merge** decision (`.keiko-scripts/epic-merge-gate.sh`): a child PR
-into an epic / integration branch (any base other than `dev`/`main`/`release`) may
-auto-merge **only** when the receipt shows `findings=0` **and** `user_facing=false`
-— otherwise a human must review and merge. Fail-closed: `unknown` never auto-merges.
+All optional (default `unknown`); omit them for a standalone audit. They feed the
+**epic auto-merge** decision (`.keiko-scripts/epic-merge-gate.sh`): a child PR into
+an epic / integration branch (any base other than `dev`/`main`/`release`) may
+auto-merge **only** when `findings=0` **and** either `user_facing=false`, or
+`user_facing=true` with `ui_verified=true` and a marked
+`<!-- keiko:manual-test-plan -->` comment on the PR — otherwise a human reviews and
+merges. Fail-closed: `unknown` never auto-merges.
 
 This binds the audit to the current HEAD commit. The PR gate
 (`.keiko-scripts/audit-gate.sh`, wired into a PreToolUse hook) **blocks any

@@ -52,22 +52,29 @@ are cut **off the epic branch**, not off `dev`.
      **stop and escalate to the human — do not merge**.
    - **User-facing child** (touches user-facing UI / needs design-system evidence):
      drive the audit clean the **same way** (fix findings + re-audit until
-     `findings=0`, bounded by the 3-attempt rule), but then **require human review
-     — no auto-merge**. Before handing off, post a **PR comment** with a
-     **step-by-step manual test plan** for the reviewer: numbered, concrete
-     `do X → expect Y` steps (action + expected result) covering the
-     acceptance criteria and the user-facing surfaces a human must eyeball —
-     `state-matrix.md` states (default / hover / focus / active / disabled /
-     loading / empty / error), keyboard + screen-reader paths, light / dark /
-     high-contrast themes, and responsive breakpoints. The human follows the
-     steps, then merges.
+     `findings=0`, bounded by the 3-attempt rule), then verify it locally:
+     1. Write a **Playwright-reviewable** test plan — numbered, concrete
+        `do X → expect Y` steps (action + expected result) for the user-facing
+        behavior Playwright can assert (visible text/DOM, navigation, computed
+        styles, focus order, ARIA, responsive viewports, visual snapshots),
+        covering the acceptance criteria. Keep it automatable — subjective
+        visual / screen-reader judgment is **deferred to the epic→`dev` human
+        review**, not the child plan.
+     2. Post it as a **PR comment** marked `<!-- keiko:manual-test-plan -->`
+        (documentation, and the gate checks the marker exists).
+     3. **Drive the plan with Playwright** locally (the repo's `test:e2e` harness /
+        Playwright MCP) and assert every expected result.
+     - All expected results green → record `--ui-verified true` → **auto-merge**.
+     - Any failure (or a result Playwright cannot assert) → leave `ui_verified`
+       false → **human review + merge** (the fallback).
 
-   The non-UI case is the only auto-merge in the system, and it is **enforced**:
-   the audit records `--findings`/`--user-facing` in the receipt, and
-   `epic-merge-gate.sh` (a PreToolUse hook on `gh pr merge`) **always blocks** an
-   agent merge into `dev`/`main`/`release` (human-only via the UI), and into an
-   epic / integration branch allows it only when `findings=0` and
-   `user_facing=false`.
+   Auto-merge is the only place merges happen without a human, and it is
+   **enforced** by `epic-merge-gate.sh` (a PreToolUse hook on `gh pr merge`): it
+   **always blocks** an agent merge into `dev`/`main`/`release` (human-only via the
+   UI); into an epic / integration branch it allows the merge only when
+   `findings=0` **and** either `user_facing=false`, or `user_facing=true` with
+   `ui_verified=true` **and** the marked test-plan comment present on the PR. The
+   audit records `--findings`/`--user-facing`/`--ui-verified` in the receipt.
 
 3. After merge, confirm the epic branch still builds (`verify.sh`); add a child
    comment linking PR/commit + evidence; update the board.

@@ -42,14 +42,15 @@ fan-out first; only disjoint write scopes in parallel.
     **auto-merge**, no human, no GitHub CI (CI does not run on `epic/*`; the audit
     runs `verify.sh`, the CI mirror, locally). The orchestrator drives the audit
     clean — fix findings and re-audit in a loop until `findings=0`, bounded by the
-    3-attempt escalation rule (else escalate, do not merge). This is the system's
-    only auto-merge.
+    3-attempt escalation rule (else escalate, do not merge).
   - **-> `epic/*`, user-facing**: drive the audit clean the same way (loop to
-    `findings=0`, bounded), then **human review + merge** — no auto-merge. The
-    orchestrator posts a **PR comment** with a step-by-step manual test plan for
-    the reviewer — numbered `do X → expect Y` steps (action + expected result)
-    covering acceptance criteria + `state-matrix.md` states, keyboard /
-    screen-reader, light / dark / high-contrast themes, responsive breakpoints.
+    `findings=0`, bounded), then **Playwright-verify** the change: write a
+    Playwright-reviewable test plan (`do X → expect Y`), post it as a **PR comment**
+    marked `<!-- keiko:manual-test-plan -->` (documentation, gate-checked), and run
+    it locally. **All expected results green → `ui_verified=true` → auto-merge.**
+    Any failure or a result Playwright cannot assert → **human review + merge**
+    (fallback). Subjective visual / screen-reader judgment is deferred to the
+    epic->`dev` human review, not the child plan.
 - **`dev` is sacred**: every merge into `dev` (epic or standalone) requires a
   **human reviewer + green CI**.
 - Epic model: long-lived `epic/<name>` off `dev`; child `issue/...` off the epic
@@ -119,13 +120,15 @@ failed, why further autonomous recovery is unlikely.
    (`.git/keiko-audit/<branch>.json`); a PreToolUse hook blocks `gh pr create` on
    an `issue/*` or `epic/*` branch unless a receipt exists for the current HEAD.
    An issue cannot become PR-ready without proof the audit ran against the exact
-   code being shipped. The same receipt records `findings` + `user_facing`; the
-   **epic-merge gate** (`epic-merge-gate.sh`, a PreToolUse hook on `gh pr merge`):
-   it **always blocks** an agent merge into `dev`/`main`/`release` (those are
-   human-only, via the GitHub UI), and into an epic / integration branch (any other
-   base) it allows the merge only when `findings=0` and `user_facing=false`
-   (fail-closed; a human merging via the GitHub UI bypasses the local hook by
-   design — that is the human-review path).
+   code being shipped. The same receipt records `findings` + `user_facing` +
+   `ui_verified`; the **epic-merge gate** (`epic-merge-gate.sh`, a PreToolUse hook
+   on `gh pr merge`) **always blocks** an agent merge into `dev`/`main`/`release`
+   (human-only, via the GitHub UI), and into an epic / integration branch (any
+   other base) allows the merge only when `findings=0` **and** either
+   `user_facing=false`, or `user_facing=true` with `ui_verified=true` and a marked
+   `<!-- keiko:manual-test-plan -->` comment present on the PR (the gate checks that
+   comment for real via `gh`). Fail-closed; a human merging via the GitHub UI
+   bypasses the local hook by design — that is the human-review path.
 5. Strong-model completion judge (Stop-hook, loop-capped <=2).
 6. CI on protected `dev` — unbypassable server-side backstop _(requires repo
    admin to configure; see README "Server-side prerequisites")_.
