@@ -67,16 +67,23 @@ change-rules. Out-of-scope blockers → report up, the lead files a linked issue
    red, fix and re-run, **looping until green** (bounded by 3 distinct attempts →
    escalate). The PR-create **verify-gate** blocks `gh pr create`/`gh pr ready`
    until a green verify receipt exists at HEAD.
-2. **Run `keiko-issue-audit` `#N`** — mandatory before PR-ready, even if it finds
-   nothing. It re-verifies and writes the audit receipt for HEAD as its last step.
+2. **Audit-clean loop.** Run `keiko-issue-audit` `#N` — mandatory. If it reports
+   confirmed findings, fix them and re-audit, **looping until `findings=0`**
+   (bounded by 3 attempts → escalate). The audit re-verifies and writes the audit
+   receipt at HEAD as its last step. **User-facing issue:** also write a runnable
+   Playwright plan, run it via `.keiko-scripts/ui-verify-receipt.sh #N -- <playwright cmd>`
+   (it stamps the ui-verify receipt only on green), and post the
+   `<!-- keiko:manual-test-plan -->` PR comment.
 3. Branch `issue/<N>-<short>` off `dev`; Conventional Commit referencing `#N`;
    `verifier` fills the PR "Verification evidence" section. For a user-facing
    change, capture design-system evidence under `docs/design-system/evidence/<N>/`
    (theme screenshots + `*-fidelity-proof.json` + `a11y-proof.json`, ADR-0049/0051).
-4. **Proof-of-audit gate.** Before opening the PR, `.keiko-scripts/audit-gate.sh`
-   must pass — it's enforced by a PreToolUse hook that **blocks `gh pr create`**
-   unless a valid audit receipt exists at HEAD. If you committed after the audit,
-   re-run `keiko-issue-audit` (the receipt is SHA-bound and goes stale).
+4. **PR gates.** Before opening the PR, three PreToolUse gates must pass and
+   **block `gh pr create`** otherwise: `verify-gate` (green verify @ HEAD),
+   `audit-gate` (audit ran @ HEAD), and — for a `-> dev` PR — `dev-pr-gate`
+   (`findings=0` **and** a green ui-verify receipt when user-facing). If you
+   committed after the audit, re-run the audit/verify (receipts are SHA-bound and
+   go stale).
 5. Open PR. **Every merge into `dev` is human-gated + green CI** — never
    auto-merge to `dev`, never enable auto-merge. `pr-shepherd` drives CI/review
    to merge-ready; bounded CI repair (stop after 3 distinct failed attempts).

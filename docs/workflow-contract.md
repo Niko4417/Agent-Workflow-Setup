@@ -60,7 +60,7 @@ fan-out first; only disjoint write scopes in parallel.
   re-runs on the accumulated epic at the epic->`dev` PR. **The epic->`dev` PR only
   opens after `dev` is rebased into the epic and the integrated surface passes,
   at HEAD, the full local set — green verify, audit `findings=0`, and (user-facing)
-  a green ui-verify Playwright run (`epic-pr-gate` enforces findings=0 + ui-verify;
+  a green ui-verify Playwright run (`dev-pr-gate` enforces findings=0 + ui-verify;
   `verify-gate` enforces verify). Then GitHub CI must go green before human review.**
 
 ## Issue lifecycle
@@ -139,11 +139,13 @@ failed, why further autonomous recovery is unlikely.
    `<!-- keiko:manual-test-plan -->` comment present on the PR (the gate checks that
    comment for real via `gh`). Fail-closed; a human merging via the GitHub UI
    bypasses the local hook by design — that is the human-review path.
-   4b. **Epic->dev PR gate** — `epic-pr-gate.sh` (PreToolUse on `gh pr create`/`ready`
-   from an `epic/*` branch) blocks the epic->`dev` PR unless, at HEAD, the
-   integrated audit is clean (`findings=0`) and — when the epic is user-facing — a
-   green ui-verify receipt exists. With `verify-gate`, the epic PR cannot open until
-   verify + audit + (UI) Playwright are all clean against the dev-integrated HEAD.
+   4b. **->dev PR gate** — `dev-pr-gate.sh` (PreToolUse on a `gh pr create`/`ready`
+   whose base is `dev`, from an `issue/*` or `epic/*` branch) blocks any `-> dev`
+   PR (standalone issue->dev OR epic->dev) unless, at HEAD, the audit is clean
+   (`findings=0`) and — when user-facing — a green ui-verify receipt exists. With
+   `verify-gate`, a `-> dev` PR cannot open until verify + audit + (UI) Playwright
+   are all clean. (Child issue->epic PRs target a non-dev base and pass through;
+   their findings=0 + ui-verify are enforced at the child->epic merge.)
 5. Strong-model completion judge (Stop-hook, loop-capped <=2).
 6. CI on protected `dev` — unbypassable server-side backstop _(requires repo
    admin to configure; see README "Server-side prerequisites")_.
