@@ -137,7 +137,12 @@ failed, why further autonomous recovery is unlikely.
    re-checks the same at the merge HEAD and adds the marked
    `<!-- keiko:manual-test-plan -->` comment (gh-checked) for a user-facing
    auto-merge; it **always blocks** an agent merge into `dev`/`main`/`release`
-   (human-only, via the GitHub UI — the human-review path). Fail-closed throughout.
+   (human-only, via the GitHub UI — the human-review path). For a user-facing
+   PR that a human merges (`-> dev`, both standalone issue and epic), the same
+   comment is enforced at the **`gh pr ready` handoff** by `ready-gate.sh` (open
+   the PR `--draft`, post the test-plan comment, then `gh pr ready`). So **every**
+   user-facing PR is documented with its Playwright plan before hand-off — at the
+   auto-merge for `-> epic`, at `ready` for `-> dev`. Fail-closed throughout.
 5. Strong-model completion judge (Stop-hook, loop-capped <=2).
 6. CI on protected `dev` — unbypassable server-side backstop _(requires repo
    admin to configure; see README "Server-side prerequisites")_.

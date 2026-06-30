@@ -84,9 +84,13 @@ change-rules. Out-of-scope blockers → report up, the lead files a linked issue
    ui-verify receipt when user-facing). Same for every PR, any target. If you
    committed after the audit, re-run the audit/verify (receipts are SHA-bound and
    go stale).
-5. Open PR. **Every merge into `dev` is human-gated + green CI** — never
-   auto-merge to `dev`, never enable auto-merge. `pr-shepherd` drives CI/review
-   to merge-ready; bounded CI repair (stop after 3 distinct failed attempts).
+5. Open PR. **User-facing → handoff flow:** open it `--draft`, post the
+   `<!-- keiko:manual-test-plan -->` comment (the runnable Playwright plan), then
+   `gh pr ready` — the **ready-gate** blocks `ready` until that comment exists.
+   (Non-user-facing PRs open ready directly.) **Every merge into `dev` is
+   human-gated + green CI** — never auto-merge to `dev`, never enable auto-merge.
+   `pr-shepherd` drives CI/review to merge-ready; bounded CI repair (stop after 3
+   distinct failed attempts).
 6. Set `Workflow State` = `PR Open` → `Ready for Human Review`; flush
    current-state + next-action to the issue/PR.
 

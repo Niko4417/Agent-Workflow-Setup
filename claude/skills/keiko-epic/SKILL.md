@@ -98,10 +98,13 @@ When all required children are integrated on the epic branch:
    - **user-facing epic:** `.keiko-scripts/ui-verify-receipt.sh #E -- <playwright cmd>`
      — the integrated Playwright plan must actually run green.
 3. **Open the epic PR `epic/<name> -> dev` — it will not open unless all of the
-   above are clean at HEAD.** Three PreToolUse gates enforce it on `gh pr create`:
-   `verify-gate` (green verify) and `audit-gate` (a clean audit at HEAD — ran,
-   `findings=0`, + ui-verify when user-facing). The same two gates apply to every PR. Body: child-issue
-   matrix, summary by capability, verification evidence, known limitations/follow-ups.
+   above are clean at HEAD.** `verify-gate` (green verify) + `audit-gate` (clean
+   audit: ran, `findings=0`, + ui-verify when user-facing) enforce it on
+   `gh pr create`. **User-facing epic:** open it `--draft`, post the
+   `<!-- keiko:manual-test-plan -->` comment carrying the **integrated** epic's
+   runnable Playwright plan, then `gh pr ready` — the **ready-gate** blocks `ready`
+   until that comment exists. Body: child-issue matrix, summary by capability,
+   verification evidence, known limitations/follow-ups.
 4. **Watch the real GitHub CI and drive it green** (`pr-shepherd`) — bounded repair,
    stop after 3 distinct failed attempts and escalate. A new commit re-stales the
    receipts; if you must re-open, re-run the loops first.
