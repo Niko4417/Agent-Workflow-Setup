@@ -99,8 +99,8 @@ When all required children are integrated on the epic branch:
      — the integrated Playwright plan must actually run green.
 3. **Open the epic PR `epic/<name> -> dev` — it will not open unless all of the
    above are clean at HEAD.** Three PreToolUse gates enforce it on `gh pr create`:
-   `verify-gate` (green verify), `dev-pr-gate` (audit `findings=0` + ui-verify when
-   user-facing, for any `-> dev` PR), and the proof-of-audit gate (audit ran at HEAD). Body: child-issue
+   `verify-gate` (green verify) and `audit-gate` (a clean audit at HEAD — ran,
+   `findings=0`, + ui-verify when user-facing). The same two gates apply to every PR. Body: child-issue
    matrix, summary by capability, verification evidence, known limitations/follow-ups.
 4. **Watch the real GitHub CI and drive it green** (`pr-shepherd`) — bounded repair,
    stop after 3 distinct failed attempts and escalate. A new commit re-stales the

@@ -57,11 +57,12 @@ fan-out first; only disjoint write scopes in parallel.
 - Epic model: long-lived `epic/<name>` off `dev`; child `issue/...` off the epic
   branch; final epic PR -> `dev` is the human-gated handoff (full CI + human). The
   child→epic audit gate runs `verify.sh` (the CI mirror) locally; real GitHub CI
-  re-runs on the accumulated epic at the epic->`dev` PR. **The epic->`dev` PR only
+  re-runs on the accumulated epic at the epic->`dev` PR. \*\*The epic->`dev` PR only
   opens after `dev` is rebased into the epic and the integrated surface passes,
   at HEAD, the full local set — green verify, audit `findings=0`, and (user-facing)
-  a green ui-verify Playwright run (`dev-pr-gate` enforces findings=0 + ui-verify;
-  `verify-gate` enforces verify). Then GitHub CI must go green before human review.**
+  a green ui-verify Playwright run (`audit-gate` enforces a clean audit: findings=0
+  - ui-verify; `verify-gate` enforces verify). Then GitHub CI must go green before
+    human review.\*\*
 
 ## Issue lifecycle
 
@@ -124,28 +125,19 @@ failed, why further autonomous recovery is unlikely.
    mirror) and writes a SHA-bound receipt **only when green**; a PreToolUse hook
    blocks `gh pr create`/`gh pr ready` on `issue/*`/`epic/*` unless a green verify
    receipt exists at HEAD. Loop verify→fix until green before the PR.
-4. **Proof-of-audit gate** — `keiko-issue-audit` writes a SHA-bound receipt
-   (`.git/keiko-audit/<branch>.json`); a PreToolUse hook blocks `gh pr create` on
-   an `issue/*` or `epic/*` branch unless a receipt exists for the current HEAD.
-   An issue cannot become PR-ready without proof the audit ran against the exact
-   code being shipped. The audit receipt records `findings` + `user_facing`; the
-   **epic-merge gate** (`epic-merge-gate.sh`, a PreToolUse hook on `gh pr merge`)
-   **always blocks** an agent merge into `dev`/`main`/`release` (human-only, via
-   the GitHub UI), and into an epic / integration branch (any other base) allows
-   the merge only when a **green verify receipt** exists at the audited commit
-   **and** `findings=0` **and** either `user_facing=false`, or `user_facing=true`
-   with a **green ui-verify receipt** at the audited commit (the Playwright plan
-   actually ran green via `ui-verify-receipt.sh` — not self-reported) and a marked
-   `<!-- keiko:manual-test-plan -->` comment present on the PR (the gate checks that
-   comment for real via `gh`). Fail-closed; a human merging via the GitHub UI
-   bypasses the local hook by design — that is the human-review path.
-   4b. **->dev PR gate** — `dev-pr-gate.sh` (PreToolUse on a `gh pr create`/`ready`
-   whose base is `dev`, from an `issue/*` or `epic/*` branch) blocks any `-> dev`
-   PR (standalone issue->dev OR epic->dev) unless, at HEAD, the audit is clean
-   (`findings=0`) and — when user-facing — a green ui-verify receipt exists. With
-   `verify-gate`, a `-> dev` PR cannot open until verify + audit + (UI) Playwright
-   are all clean. (Child issue->epic PRs target a non-dev base and pass through;
-   their findings=0 + ui-verify are enforced at the child->epic merge.)
+4. **Proof-of-clean-audit gate** — `keiko-issue-audit` writes a SHA-bound receipt
+   (`.git/keiko-audit/<branch>.json`); `audit-gate.sh` (PreToolUse on
+   `gh pr create`/`ready`, `issue/*`/`epic/*`) blocks **any** PR unless, at HEAD,
+   the audit **ran and is clean**: `findings=0` **and** — when user-facing — a green
+   ui-verify receipt (the Playwright plan actually ran green via
+   `ui-verify-receipt.sh`, not self-reported). Uniform for every PR, any target;
+   with `verify-gate`, no PR opens unless verify + audit + (UI) Playwright are all
+   clean at HEAD.
+   The **epic-merge gate** (`epic-merge-gate.sh`, PreToolUse on `gh pr merge`)
+   re-checks the same at the merge HEAD and adds the marked
+   `<!-- keiko:manual-test-plan -->` comment (gh-checked) for a user-facing
+   auto-merge; it **always blocks** an agent merge into `dev`/`main`/`release`
+   (human-only, via the GitHub UI — the human-review path). Fail-closed throughout.
 5. Strong-model completion judge (Stop-hook, loop-capped <=2).
 6. CI on protected `dev` — unbypassable server-side backstop _(requires repo
    admin to configure; see README "Server-side prerequisites")_.

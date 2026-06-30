@@ -54,10 +54,6 @@
           },
           {
             "type": "command",
-            "command": "cmd=$(jq -r '.tool_input.command // empty'); printf '%s' \"$cmd\" | grep -qiE 'gh pr (create|ready)' || exit 0; [ -x .keiko-scripts/dev-pr-gate.sh ] || exit 0; .keiko-scripts/dev-pr-gate.sh \"$cmd\" >&2 || { echo '[dev-pr-gate] ->dev PR blocked — surface must be clean (findings=0 + ui-verify if user-facing) at HEAD first.' >&2; exit 2; }; exit 0"
-          },
-          {
-            "type": "command",
             "command": "cmd=$(jq -r '.tool_input.command // empty'); printf '%s' \"$cmd\" | grep -qiE 'gh pr merge' || exit 0; [ -x .keiko-scripts/epic-merge-gate.sh ] || exit 0; .keiko-scripts/epic-merge-gate.sh \"$cmd\" >&2 || exit 2; exit 0"
           }
         ]

@@ -78,10 +78,10 @@ change-rules. Out-of-scope blockers → report up, the lead files a linked issue
    `verifier` fills the PR "Verification evidence" section. For a user-facing
    change, capture design-system evidence under `docs/design-system/evidence/<N>/`
    (theme screenshots + `*-fidelity-proof.json` + `a11y-proof.json`, ADR-0049/0051).
-4. **PR gates.** Before opening the PR, three PreToolUse gates must pass and
-   **block `gh pr create`** otherwise: `verify-gate` (green verify @ HEAD),
-   `audit-gate` (audit ran @ HEAD), and — for a `-> dev` PR — `dev-pr-gate`
-   (`findings=0` **and** a green ui-verify receipt when user-facing). If you
+4. **PR gates.** Before opening the PR, two PreToolUse gates must pass and
+   **block `gh pr create`** otherwise: `verify-gate` (green verify @ HEAD) and
+   `audit-gate` (a **clean** audit @ HEAD — ran, `findings=0`, **and** a green
+   ui-verify receipt when user-facing). Same for every PR, any target. If you
    committed after the audit, re-run the audit/verify (receipts are SHA-bound and
    go stale).
 5. Open PR. **Every merge into `dev` is human-gated + green CI** — never
