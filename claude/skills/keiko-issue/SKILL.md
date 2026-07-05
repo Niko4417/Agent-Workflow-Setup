@@ -90,7 +90,10 @@ change-rules. Out-of-scope blockers → report up, the lead files a linked issue
    (Non-user-facing PRs open ready directly.) **Every merge into `dev` is
    human-gated + green CI** — never auto-merge to `dev`, never enable auto-merge.
    `pr-shepherd` drives CI/review to merge-ready; bounded CI repair (stop after 3
-   distinct failed attempts).
+   distinct failed attempts). **Each CI-repair repush re-runs the QA:** the
+   **push-gate** blocks a `git push` to an open `-> dev` PR unless fresh verify +
+   clean-audit (+ ui-verify) receipts exist at the new HEAD — so fix → re-run the
+   loops → push.
 6. Set `Workflow State` = `PR Open` → `Ready for Human Review`; flush
    current-state + next-action to the issue/PR.
 

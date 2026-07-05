@@ -59,6 +59,10 @@
           {
             "type": "command",
             "command": "cmd=$(jq -r '.tool_input.command // empty'); printf '%s' \"$cmd\" | grep -qiE 'gh pr ready' || exit 0; [ -x .keiko-scripts/ready-gate.sh ] || exit 0; .keiko-scripts/ready-gate.sh \"$cmd\" >&2 || { echo '[ready-gate] ready blocked — user-facing PR needs its manual-test-plan comment first.' >&2; exit 2; }; exit 0"
+          },
+          {
+            "type": "command",
+            "command": "cmd=$(jq -r '.tool_input.command // empty'); printf '%s' \"$cmd\" | grep -qE 'git +push' || exit 0; [ -x .keiko-scripts/push-gate.sh ] || exit 0; .keiko-scripts/push-gate.sh >&2 || { echo '[push-gate] repush to ->dev PR blocked — re-run verify + audit (+ui-verify) at HEAD first.' >&2; exit 2; }; exit 0"
           }
         ]
       },

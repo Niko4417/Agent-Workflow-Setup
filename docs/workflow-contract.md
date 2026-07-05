@@ -143,6 +143,13 @@ failed, why further autonomous recovery is unlikely.
    the PR `--draft`, post the test-plan comment, then `gh pr ready`). So **every**
    user-facing PR is documented with its Playwright plan before hand-off — at the
    auto-merge for `-> epic`, at `ready` for `-> dev`. Fail-closed throughout.
+   4c. **Push gate** — `push-gate.sh` (PreToolUse on `git push`) re-requires the
+   QA when a fix is pushed onto an **open PR that targets `dev`** (the CI-repair /
+   external-review-fix loop): it delegates to `verify-gate` + `audit-gate` at the
+   new HEAD, so a repush must carry fresh verify + clean-audit (+ ui-verify)
+   receipts. GitHub CI re-runs verify on each push but not the keiko audit or the
+   ui-verify plan, so this re-qualifies those. Pre-PR pushes and non-`dev` PRs
+   (e.g. child -> epic) pass through.
 5. Strong-model completion judge (Stop-hook, loop-capped <=2).
 6. CI on protected `dev` — unbypassable server-side backstop _(requires repo
    admin to configure; see README "Server-side prerequisites")_.

@@ -33,6 +33,12 @@
             "command": "cmd=$(jq -r '.tool_input.command // empty'); printf '%s' \"$cmd\" | grep -qiE 'gh pr ready' || exit 0; gate=\"$(git rev-parse --show-toplevel)/.keiko-scripts/ready-gate.sh\"; [ -x \"$gate\" ] || exit 0; \"$gate\" \"$cmd\" >&2 || exit 2; exit 0",
             "timeout": 15,
             "statusMessage": "Ready gate"
+          },
+          {
+            "type": "command",
+            "command": "cmd=$(jq -r '.tool_input.command // empty'); printf '%s' \"$cmd\" | grep -qE 'git +push' || exit 0; gate=\"$(git rev-parse --show-toplevel)/.keiko-scripts/push-gate.sh\"; [ -x \"$gate\" ] || exit 0; \"$gate\" >&2 || exit 2; exit 0",
+            "timeout": 25,
+            "statusMessage": "Push gate"
           }
         ]
       }

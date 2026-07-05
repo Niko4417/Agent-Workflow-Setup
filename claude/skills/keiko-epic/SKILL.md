@@ -106,8 +106,10 @@ When all required children are integrated on the epic branch:
    until that comment exists. Body: child-issue matrix, summary by capability,
    verification evidence, known limitations/follow-ups.
 4. **Watch the real GitHub CI and drive it green** (`pr-shepherd`) — bounded repair,
-   stop after 3 distinct failed attempts and escalate. A new commit re-stales the
-   receipts; if you must re-open, re-run the loops first.
+   stop after 3 distinct failed attempts and escalate. **Each CI-repair repush
+   re-runs the QA:** the **push-gate** blocks a `git push` to this open `-> dev` PR
+   unless fresh verify + clean-audit (+ ui-verify) receipts exist at the new HEAD —
+   so fix → re-run the loops → push.
 5. **Only once CI is green**, set the epic and remaining children to `Ready for
 Human Review`. **Sacred-`dev`: human review + green CI required.** Do **not**
    merge the epic PR or close the epic without explicit maintainer authorization.
