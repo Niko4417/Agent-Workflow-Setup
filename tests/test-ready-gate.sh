@@ -19,9 +19,9 @@ mkrcpt() { # user_facing
   mkdir -p .git/keiko-audit
   printf '{"branch":"%s","user_facing":"%s","ts":"t"}\n' "$b" "$1" > ".git/keiko-audit/$slug.json"
 }
-stubgh() { # present|absent  (the comment body gh returns)
+stubgh() { # sha  (""=no plan comment); embeds a SHA-bound marker
   local body='(no plan)'
-  [ "$1" = present ] && body='<!-- keiko:manual-test-plan -->'
+  [ -n "${1:-}" ] && body="<!-- keiko:manual-test-plan sha=$1 -->"
   printf '#!/usr/bin/env bash\nprintf "%%s\\n" "%s"\n' "$body" > bin/gh
   chmod +x bin/gh
 }
@@ -36,11 +36,13 @@ git checkout -q -b feature-x
 expect "non-work branch -> pass through" 0
 
 git checkout -q -b issue/3-x
+H="$(git rev-parse HEAD)"
 rm -rf .git/keiko-audit
 expect "no audit receipt -> pass through" 0
-mkrcpt false; stubgh absent;  expect "non-user-facing -> pass through" 0
-mkrcpt true;  stubgh present; expect "user-facing + comment -> allow" 0
-mkrcpt true;  stubgh absent;  expect "user-facing, no comment -> block" 1
+mkrcpt false; stubgh "$H";  expect "non-user-facing -> pass through" 0
+mkrcpt true;  stubgh "$H";  expect "user-facing + comment@HEAD -> allow" 0
+mkrcpt true;  stubgh "";    expect "user-facing, no comment -> block" 1
+mkrcpt true;  stubgh deadbeef; expect "user-facing, stale comment sha -> block" 1
 
 echo "---"
 echo "passed=$pass failed=$fail"

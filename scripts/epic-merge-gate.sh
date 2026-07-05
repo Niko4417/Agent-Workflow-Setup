@@ -92,8 +92,9 @@ case "$user_facing" in
       exit 1
     fi
     comments="$(ghpr --json comments -q '.comments[].body' 2>/dev/null || true)"
-    if ! printf '%s' "$comments" | grep -q "$marker"; then
-      printf '[epic-merge-gate] BLOCKED: %s is user-facing but has no manual-test-plan comment (<!-- %s -->) on the PR. Post the test plan before auto-merge.\n' "$head" "$marker" >&2
+    # SHA-bound: the comment must name the audited commit being merged.
+    if ! printf '%s' "$comments" | grep -q "$marker sha=$audited"; then
+      printf '[epic-merge-gate] BLOCKED: %s is user-facing but has no manual-test-plan comment for the audited commit (<!-- %s sha=%s -->). Repost the test plan for this commit before auto-merge.\n' "$head" "$marker" "$audited" >&2
       exit 1
     fi
     printf '[epic-merge-gate] OK: user-facing audit clean, Playwright-verified, test-plan comment present for %s -> %s; auto-merge allowed.\n' "$head" "$base"

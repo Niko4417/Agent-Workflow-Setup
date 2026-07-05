@@ -72,8 +72,9 @@ change-rules. Out-of-scope blockers → report up, the lead files a linked issue
    (bounded by 3 attempts → escalate). The audit re-verifies and writes the audit
    receipt at HEAD as its last step. **User-facing issue:** also write a runnable
    Playwright plan, run it via `.keiko-scripts/ui-verify-receipt.sh #N -- <playwright cmd>`
-   (it stamps the ui-verify receipt only on green), and post the
-   `<!-- keiko:manual-test-plan -->` PR comment.
+   (it stamps the ui-verify receipt only on green), and post the PR comment marked
+   **`<!-- keiko:manual-test-plan sha=<HEAD> -->`** (SHA-bound: name the exact
+   commit; repost it whenever HEAD changes).
 3. Branch `issue/<N>-<short>` off `dev`; Conventional Commit referencing `#N`;
    `verifier` fills the PR "Verification evidence" section. For a user-facing
    change, capture design-system evidence under `docs/design-system/evidence/<N>/`
@@ -85,15 +86,17 @@ change-rules. Out-of-scope blockers → report up, the lead files a linked issue
    committed after the audit, re-run the audit/verify (receipts are SHA-bound and
    go stale).
 5. Open PR. **User-facing → handoff flow:** open it `--draft`, post the
-   `<!-- keiko:manual-test-plan -->` comment (the runnable Playwright plan), then
-   `gh pr ready` — the **ready-gate** blocks `ready` until that comment exists.
+   `<!-- keiko:manual-test-plan sha=<HEAD> -->` comment (the runnable Playwright
+   plan), then `gh pr ready` — the **ready-gate** blocks `ready` until a comment
+   naming the current commit exists.
    (Non-user-facing PRs open ready directly.) **Every merge into `dev` is
    human-gated + green CI** — never auto-merge to `dev`, never enable auto-merge.
    `pr-shepherd` drives CI/review to merge-ready; bounded CI repair (stop after 3
    distinct failed attempts). **Each CI-repair repush re-runs the QA:** the
    **push-gate** blocks a `git push` to an open `-> dev` PR unless fresh verify +
-   clean-audit (+ ui-verify) receipts exist at the new HEAD — so fix → re-run the
-   loops → push.
+   clean-audit (+ ui-verify) receipts exist at the new HEAD — and, for a
+   user-facing PR, the `keiko:manual-test-plan sha=<HEAD>` comment reposted for the
+   new commit — so fix → re-run the loops → repost the comment → push.
 6. Set `Workflow State` = `PR Open` → `Ready for Human Review`; flush
    current-state + next-action to the issue/PR.
 

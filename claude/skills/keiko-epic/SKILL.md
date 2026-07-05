@@ -59,8 +59,9 @@ are cut **off the epic branch**, not off `dev`.
         visual snapshots), covering the acceptance criteria. Keep it automatable —
         subjective visual / screen-reader judgment is **deferred to the epic→`dev`
         human review**, not the child plan.
-     2. Post the plan as a **PR comment** marked `<!-- keiko:manual-test-plan -->`
-        (documentation; the merge gate checks the marker exists).
+     2. Post the plan as a **PR comment** marked
+        `<!-- keiko:manual-test-plan sha=<HEAD> -->` (SHA-bound; the merge gate
+        requires a comment naming the audited commit, so repost on any fix).
      3. Run it via **`.keiko-scripts/ui-verify-receipt.sh #child -- <playwright cmd>`**
         — it executes the spec and writes the ui-verify receipt **only on a real
         green exit** (the result is not self-reported).
@@ -101,15 +102,16 @@ When all required children are integrated on the epic branch:
    above are clean at HEAD.** `verify-gate` (green verify) + `audit-gate` (clean
    audit: ran, `findings=0`, + ui-verify when user-facing) enforce it on
    `gh pr create`. **User-facing epic:** open it `--draft`, post the
-   `<!-- keiko:manual-test-plan -->` comment carrying the **integrated** epic's
-   runnable Playwright plan, then `gh pr ready` — the **ready-gate** blocks `ready`
-   until that comment exists. Body: child-issue matrix, summary by capability,
-   verification evidence, known limitations/follow-ups.
+   `<!-- keiko:manual-test-plan sha=<HEAD> -->` comment carrying the **integrated**
+   epic's runnable Playwright plan, then `gh pr ready` — the **ready-gate** blocks
+   `ready` until a comment naming the current commit exists. Body: child-issue
+   matrix, summary by capability, verification evidence, known limitations/follow-ups.
 4. **Watch the real GitHub CI and drive it green** (`pr-shepherd`) — bounded repair,
    stop after 3 distinct failed attempts and escalate. **Each CI-repair repush
    re-runs the QA:** the **push-gate** blocks a `git push` to this open `-> dev` PR
    unless fresh verify + clean-audit (+ ui-verify) receipts exist at the new HEAD —
-   so fix → re-run the loops → push.
+   and, for a user-facing epic, the `keiko:manual-test-plan sha=<HEAD>` comment
+   reposted for the new commit — so fix → re-run the loops → repost the comment → push.
 5. **Only once CI is green**, set the epic and remaining children to `Ready for
 Human Review`. **Sacred-`dev`: human review + green CI required.** Do **not**
    merge the epic PR or close the epic without explicit maintainer authorization.

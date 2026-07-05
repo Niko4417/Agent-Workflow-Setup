@@ -35,10 +35,11 @@ mkuiverify() { # ui_verified_sha  ("" => no ui-verify receipt)
   printf '{"branch":"issue/999-demo","ui_verified_sha":"%s","ts":"t"}\n' "$1" > .git/keiko-ui-verify/issue_999-demo.json
 }
 # stubgh BASE COMMENT  — BASE="" simulates an unresolvable PR; COMMENT=present|absent
-stubgh() {
+stubgh() { # base  comment(present|stale|absent)  — present means sha=x (the audited sha)
   local base="$1" comment="${2:-absent}" body="(no plan)"
   if [ -z "$base" ]; then printf '#!/usr/bin/env bash\n' > bin/gh; chmod +x bin/gh; return; fi
-  [ "$comment" = "present" ] && body='<!-- keiko:manual-test-plan -->'
+  [ "$comment" = "present" ] && body='<!-- keiko:manual-test-plan sha=x -->'
+  [ "$comment" = "stale" ]   && body='<!-- keiko:manual-test-plan sha=OLD -->'
   cat > bin/gh <<EOF
 #!/usr/bin/env bash
 for a in "\$@"; do
@@ -66,6 +67,7 @@ stubgh feat/x-123;     mkreceipt 0 false; mkverify "";  mkuiverify x; expect "no
 stubgh feat/x-123;     mkreceipt 0 false; mkverify y;   mkuiverify x; expect "verify sha mismatch -> block"  1
 stubgh feat/x-123 present; mkreceipt 0 true; mkverify x; mkuiverify x; expect "UI: comment+verify+ui-verify -> allow" 0
 stubgh feat/x-123 absent;  mkreceipt 0 true; mkverify x; mkuiverify x; expect "UI: no comment -> block"      1
+stubgh feat/x-123 stale;   mkreceipt 0 true; mkverify x; mkuiverify x; expect "UI: stale comment sha -> block" 1
 stubgh feat/x-123 present; mkreceipt 0 true; mkverify x; mkuiverify ""; expect "UI: no ui-verify receipt -> block" 1
 stubgh feat/x-123 present; mkreceipt 0 true; mkverify x; mkuiverify y;  expect "UI: ui-verify sha mismatch -> block" 1
 stubgh feat/x-123;     mkreceipt 0 unknown; mkverify x; mkuiverify x; expect "user_facing unknown -> block"  1

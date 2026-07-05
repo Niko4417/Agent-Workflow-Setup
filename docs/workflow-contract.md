@@ -46,7 +46,8 @@ fan-out first; only disjoint write scopes in parallel.
   - **-> `epic/*`, user-facing**: drive the audit clean the same way (loop to
     `findings=0`, bounded), then **Playwright-verify** the change: write a
     Playwright-reviewable test plan (`do X → expect Y`), post it as a **PR comment**
-    marked `<!-- keiko:manual-test-plan -->` (documentation, gate-checked), and run
+    marked `<!-- keiko:manual-test-plan sha=<HEAD> -->` (SHA-bound documentation,
+    gate-checked; repost on any fix), and run
     it via `ui-verify-receipt.sh` (which stamps a receipt **only on a real green
     Playwright exit** — not self-reported). **Green ui-verify receipt + comment →
     auto-merge.** Any failure or a result Playwright cannot assert → \*\*human review
@@ -134,15 +135,17 @@ failed, why further autonomous recovery is unlikely.
    with `verify-gate`, no PR opens unless verify + audit + (UI) Playwright are all
    clean at HEAD.
    The **epic-merge gate** (`epic-merge-gate.sh`, PreToolUse on `gh pr merge`)
-   re-checks the same at the merge HEAD and adds the marked
-   `<!-- keiko:manual-test-plan -->` comment (gh-checked) for a user-facing
-   auto-merge; it **always blocks** an agent merge into `dev`/`main`/`release`
-   (human-only, via the GitHub UI — the human-review path). For a user-facing
-   PR that a human merges (`-> dev`, both standalone issue and epic), the same
-   comment is enforced at the **`gh pr ready` handoff** by `ready-gate.sh` (open
-   the PR `--draft`, post the test-plan comment, then `gh pr ready`). So **every**
-   user-facing PR is documented with its Playwright plan before hand-off — at the
-   auto-merge for `-> epic`, at `ready` for `-> dev`. Fail-closed throughout.
+   re-checks the same at the merge HEAD and adds the **SHA-bound** test-plan
+   comment `<!-- keiko:manual-test-plan sha=<commit> -->` (gh-checked, must name the
+   audited commit) for a user-facing auto-merge; it **always blocks** an agent merge
+   into `dev`/`main`/`release` (human-only, via the GitHub UI — the human-review
+   path). For a user-facing PR that a human merges (`-> dev`, both standalone issue
+   and epic), the same comment is enforced at the **`gh pr ready` handoff** by
+   `ready-gate.sh` (open the PR `--draft`, post the test-plan comment, then
+   `gh pr ready`), and on any fix repush by `push-gate.sh`. Because the marker is
+   SHA-bound, a fix that changes HEAD forces a **repost** — the documented plan
+   always names the exact commit. So **every** user-facing PR is documented with a
+   current Playwright plan before hand-off. Fail-closed throughout.
    4c. **Push gate** — `push-gate.sh` (PreToolUse on `git push`) re-requires the
    QA when a fix is pushed onto an **open PR that targets `dev`** (the CI-repair /
    external-review-fix loop): it delegates to `verify-gate` + `audit-gate` at the

@@ -42,5 +42,19 @@ if ! "$here/audit-gate.sh"; then
   exit 1
 fi
 
+# A user-facing fix changes the UI, so its sha-bound test-plan comment must be
+# reposted for the new commit (the automated ui-verify already re-ran via audit-gate).
+gd="$(git rev-parse --git-dir 2>/dev/null)"
+slug="$(printf '%s' "$branch" | tr '/' '_')"
+head="$(git rev-parse HEAD 2>/dev/null)"
+user_facing="$(sed -n 's/.*"user_facing":"\([^"]*\)".*/\1/p' "$gd/keiko-audit/$slug.json" 2>/dev/null || true)"
+if [ "$user_facing" = "true" ]; then
+  comments="$(gh pr view --json comments -q '.comments[].body' 2>/dev/null || true)"
+  if ! printf '%s' "$comments" | grep -q "keiko:manual-test-plan sha=$head"; then
+    printf '[push-gate] fix push blocked — repost the manual-test-plan comment for the new commit (<!-- keiko:manual-test-plan sha=%s -->).\n' "$head" >&2
+    exit 1
+  fi
+fi
+
 printf '[push-gate] OK: verify + clean audit at HEAD for the ->dev PR update.\n'
 exit 0
