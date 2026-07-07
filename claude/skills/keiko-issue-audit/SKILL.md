@@ -107,8 +107,12 @@ commit again after this, re-run the audit (the receipt goes stale by design).
 
 ## Memory
 
-Read/append only durable lessons to `.agents/memory/<role>/` (<25 KB). Never
-store secrets, customer data, source dumps, or token-bearing logs.
+Append to `.agents/memory/<role>/` **only a durable, generalizable lesson** — a
+recurring finding, a repo gotcha, a workaround, a systemic gap. **Not** per-issue
+facts (those live in the PR closure evidence) and **not** "audited #N, clean." If
+this run taught nothing reusable, write nothing — silence beats noise. Keep
+<25 KB/file; never store secrets, customer data, source dumps, or token-bearing
+logs. (The epic-level `keiko-retro` pass aggregates across runs and prunes.)
 
 ## Final report
 

@@ -1,12 +1,20 @@
 # Agent Workflow Setup
 
-A portable, multi-agent development workflow for the **Keiko** codebase — primary
-harness **Codex**, backup harness **Claude Code**. Clone it, symlink it into a
-Keiko checkout, and drive epics and issues through one consistent, gated process.
+**Turn a Keiko checkout into a governed, multi-agent delivery line.** Clone this
+repo, symlink it into Keiko, and drive epics and issues from a rough idea all the
+way to a green, human-reviewed PR — through one consistent process that **enforces
+quality with local gates instead of trusting an agent to remember.**
 
-Nothing is committed into the Keiko repo — its `.claude/`/`.codex/` are
-git-ignored by design. The setup, the agent roster, and accumulated learnings all
-live here; the target stays clean.
+- **Two harnesses, one brain.** Primary **Codex**, backup **Claude Code** — same
+  roles, same skills, same memory, same gates.
+- **Nothing leaks into Keiko.** The target's `.claude/` / `.codex/` are git-ignored;
+  the setup, the agent roster, and accumulated learnings all live _here_. The target
+  stays clean.
+- **Hard gates, not vibes.** A PR can't even open with a red build or an unaudited
+  commit; user-facing changes can't ship without a real Playwright run; nothing
+  reaches `dev` without a human.
+
+---
 
 ## Install
 
@@ -16,93 +24,127 @@ cd Agent-Workflow-Setup
 ./scripts/install.sh /path/to/Keiko        # or: KEIKO_ROOT=/path/to/Keiko ./scripts/install.sh
 ```
 
-The installer symlinks the harness into the target (live — edit here, active
+The installer symlinks the harness into the target (**live** — edit here, active
 immediately) and keeps the target git-clean:
 
-- `<target>/.codex`, `.claude`, `.agents` → this repo
-- `<target>/.mcp.json`, `AGENTS.md`, `CLAUDE.md` → this repo; old `project.md` retired
-- project skills mirrored into `~/.codex/skills/` so Codex and Claude share them
-- an existing `.claude/settings.local.json` is preserved (per-machine, git-ignored)
-- a `post-checkout` git hook is installed so **every `git worktree add` re-links the
-  harness** — a fresh worktree does not inherit the symlinks, so without this an
-  agent launched in a worktree would lose CLAUDE.md, skills, memory, and the
-  audit gate (see `scripts/link-worktree.sh`; run it by hand to relink one);
-  note: `git worktree add --no-checkout` never fires `post-checkout`, so run
-  `scripts/link-worktree.sh <worktree-path>` manually afterward
+- `<target>/.codex`, `.claude`, `.agents`, `.mcp.json`, `AGENTS.md`, `CLAUDE.md` → this repo
+- skills mirrored into `~/.codex/skills/` so Codex and Claude invoke them by the same name
+- `.claude/settings.local.json` (per-machine) is preserved
+- a `post-checkout` hook re-links the harness on every `git worktree add` (a fresh
+  worktree doesn't inherit the symlinks — without this an agent in a worktree loses
+  CLAUDE.md, skills, memory, and the gates; see `scripts/link-worktree.sh`)
+
+---
 
 ## Quick start
 
-Tell the orchestrator what to work on; it invokes the matching skill.
+Tell the orchestrator what to work on — it picks the matching skill and drives it.
 
 ```text
 Act as the orchestrator for Keiko and run epic #532.
 Act as the orchestrator for Keiko and resolve issue #178.
 ```
 
-See **[docs/example-workflow.md](docs/example-workflow.md)** for full example
-prompts and a step-by-step walkthrough of what happens.
+Full walkthrough: **[docs/example-workflow.md](docs/example-workflow.md)**.
 
-## Skills & tooling
+---
 
-| Command                      | What it does                                                                                              |
-| ---------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `keiko-epic <N>`             | Drive a multi-issue epic: plan children, run each on an epic branch, hand off one green epic PR to `dev`. |
-| `keiko-issue <N>`            | Drive one issue/task/bug/finding end-to-end to a PR.                                                      |
-| `keiko-issue-audit <N>`      | Mandatory pre-PR-ready audit wave (also on-demand). Writes a SHA-bound audit receipt.                     |
-| `scripts/verify.sh`          | Local CI mirror — run from the Keiko root before a PR.                                                    |
-| `scripts/audit-gate.sh`      | Proof-of-audit check — blocks `gh pr create` unless `keiko-issue-audit` ran against the current HEAD.     |
-| `scripts/keiko-watch`        | Live per-agent activity feed (side terminal).                                                             |
-| `scripts/consolidate-memory` | Memory budget checker (<25 KB/role).                                                                      |
+## The delivery lifecycle (5 skills)
 
-```bash
-bash /path/to/Agent-Workflow-Setup/scripts/verify.sh                 # from Keiko root, pre-PR
-KEIKO_ROOT=/path/to/Keiko /path/to/Agent-Workflow-Setup/scripts/keiko-watch
-```
+Work flows through four stages — plan → deliver → verify → learn:
+
+| Stage       | Skill                   | What it does                                                                                                  |
+| ----------- | ----------------------- | ------------------------------------------------------------------------------------------------------------- |
+| **Plan**    | `keiko-grill-epic`      | Turn a rough idea into an implementation-ready epic + scoped child issues via one evidence-first grilling.    |
+| **Deliver** | `keiko-epic <N>`        | Drive a multi-issue epic: plan children, run each on the epic branch, hand off one green epic PR to `dev`.    |
+|             | `keiko-issue <N>`       | Drive one issue / task / bug / finding end-to-end to a PR.                                                    |
+| **Verify**  | `keiko-issue-audit <N>` | Read-first audit wave that fixes confirmed gaps and writes a SHA-bound audit receipt. Mandatory pre-PR.       |
+| **Learn**   | `keiko-retro <epic>`    | Post-merge retrospective: mine the full PR trail + the human-fix delta, distill process lessons, tidy memory. |
+
+`keiko-epic` composes `keiko-issue` per child; every issue ends with `keiko-issue-audit`.
+
+---
+
+## The gate chain — why you can trust the output
+
+Six **PreToolUse gates** fire on the agent's own `gh` / `git` commands. They don't
+run the tests themselves — they **block the action until proof exists** (SHA-bound
+receipts, a real Playwright run, a `gh`-checked comment). An agent literally cannot
+open, ready, merge, or repush around them.
+
+| Moment                     | Gate              | Blocks unless…                                                                                                           |
+| -------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| open / ready a PR          | `verify-gate`     | `verify.sh` (CI mirror) passed **green** at HEAD                                                                         |
+| open / ready a PR          | `audit-gate`      | the audit **ran and is clean** — `findings=0`, plus a green **ui-verify** receipt (real Playwright run) when user-facing |
+| ready a user-facing PR     | `ready-gate`      | a **SHA-bound test-plan comment** for the current commit is posted                                                       |
+| repush a fix to a `dev` PR | `push-gate`       | the fix re-passes verify + clean-audit (+ ui-verify + reposted plan)                                                     |
+| auto-merge into an epic    | `epic-merge-gate` | clean audit + green verify + (UI) Playwright + comment; **never** into `dev`/`main`/`release`                            |
+
+**`dev` is sacred:** the only agent auto-merge is a _non-user-facing_ child into its
+epic branch. Everything into `dev` — standalone issue or accumulated epic — needs a
+**human reviewer + green GitHub CI**. Local gates are fast feedback; the target's
+protected `dev` is the authoritative backstop.
+
+---
 
 ## How it works
 
-- **One orchestrator.** The lead session is the only agent the human talks to; it
-  plans, delegates, and reports. It never spawns a sub-coordinator.
+- **One orchestrator.** The lead session is the only agent the human talks to — it
+  plans, delegates, integrates, reports. It never spawns a sub-coordinator.
 - **16 canonical roles.** Work routes to roles in `.agents/roles.yaml` at the
-  smallest effective shape — solo for small work, a cluster for multi-module/epic
-  work. Both harnesses share one role vocabulary and one memory tree.
-- **`dev` is sacred.** Every issue ships as a PR. The only auto-merge is
-  `issue → epic-branch` on green CI; every merge into `dev` needs a human + green CI.
-- **Layered quality gates.** lint-staged → 2-pass self-critique → `verify.sh` →
-  `keiko-issue-audit` → completion judge → CI on protected `dev`.
-- **Status in GitHub, learnings in memory.** The delivery board is the durable
-  source of truth; `.agents/memory/<role>/` holds curated, committed learnings.
+  smallest effective shape: solo for a one-file fix, a cluster (explorer → writer →
+  verifier) for epic / security / UI work. Both harnesses share one role vocabulary.
+- **Resumable by design.** State lives on the GitHub delivery board, not in a chat —
+  so a run that hits a token limit picks up exactly where it left off on the next
+  invocation.
+- **Status in GitHub, learnings in memory.** The board is the durable source of
+  truth; `.agents/memory/<role>/` holds curated learnings, kept lean by
+  `consolidate-memory` and the `keiko-retro` lint pass.
 
-Rules: [docs/workflow-contract.md](docs/workflow-contract.md) ·
-Design + tradeoffs: [docs/workflow-blueprint.md](docs/workflow-blueprint.md)
+Rules: **[docs/workflow-contract.md](docs/workflow-contract.md)** ·
+Design + tradeoffs: **[docs/workflow-blueprint.md](docs/workflow-blueprint.md)**
+
+---
+
+## Tooling
+
+```bash
+bash /path/to/Agent-Workflow-Setup/scripts/verify.sh                          # local CI mirror, from Keiko root
+KEIKO_ROOT=/path/to/Keiko /path/to/Agent-Workflow-Setup/scripts/keiko-watch   # live per-agent activity feed
+/path/to/Agent-Workflow-Setup/scripts/consolidate-memory                      # memory budget check (<25 KB/role)
+```
+
+The gate scripts (`verify-gate`, `audit-gate`, `ready-gate`, `push-gate`,
+`epic-merge-gate`) and receipt writers (`verify-receipt`, `audit-receipt`,
+`ui-verify-receipt`) run automatically via the harness hooks — you rarely call them
+by hand. Each has a test in `tests/`.
+
+---
 
 ## What's inside
 
 ```
 docs/        workflow-contract.md (rules) · workflow-blueprint.md (design) · example-workflow.md
-.agents/     roles.yaml · aliases.yaml · memory/<role>/   (tool-neutral shared layer)
-codex/       config.toml · RUNBOOK.md · agents/*.toml · playbooks/ · hooks/   (primary)
-claude/      settings.json · agents/*.md · teams/ · skills/<name>/SKILL.md     (backup)
-scripts/     install.sh · link-worktree.sh · verify.sh · audit-gate.sh · keiko-watch · consolidate-memory
+.agents/     roles.yaml · aliases.yaml · memory/<role>/            (tool-neutral shared layer)
+codex/       config.toml · RUNBOOK.md · agents/*.toml · hooks.json · playbooks/    (primary)
+claude/      settings.json · agents/*.md · skills/<name>/SKILL.md                  (backup)
+scripts/     install.sh · verify.sh · *-gate.sh · *-receipt.sh · keiko-watch · consolidate-memory
+tests/       gate + hook test suites
 templates/   target-side gate snippets (husky / lint-staged / PR evidence)
 ```
 
+---
+
 ## Server-side prerequisite (repo admin)
 
-The full-local-access posture is safe **because `dev` is protected** — and that
-requires `admin` on the target repo. On `oscharko-dev/Keiko`, protect `dev`:
-require a PR, the green `ci` check, and human review. Until then the server-side
-backstop is absent; treat agent merges toward `dev` with extra care.
-
-By design, the authoritative guarantees live here, server-side — local hooks and
-the `audit-gate` are **fast feedback**, not the source of truth. The airtight
-version of proof-of-audit also belongs here: have the audit emit PR-visible
-evidence (a check or label) and make it a **required status check** on `dev`.
-That is the only unbypassable form, and it lands the same place as branch
-protection — with the maintainer.
+The full-local-access posture is safe **because `dev` is protected** — which needs
+`admin` on the target repo. On `oscharko-dev/Keiko`, protect `dev`: require a PR, the
+green `ci` check, and human review. Until then the local gates are fast feedback but
+the _authoritative_ backstop is absent — treat agent merges toward `dev` with care.
+The airtight form of proof-of-audit lives here too: emit PR-visible evidence and make
+it a **required status check** on `dev`.
 
 ## Sharing
 
-The repo is path-free and self-contained: a collaborator clones it and runs
-`install.sh` against their own Keiko checkout. Per-machine bits stay local and
-git-ignored.
+Path-free and self-contained: a collaborator clones it and runs `install.sh` against
+their own Keiko checkout. Per-machine bits stay local and git-ignored.
