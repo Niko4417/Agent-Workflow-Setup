@@ -12,14 +12,34 @@ You can drive it two ways — both end up running the same skill:
   `keiko-issue` skill.
 - **Explicit:** invoke the skill directly — `keiko-issue 178`.
 
-**You do not need to ask for the audit.** `keiko-issue` and `keiko-epic` invoke
-`keiko-issue-audit` themselves as a mandatory step, and it's a **hard gate**: the
-audit writes a SHA-bound receipt, and a PreToolUse hook **blocks `gh pr create`**
-on an `issue/*`/`epic/*` branch unless a receipt exists for the current HEAD. So
-an issue can't reach PR-ready without proof the audit ran against the shipped
-code — and if you commit after auditing, the receipt goes stale and you must
-re-audit. Invoke `keiko-issue-audit` directly only for a standalone audit
-(Example C).
+**You do not need to ask for the audit or the gates.** `keiko-issue` / `keiko-epic`
+invoke `keiko-issue-audit` themselves, and a set of **PreToolUse gates** enforce
+quality on the agent's own `gh` / `git` commands — an agent can't open, ready,
+merge, or repush around them:
+
+- **`verify-gate`** blocks a PR unless `verify.sh` (CI mirror) passed **green** at HEAD.
+- **`audit-gate`** blocks a PR unless the audit ran **and is clean** (`findings=0`,
+  plus a real Playwright **ui-verify** run when the change is user-facing).
+- **`ready-gate`** blocks marking a user-facing PR ready until its SHA-bound
+  test-plan comment is posted.
+- **`epic-merge-gate` / `push-gate`** re-check the same at child→epic auto-merge and
+  on any fix repushed to a `dev` PR.
+
+All receipts are SHA-bound: commit after auditing and they go stale — you must
+re-run. Invoke `keiko-issue-audit` directly only for a standalone audit (Example C).
+
+---
+
+## Plan: turn an idea into an epic (before there's a number)
+
+Shape the work first with **`keiko-grill-epic`** — an evidence-first grilling that
+turns a rough feature idea into an implementation-ready epic + scoped child issues.
+It inspects the code / ADRs / templates first and asks only what it can't answer
+itself, then writes the epic + children to GitHub for `keiko-epic` to execute.
+
+```text
+Use keiko-grill-epic to turn this into a ready epic: <your rough feature idea>.
+```
 
 ---
 
@@ -127,6 +147,22 @@ keiko-issue-audit 178      ← invoked directly (not wrapped by keiko-issue)
 - Only **evidence-cited** findings become fix slices (`implementor` / `developer`
   - `test-engineer`); speculative findings never block.
 - Ends with `verifier` + a green PR per the sacred-`dev` rule.
+
+---
+
+## Reflect: after it merges
+
+Once the epic (or a notable issue) has merged into `dev` — post human review and any
+hand-fixes — run **`keiko-retro`** to compound the learning:
+
+```text
+Run keiko-retro on <epic link / #>.
+```
+
+It mines the full trail (epic + child PRs, all comments/reviews, audit findings, and
+the **human-fix delta** — what the human changed by hand after review), distills
+durable _process_ learnings into agent memory, then lints + reconciles the memory.
+Proposed workflow changes are reported to you, never auto-applied.
 
 ---
 

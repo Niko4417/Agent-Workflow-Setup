@@ -9,9 +9,11 @@ dependencies, and definition of done.
 When the operator selects work, invoke the matching skill from `~/.codex/skills/`
 rather than improvising the procedure:
 
+- `keiko-grill-epic` — turn a rough idea into a ready epic + child issues (upstream of `keiko-epic`).
 - `keiko-epic <N>` — drive a multi-issue epic end-to-end.
 - `keiko-issue <N>` — drive a single issue / task / bug / finding.
 - `keiko-issue-audit <N>` — mandatory pre-PR-ready audit (also on-demand).
+- `keiko-retro <epic>` — post-merge: distill process learnings + lint/reconcile memory.
 
 The skills carry the executable procedure; this runbook and the contract carry
 the always-on rules they follow. The sections below are the rules.
