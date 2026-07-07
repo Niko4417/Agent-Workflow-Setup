@@ -89,8 +89,11 @@ keiko-epic 532
   board.
 - **Child loop.** For each ready child, runs **`keiko-issue <child>`** (which runs
   its own **`keiko-issue-audit <child>`**) on a branch off the epic branch. Each
-  child PR targets the **epic branch** and **auto-merges on green CI** (the only
-  auto-merge in the system) — no human per child. Re-syncs `dev` regularly.
+  child PR targets the **epic branch**. CI does not run on epic branches, so the
+  child→epic gate is the **audit**: a _non-user-facing_ child **auto-merges** on a
+  clean audit (the system's only auto-merge — no human per child); a _user-facing_
+  child needs a green **ui-verify** Playwright run + a test-plan comment, then a
+  human merges. Re-syncs `dev` regularly.
 - **Heartbeat.** Posts a one-line status at each child/milestone and flushes state
   to GitHub so either harness can resume.
 - **Final PR.** Once children are integrated, runs **`keiko-issue-audit`** on the
