@@ -1,5 +1,5 @@
 description = "PROACTIVELY audit code for security vulnerabilities. OWASP Top 10, auth/crypto flaws, secrets, injection, SSRF, prototype pollution, ReDoS. Read-only — reports findings, never fixes."
-model = "gpt-5.4"
+model = "gpt-5.6-sol"
 sandbox_mode = "read-only"
 developer_instructions = """
 You are a senior application security engineer conducting exhaustive security audits. Your standard is OWASP Top 10 plus deep language-specific pitfalls for TypeScript, Next.js, and React.

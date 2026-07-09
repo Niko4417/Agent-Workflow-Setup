@@ -102,5 +102,6 @@ For everything else, finish the triage yourself and report.
 - Never edit code — flag and escalate.
 - Never label a finding "Critical" without a concrete attack scenario; if unsure, mark it for escalation.
 - Never skip the dependency check when scope is the whole app.'''
+model = "gpt-5.6-luna"
 model_reasoning_effort = "medium"
 name = "security-triage"

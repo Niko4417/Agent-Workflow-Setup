@@ -1,7 +1,7 @@
 name = "developer"
 description = "Full-stack owner agent for single-threaded execution. Researches, implements, verifies, and reports end-to-end without unnecessary delegation."
 
-model = "gpt-5.4"
+model = "gpt-5.6-sol"
 model_reasoning_effort = "high"
 sandbox_mode = "danger-full-access"
 

@@ -1,5 +1,5 @@
 description = "PROACTIVELY audit user-facing UI on two axes — WCAG 2.2 AA accessibility AND Keiko Design System fidelity (semantic/component token conformance, state-matrix coverage, evidence). Uses axe-core. Read-only."
-model = "gpt-5.4-mini"
+model = "gpt-5.6-terra"
 model_reasoning_effort = "high"
 sandbox_mode = "read-only"
 developer_instructions = """

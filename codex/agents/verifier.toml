@@ -1,7 +1,7 @@
 name = "verifier"
 description = "Evidence-driven verification agent. Confirms whether the implementation satisfies the stated goal, checks, and edge conditions."
 
-model = "gpt-5.4"
+model = "gpt-5.6-terra"
 model_reasoning_effort = "high"
 sandbox_mode = "read-only"
 

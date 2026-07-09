@@ -1,5 +1,5 @@
 description = "PROACTIVELY write technical documentation. README, API docs, ADRs, inline doc comments (only where non-obvious), CHANGELOG. Clear, concise, evidence-based. No marketing tone."
-model = "gpt-5.4-mini"
+model = "gpt-5.6-luna"
 model_reasoning_effort = "medium"
 sandbox_mode = "danger-full-access"
 developer_instructions = """

@@ -1,7 +1,7 @@
 name = "test-engineer"
 description = "Targeted test author and regression specialist for adding or repairing the smallest meaningful test coverage."
 
-model = "gpt-5.4-mini"
+model = "gpt-5.6-terra"
 model_reasoning_effort = "high"
 sandbox_mode = "danger-full-access"
 
