@@ -53,18 +53,13 @@ When cluster mode is active:
   are missing, scope expands beyond the issue, file ownership overlaps, secrets
   would be required, or CI has failed after three distinct repair attempts.
 """
-model = "gpt-5.4"
-model_reasoning_effort = "medium"
 model_reasoning_summary = "auto"
-model_verbosity = "medium"
 personality = "pragmatic"
-plan_mode_reasoning_effort = "high"
 project_doc_fallback_filenames = [
     "CODEX.md",
     "codex.md",
 ]
 project_doc_max_bytes = 65536
-review_model = "gpt-5.4"
 sandbox_mode = "danger-full-access"
 web_search = "live"
 
