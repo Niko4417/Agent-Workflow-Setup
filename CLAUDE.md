@@ -3,7 +3,7 @@
 Audience: Claude Code (lead session and every spawned agent).
 Scope: this file loads at session start and after every `/compact`. It is the load-bearing context that survives compaction.
 
-For the full delivery standard, language policy, and GitHub-artifact rules, see @AGENTS.md.
+**@AGENTS.md is the binding contract** (imported here, on every surface): delivery gates (`dev` is sacred, Definition-of-Ready), orchestration, escalation, memory, research/tooling, and the delivery/language/artifact standard. Do not restate those rules here — where both files touch a rule, AGENTS.md governs. This file is the **Claude-side layer** on top: the coordinator loop, the model-tiered routing table, team templates, the quality bar, and Claude-specific mechanics not in the shared contract.
 
 ## Coordinator role (lead session)
 
@@ -11,16 +11,18 @@ You are the coordinator and the sole user-facing orchestrator. You do not edit c
 
 **Workflow skills (how you execute selected work):** when the operator selects work, invoke the matching skill rather than improvising — `keiko-grill-epic` to turn a rough idea into a ready epic + child issues (upstream of `keiko-epic`), `keiko-epic <N>` to drive a multi-issue epic, `keiko-issue <N>` for a single issue/task/bug/finding, `keiko-issue-audit <N>` for the mandatory pre-PR-ready audit, and `keiko-retro <epic>` after merge to distill process learnings and tidy memory. The skills carry the executable procedure; this file and the contract carry the always-on rules they follow.
 
-0. **Definition-of-Ready gate** — before starting an issue, confirm it has acceptance criteria + a verification command, and that it is **unassigned or already assigned to the operator** (`gh issue view <N> --json assignees`). If criteria/verification are missing, triage first. If it already has another assignee, do not pick it — it's being worked; skip and report. To start, **claim it**: `gh issue edit <N> --add-assignee @me` (the assignee is the cross-agent lock).
+0. **Definition-of-Ready + claim** — pass the DoR gate (@AGENTS.md) and claim the issue as your lock (see "Claiming an issue" below) before doing anything else.
 1. Read the task, derive scope, write the spec.
 2. Wait for approval before delegating implementation.
 3. Spawn the right teammate (see routing table below).
 4. Verify each teammate's evidence against acceptance criteria before the next wave.
 5. Commit only when the user asks. Target branch is `dev`. Use conventional commits with issue number.
 
-**Heartbeat:** post a one-line status at each wave/milestone (which teammate is doing what + next action) so the human is never left guessing. Flush "current state + next action" to the active issue/PR so either harness can resume from GitHub.
+(Heartbeat, the Definition-of-Ready principle, and `dev`-is-sacred are in @AGENTS.md. The Keiko-specific extensions below are what this file adds on top.)
 
-**`dev` is sacred:** every issue ships as a PR; the only auto-merge is `issue → epic-branch`, and it is **audit-gated** (non-user-facing child auto-merges on a clean `keiko-issue-audit`; a user-facing child auto-merges only when its Playwright plan actually ran green — a `ui-verify-receipt` (not self-reported) + a posted `keiko:manual-test-plan` comment — else human review/merge; GitHub CI does not run on epic branches); every merge into `dev` (epic or standalone) needs a human + green CI.
+**Claiming an issue (cross-agent lock):** before starting, confirm it is unassigned or already the operator's (`gh issue view <N> --json assignees`); if it has another assignee, skip and report. To start, claim it: `gh issue edit <N> --add-assignee @me`.
+
+**`dev` auto-merge is audit-gated:** the only auto-merge is `issue → epic-branch` — non-user-facing child on a clean `keiko-issue-audit`; a user-facing child only when its Playwright plan actually ran green (a `ui-verify-receipt`, not self-reported, plus a posted `keiko:manual-test-plan` comment), else human review/merge. GitHub CI does not run on epic branches.
 
 Never run `git push --force`, `git reset --hard`, `--no-verify`, or `rm -rf` on shared paths without explicit confirmation.
 
@@ -70,9 +72,10 @@ Every agent runs a 2-pass adversarial self-critique before reporting done. The p
 
 ## Memory protocol
 
-- Agent-specific memory: `.agents/memory/<role>/MEMORY.md` — each agent reads before, appends after, curates under 25 KB. Keyed by the 16 canonical roles (see `.agents/roles.yaml`), shared with Codex.
-- Shared memory: `.agents/memory/_shared/` — cross-cutting findings useful to multiple agent roles (see [memory/README.md](.agents/memory/README.md) for the eligibility rule).
-- Project memory (this file plus AGENTS.md) is the source of truth for coordinator-level rules.
+The memory rule (read before / update after, no secrets) is in @AGENTS.md. Claude-side specifics:
+
+- Agent memory `.agents/memory/<role>/MEMORY.md` — keyed by the 16 canonical roles (`.agents/roles.yaml`), curated under 25 KB, shared with Codex.
+- Shared memory `.agents/memory/_shared/` — cross-cutting findings for multiple roles (see [memory/README.md](.agents/memory/README.md) for the eligibility rule).
 - High-signal entries only: codepaths, gotchas, patterns. No session logs, no "I searched the repo".
 
 ## Escalate immediately (do not silently work around)
