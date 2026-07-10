@@ -81,6 +81,15 @@ multi_agent = true
 plugins = true
 prevent_idle_sleep = true
 
+# GPT-5.6 Sol/Terra select MultiAgent V2 via model metadata, which defaults
+# hide_spawn_agent_metadata = true and strips agent_type/model/reasoning_effort
+# from the model-visible spawn_agent schema -- silently forcing every subagent to
+# inherit the lead's model and sandbox, ignoring .codex/agents/*.toml.
+# openai/codex#31814 (tool_namespace avoids the reserved-name error).
+[features.multi_agent_v2]
+hide_spawn_agent_metadata = false
+tool_namespace = "agents"
+
 [mcp_servers.chrome_devtools]
 args = [
     "-y",
