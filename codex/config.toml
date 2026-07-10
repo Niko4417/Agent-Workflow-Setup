@@ -75,8 +75,8 @@ open_world_enabled = true
 
 [features]
 apps = true
-codex_hooks = true
 fast_mode = false
+hooks = true
 multi_agent = true
 plugins = true
 prevent_idle_sleep = true
