@@ -174,54 +174,6 @@ startup_timeout_sec = 20
 tool_timeout_sec = 45
 url = "https://mcp.sentry.dev"
 
-[profiles.deep]
-approval_policy = "never"
-model = "gpt-5.6-sol"
-model_reasoning_effort = "xhigh"
-model_verbosity = "high"
-plan_mode_reasoning_effort = "xhigh"
-sandbox_mode = "danger-full-access"
-web_search = "live"
-
-[profiles.fast]
-approval_policy = "never"
-model = "gpt-5.6-luna"
-model_reasoning_effort = "medium"
-model_verbosity = "low"
-sandbox_mode = "danger-full-access"
-web_search = "live"
-
-[profiles.max]
-approval_policy = "never"
-model = "gpt-5.6-sol"
-model_reasoning_effort = "xhigh"
-model_verbosity = "high"
-plan_mode_reasoning_effort = "xhigh"
-review_model = "gpt-5.6-sol"
-sandbox_mode = "danger-full-access"
-web_search = "live"
-
-[profiles.research]
-approval_policy = "never"
-model = "gpt-5.6-sol"
-model_reasoning_effort = "high"
-model_reasoning_summary = "concise"
-plan_mode_reasoning_effort = "high"
-review_model = "gpt-5.6-sol"
-sandbox_mode = "read-only"
-web_search = "live"
-
-[profiles.review]
-approval_policy = "never"
-model = "gpt-5.6-sol"
-model_reasoning_effort = "high"
-model_reasoning_summary = "detailed"
-model_verbosity = "high"
-plan_mode_reasoning_effort = "high"
-review_model = "gpt-5.6-sol"
-sandbox_mode = "read-only"
-web_search = "live"
-
 [shell_environment_policy]
 inherit = "core"
 
