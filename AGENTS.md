@@ -66,8 +66,14 @@ issue, file ownership overlaps, secrets would be required, or CI has failed afte
 
 ## Memory
 
-Before and after substantial work, read and update role memory under `.agents/memory/<role>/MEMORY.md`. Never store
-secrets, customer data, logs containing tokens, or raw private source in memory.
+Before substantial work, read the relevant role memory under `.agents/memory/<role>/MEMORY.md`. After it, capture only
+durable, generalizable lessons (recurring pitfalls, architecture invariants, reliable verification commands, confirmed
+false positives) — never task status, one-off findings, secrets, customer data, token-bearing logs, or raw private
+source. Write nothing when no reusable lesson was learned; keep each file under 25 KB.
+
+**Read-only roles do not write memory.** A read-only agent (its sandbox forbids writes) returns a concise **memory
+candidate** to the lead instead of appending; the lead decides whether it is durable and records it from a write-enabled
+context. Only write-enabled roles (or the lead) touch `MEMORY.md`.
 
 ## Research and tooling
 
@@ -84,8 +90,13 @@ secrets, customer data, logs containing tokens, or raw private source in memory.
   `ci-repair.md` when the task matches those workflows.
 - Agent model tiers live in `.codex/agents/*.toml`; the canonical role map is `.agents/roles.yaml`. Right-size the model
   per role — do not promote an agent to the frontier tier without reason.
-- **Spawning a custom agent**: pass `agent_type` (plus `model` / `reasoning_effort` only when overriding the agent's own
-  definition) and do **not** use a full-history fork (`fork_turns = "all"`). A full-history fork forces the subagent to
-  inherit the parent's agent type, model, and reasoning effort. If Codex rejects the call, drop `fork_turns` — never
-  drop `agent_type`, or the subagent silently inherits the lead's model and sandbox, defeating the per-agent tiers and
-  read-only postures.
+- **Spawn contract** — for every custom child:
+  1. Pass the exact `agent_type` from `.codex/agents/*.toml`. **Never** omit it to make a rejected spawn call pass —
+     that silently inherits the lead's model and sandbox, defeating the per-agent tiers and read-only postures.
+  2. Omit `model` / `reasoning_effort` / `service_tier` so the role definition wins; set them only for a justified
+     one-off escalation.
+  3. Do **not** use a full-history fork with a named role (`fork_turns = "all"`) — it forces the child to inherit the
+     parent's agent type, model, reasoning effort, and growing context. Use `fork_turns = "none"` for independent work;
+     if Codex rejects the call, drop `fork_turns`, never `agent_type`.
+  4. Give the child a bounded goal, owned files or read surface, expected evidence, a stop condition, and the required
+     return format.

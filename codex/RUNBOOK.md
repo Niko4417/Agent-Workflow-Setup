@@ -187,6 +187,8 @@ Stop and report instead of improvising when:
 - Keep each memory file below 25 KB.
 - Never store secrets, customer data, raw private source dumps, full logs, or
   token-bearing command output.
+- Read-only roles do not write memory: they return a concise memory candidate to
+  the lead, who records durable ones from a write-enabled context.
 
 ## Tooling Rules
 
