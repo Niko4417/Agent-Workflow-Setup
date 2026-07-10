@@ -105,25 +105,47 @@ harness (Codex or Claude) can resume from GitHub alone.
 
 ## Agent Routing by Issue Signal
 
+Route on the repo's actual label taxonomy (`gh label list`). Type labels use a
+space (`type: task`); area labels do not (`area:model-gateway`).
+
+**By type:**
+
 - `type: epic`: the lead coordinates with `architect`; do not implement the whole
   epic unless a child issue is selected.
 - `type: task` or `type: feature`: the lead drives `explorer`, then
-  `implementor`/`developer`, `test-engineer`, `verifier`.
-- `type: bug`: `explorer`, `browser-debugger` when UI-visible,
-  `implementor`, `test-engineer`, `verifier`.
-- `type: follow-up`: usually `developer` or small agent team.
-- `area: frontend`: add `ui-engineer`, `a11y-auditor`, and
+  `implementor`/`developer`, `test-engineer`, `verifier`. Bug work and follow-ups
+  arrive as `type: task` — read the area labels below for the shape.
+
+**By area** (add these agents on top of the type baseline):
+
+- `area:user-interface`: add `ui-engineer`, `a11y-auditor`, and
   `performance-engineer` when UI risk is material. For user-facing components,
   `ui-engineer` builds against the Keiko Design System (`docs/design-system/`) and
   `a11y-auditor` audits **WCAG + design-system fidelity** (token conformance,
   `state-matrix.md` coverage, evidence dir populated).
-- `area: bff`: add `security-auditor` when request/session/rate-limit/CSP
-  behavior changes.
-- `area: architecture`: add `architect` and `docs`.
-- `area: security`: add `security-auditor`.
-- `area: release`: add `pr-shepherd` and `verifier`.
-- `area: evidence`, `area: orchestration`, `area: harness`, or
-  `area: model-gateway`: add `architect` and `security-auditor`.
+- `area:tooling-security`: add `security-triage` first-pass, escalating to
+  `security-auditor` for tool-execution / patch-safety / command-boundary changes.
+- `area:model-gateway`: add `architect` and `security-auditor` (provider
+  abstraction, routing, capability metadata, model access boundaries).
+- `area:agent-runtime`: add `architect` and `security-auditor` (agent loop, task
+  state, runtime limits, orchestration).
+- `area:repository-context`: add `explorer` and `security-auditor` (workspace
+  discovery, safe file access, context selection).
+- `area:platform-foundation`: add `architect` and `refactor-specialist` (project
+  foundation, package structure, repo hygiene).
+- `area:bug-investigation`: `explorer` first, `browser-debugger` when UI-visible,
+  then `implementor`, `test-engineer`, `verifier`.
+- `area:unit-tests`: add `test-engineer` (generation workflow, regression coverage).
+- `area:verification`: add `verifier` and `test-engineer` (tests, type/build
+  checks, verification evidence).
+- `area:audit-evidence`: add `security-auditor` and `verifier` (run ledger,
+  evidence manifests, redaction, compliance traceability).
+- `area:evaluation`: add `performance-engineer` and `test-engineer` (eval
+  harnesses, benchmark fixtures, model-performance measurement).
+- `area:test-intelligence`: add `architect`, `test-engineer`, and
+  `security-auditor` (native quality intelligence, test gen/validation/review, TMS).
+- `area:packaging-docs`: add `docs` and `architect` (npm packaging, documentation,
+  customer runbooks).
 
 ## Verification Routing
 
