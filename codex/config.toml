@@ -1,57 +1,11 @@
 approval_policy = "never"
 check_for_update_on_startup = true
 developer_instructions = """
-Operate in one of two modes:
-
-1. Default mode: use the smallest effective execution shape.
-2. Cluster mode: use the project agent team for GitHub issues, PR-ready
-   implementation work, refactoring sprints, audits, CI repair, release gates,
-   or any task where parallel review materially improves quality.
-3. Stay single-agent for tiny questions, narrow one-file edits, or explicit
-   user requests to avoid delegation.
-
-Execution defaults:
-- Apply state-of-the-art, best-practice, production-ready, and enterprise-grade standards.
-- Keep architecture and code as simple as possible; avoid unnecessary complexity (KEEP IT SIMPLE).
-- Full access is available by default. Use it deliberately and keep scope tight.
-- Treat `dev` as the integration target and require a green `ci` check before merge.
-- `dev` is sacred: every issue ships as a PR; the only auto-merge is `issue -> epic-branch` on green CI; every merge into `dev` (epic or standalone) needs a human reviewer + green CI.
-- Definition-of-Ready gate: do not start an issue without acceptance criteria + a verification command; triage first if missing.
-- Heartbeat: as the lead, post a one-line status at each wave/milestone and flush "current state + next action" to the issue/PR so either harness can resume.
-- The lead is the sole orchestrator; never spawn a sub-coordinator.
-- For OpenAI/Codex API and product questions, prefer the `openaiDeveloperDocs` MCP server before general web search.
-- Use live web search or MCP for unstable facts, external APIs, model details,
-  framework changes, pricing, policies, and recommendations that may age.
-- Prefer official documentation and primary sources.
-- Include concrete dates or versions when freshness matters.
-- Use the repository MCP/tool surface deliberately: GitHub plugin or `gh` for
-  GitHub state, Context7 for library docs, OpenAI Developer Docs for OpenAI
-  product/API work, Playwright/browser tooling for UI verification, and Figma
-  MCP only when a design URL or design task exists.
-- Before and after substantial work, read and update role memory under
-  `.agents/memory/<agent-name>/MEMORY.md`; do not store secrets,
-  customer data, logs containing tokens, or raw private source in memory.
-- Use `.codex/RUNBOOK.md` as the project operating manual for agent-team
-  delivery. Use `.codex/playbooks/feature.md`, `.codex/playbooks/audit.md`,
-  `.codex/playbooks/refactor.md`, and `.codex/playbooks/ci-repair.md` when the
-  task matches those workflows.
-
-When cluster mode is active:
-- Start with a short coordination plan that assigns ownership, file scopes,
-  dependencies, and stop conditions.
-- Prefer read-heavy fan-out first: `explorer`, `architect`,
-  `security-auditor`, or `performance-engineer` when relevant.
-- Use write agents only for disjoint file scopes: `implementor` or `developer`.
-- Use `test-engineer` for test coverage and regression harnesses.
-- Use `pr-shepherd` for CI/review follow-up after a PR exists.
-- Finish write waves with `verifier`, `pr-reviewer`, or `security-auditor`
-  depending on risk.
-- Keep delegation shallow and predictable. Do not recurse unless the user
-  explicitly asks for deeper nesting.
-- Return distilled outcomes from subagents, not raw transcripts.
-- Stop rather than improvise when the issue is ambiguous, acceptance criteria
-  are missing, scope expands beyond the issue, file ownership overlaps, secrets
-  would be required, or CI has failed after three distinct repair attempts.
+The project contract in AGENTS.md is binding: delivery gates (`dev` is sacred,
+Definition-of-Ready), orchestration (sole orchestrator, smallest effective
+execution shape), escalation, memory, and the Codex custom-agent spawn rules.
+Read it and follow it. It is the single source of truth -- do not rely on a copy
+of these rules living anywhere else.
 """
 model_reasoning_summary = "auto"
 personality = "pragmatic"
