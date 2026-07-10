@@ -1,3 +1,4 @@
+#:schema https://developers.openai.com/codex/config-schema.json
 approval_policy = "never"
 check_for_update_on_startup = true
 developer_instructions = """
