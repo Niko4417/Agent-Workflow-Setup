@@ -16,13 +16,13 @@ roles:
     summary: >
       Internal code mapping AND external doc/API/version grounding (Context7/web).
     posture: read-only
-    model: { codex: gpt-5.4, claude: haiku }
+    model: { codex: gpt-5.6-luna, claude: haiku }
 
   architect:
     kind: read
     summary: ADRs, service boundaries, dependency direction, contract decisions.
     posture: docs/adr only
-    model: { codex: gpt-5.4, claude: sonnet }
+    model: { codex: gpt-5.6-sol, claude: sonnet }
 
   security-triage:
     kind: read
@@ -30,7 +30,7 @@ roles:
       Fast first-pass scan: OWASP grep, dangerous primitives, secret leaks,
       missing authz. Escalates to security-auditor.
     posture: read-only
-    model: { codex: gpt-5.4, claude: sonnet }
+    model: { codex: gpt-5.6-luna, claude: sonnet }
 
   security-auditor:
     kind: read
@@ -38,32 +38,32 @@ roles:
       Deep audit: crypto/auth, data-flow tracing, trust boundaries, supply
       chain. Also covers diff/PR-scoped security review.
     posture: read-only
-    model: { codex: gpt-5.4, claude: opus }
+    model: { codex: gpt-5.6-sol, claude: opus }
 
   performance-engineer:
     kind: read
     summary: LCP/INP/CLS, bundle, N+1, hot paths, large-data behavior.
     posture: read-only
-    model: { codex: gpt-5.4, claude: sonnet }
+    model: { codex: gpt-5.6-terra, claude: sonnet }
 
   a11y-auditor:
     kind: read
     summary: WCAG 2.2 AA review.
     posture: read-only
-    model: { codex: gpt-5.4-mini, claude: haiku }
+    model: { codex: gpt-5.6-terra, claude: haiku }
 
   verifier:
     kind: read
     summary: >
       Acceptance-criteria verification + automated evidence capture for the PR.
     posture: read-only
-    model: { codex: gpt-5.4, claude: sonnet }
+    model: { codex: gpt-5.6-terra, claude: sonnet }
 
   pr-reviewer:
     kind: read
     summary: Multi-dimension PR review before merge.
     posture: read-only
-    model: { codex: gpt-5.4, claude: sonnet }
+    model: { codex: gpt-5.6-terra, claude: sonnet }
 
   browser-debugger:
     kind: read
@@ -72,14 +72,14 @@ roles:
       on Claude it is a capability (lead/agent driving Playwright or Chrome MCP),
       not a named sub-agent.
     posture: reproduction
-    model: { codex: gpt-5.4-mini, claude: sonnet }
+    model: { codex: gpt-5.6-luna, claude: sonnet }
 
   # ---- write ----
   developer:
     kind: write
     summary: Spec-first, TDD, planning, research, end-to-end implementation (heavy).
     posture: full
-    model: { codex: gpt-5.4, claude: opus }
+    model: { codex: gpt-5.6-sol, claude: opus }
 
   implementor:
     kind: write
@@ -87,13 +87,13 @@ roles:
       Scoped minimal-diff worker; precise definition of done; no planning,
       no delegation.
     posture: full
-    model: { codex: gpt-5.4, claude: sonnet }
+    model: { codex: gpt-5.6-terra, claude: sonnet }
 
   test-engineer:
     kind: write
     summary: Test coverage, regression harnesses, mutation-robust tests.
     posture: test files only
-    model: { codex: gpt-5.4, claude: sonnet }
+    model: { codex: gpt-5.6-terra, claude: sonnet }
 
   ui-engineer:
     kind: write
@@ -101,13 +101,13 @@ roles:
       Figma->code, component build, design-system consistency. Also small/
       targeted UI fixes.
     posture: full
-    model: { codex: gpt-5.4, claude: sonnet }
+    model: { codex: gpt-5.6-terra, claude: sonnet }
 
   refactor-specialist:
     kind: write
     summary: Behavior-preserving cleanup (complexity reduction).
     posture: full
-    model: { codex: gpt-5.4, claude: sonnet }
+    model: { codex: gpt-5.6-terra, claude: sonnet }
 
   docs:
     kind: write
@@ -115,11 +115,11 @@ roles:
       Write AND maintain docs: README, API, ADR, CHANGELOG, migration/
       troubleshooting notes, link-aware maintenance.
     posture: docs only
-    model: { codex: gpt-5.4-mini, claude: haiku }
+    model: { codex: gpt-5.6-luna, claude: haiku }
 
   # ---- drive ----
   pr-shepherd:
     kind: drive
     summary: Drive an open PR to merge-ready; delegates fixes to implementor.
     posture: full
-    model: { codex: gpt-5.4, claude: sonnet }
+    model: { codex: gpt-5.6-luna, claude: sonnet }
