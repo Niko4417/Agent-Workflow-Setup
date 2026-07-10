@@ -106,6 +106,42 @@ Design + tradeoffs: **[docs/workflow-blueprint.md](docs/workflow-blueprint.md)**
 
 ---
 
+## Agent roster & routing
+
+Each role is tiered onto the GPT-5.6 model family (Codex, primary harness) with a
+mirror on Claude (backup). **Reasoning** is the _standing_ effort — the orchestrator
+escalates a single task to `xhigh`/`max` when it's genuinely hard, then drops back.
+Model + effort live in `.codex/agents/*.toml`; the canonical map is
+[`.agents/roles.yaml`](.agents/roles.yaml).
+
+Tiers: **Sol** = frontier (ambiguous planning, high-risk review) · **Terra** =
+everyday build/test/review (the ex-`gpt-5.4` successor) · **Luna** = light recon,
+mechanical, docs.
+
+| Agent                  | Routed for (task signal)                                   | Codex model     | Reasoning | Claude | Access       |
+| ---------------------- | ---------------------------------------------------------- | --------------- | --------- | ------ | ------------ |
+| `architect`            | ADR / module boundary / dependency-direction decision      | `gpt-5.6-sol`   | high      | opus   | docs/adr     |
+| `developer`            | spec-first feature: research → plan → TDD build (heavy)    | `gpt-5.6-sol`   | high      | opus   | full write   |
+| `security-auditor`     | deep audit — crypto/auth, data-flow, PR-scoped review      | `gpt-5.6-sol`   | xhigh     | opus   | read-only    |
+| `implementor`          | scoped minimal-diff task with a clear definition of done   | `gpt-5.6-terra` | medium    | sonnet | full write   |
+| `test-engineer`        | test coverage, regression harnesses, mutation-robust tests | `gpt-5.6-terra` | high      | sonnet | test files   |
+| `ui-engineer`          | Figma → component, design-system conformance, UI fixes     | `gpt-5.6-terra` | high      | sonnet | full write   |
+| `refactor-specialist`  | behavior-preserving cleanup, complexity > 10               | `gpt-5.6-terra` | high      | sonnet | full write   |
+| `pr-reviewer`          | multi-dimension PR review before merge                     | `gpt-5.6-terra` | high      | sonnet | read-only    |
+| `verifier`             | acceptance-criteria verification + PR evidence capture     | `gpt-5.6-terra` | high      | sonnet | read-only    |
+| `performance-engineer` | LCP / INP / CLS, bundle, N+1, hot paths                    | `gpt-5.6-terra` | high      | sonnet | read-only    |
+| `a11y-auditor`         | WCAG 2.2 AA review                                         | `gpt-5.6-terra` | high      | haiku  | read-only    |
+| `explorer`             | code mapping + external doc/API grounding (Context7/web)   | `gpt-5.6-luna`  | medium    | haiku  | read-only    |
+| `docs`                 | README / API / ADR / CHANGELOG / migration notes           | `gpt-5.6-luna`  | medium    | haiku  | docs         |
+| `security-triage`      | fast first-pass scan (OWASP grep, secrets, authz)          | `gpt-5.6-luna`  | medium    | sonnet | read-only    |
+| `browser-debugger`     | real-browser reproduction + evidence capture               | `gpt-5.6-luna`  | medium    | sonnet | reproduction |
+| `pr-shepherd`          | drive an open PR to merge-ready (delegates fixes)          | `gpt-5.6-luna`  | medium    | sonnet | drive        |
+
+The **orchestrator** (the lead chat you invoke a skill from) is not a spawnable role —
+run it on **Sol**, `high` for executing an epic, `xhigh` when authoring one.
+
+---
+
 ## Tooling
 
 ```bash
