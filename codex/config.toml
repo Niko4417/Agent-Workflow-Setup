@@ -21,7 +21,7 @@ web_search = "live"
 [agents]
 job_max_runtime_seconds = 1800
 max_depth = 1
-max_threads = 8
+max_threads = 4
 
 [apps._default]
 destructive_enabled = true
@@ -43,6 +43,7 @@ prevent_idle_sleep = true
 # openai/codex#31814 (tool_namespace avoids the reserved-name error).
 [features.multi_agent_v2]
 hide_spawn_agent_metadata = false
+max_concurrent_threads_per_session = 4
 tool_namespace = "agents"
 
 [mcp_servers.chrome_devtools]
