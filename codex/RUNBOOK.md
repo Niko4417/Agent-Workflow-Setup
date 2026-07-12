@@ -147,6 +147,21 @@ space (`type: task`); area labels do not (`area:model-gateway`).
 - `area:packaging-docs`: add `docs` and `architect` (npm packaging, documentation,
   customer runbooks).
 
+## Reasoning-effort escalation (lead-driven, on-demand)
+
+Agents run at their `.codex/agents/*.toml` default effort. The lead may raise it
+for a single spawn by passing `reasoning_effort` on `spawn_agent` (available only
+while the V2 `hide_spawn_agent_metadata = false` workaround holds). Escalate, do
+not make it the default:
+
+- **`architect` → `xhigh`** only when the decision is genuinely deep: a
+  boundary/dependency-direction ADR, a hard-to-reverse choice spanning multiple
+  layers, or reconciling conflicting constraints (security vs performance vs the
+  deterministic-first architecture). Keep the `high` default for routine
+  structure/ownership/pattern-fit calls (the majority).
+- Same principle for other roles if a specific task warrants it; never raise the
+  standing default in the toml to avoid taxing every spawn.
+
 ## Verification Routing
 
 - Always required before merge: GitHub check `ci`.
