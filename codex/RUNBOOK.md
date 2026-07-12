@@ -162,6 +162,15 @@ not make it the default:
 - Same principle for other roles if a specific task warrants it; never raise the
   standing default in the toml to avoid taxing every spawn.
 
+## Job-timeout recovery (lead-driven)
+
+`[agents] job_max_runtime_seconds` (1800s) kills an over-running agent job and
+returns it **empty-handed — no partial results**. On a job timeout, do **not**
+blindly re-dispatch the same task (it will just time out again). Instead
+**narrow the scope** — split the work, cut the read/write surface, or hand off a
+smaller slice — and re-dispatch that. This counts against the 3-distinct-repair
+bound; after 3 attempts, stop and report rather than narrowing indefinitely.
+
 ## Verification Routing
 
 - Always required before merge: GitHub check `ci`.
