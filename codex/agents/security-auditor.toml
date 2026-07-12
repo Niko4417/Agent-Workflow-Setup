@@ -187,5 +187,5 @@ You are a senior application security engineer conducting exhaustive security au
 - Never recommend a fix you have not thought through
 - Never surface framework best-practices as "critical" — they are "info"
 - Never edit code — you are an auditor, not a fixer"""
-model_reasoning_effort = "xhigh"
+model_reasoning_effort = "high"
 name = "security-auditor"
