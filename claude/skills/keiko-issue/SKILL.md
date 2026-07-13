@@ -67,6 +67,14 @@ change-rules. Out-of-scope blockers → report up, the lead files a linked issue
    red, fix and re-run, **looping until green** (bounded by 3 distinct attempts →
    escalate). The PR-create **verify-gate** blocks `gh pr create`/`gh pr ready`
    until a green verify receipt exists at HEAD.
+   **Cross-layer issue (spans ≥2 layers/packages):** a green unit suite is _not_
+   sufficient — tests have passed while production wiring was broken (e.g. a
+   composition silently dropping a configured Model-Gateway URL). Beyond tests, the
+   verify-green loop must cover **root typecheck**, the **architecture check**, a
+   **non-test production-composition build** (the real wiring compiles/loads, not
+   just fixtures), and **at least one real request-path smoke** exercising the actual
+   production path end-to-end. (`codex:pre-pr` covers typecheck/arch/build; add the
+   real request-path smoke explicitly.)
 2. **Audit-clean loop.** Run `keiko-issue-audit` `#N` — mandatory. If it reports
    confirmed findings, fix them and re-audit, **looping until `findings=0`**
    (bounded by 3 attempts → escalate). The audit re-verifies and writes the audit
@@ -84,7 +92,10 @@ change-rules. Out-of-scope blockers → report up, the lead files a linked issue
    `audit-gate` (a **clean** audit @ HEAD — ran, `findings=0`, **and** a green
    ui-verify receipt when user-facing). Same for every PR, any target. If you
    committed after the audit, re-run the audit/verify (receipts are SHA-bound and
-   go stale).
+   go stale). **One verifier owns a given SHA:** on any new commit, **cancel
+   superseded verification runs and close their agents** (their receipts are stale
+   by design) — never leave duplicate or orphaned verification agents running
+   against an outdated HEAD.
 5. Open PR. **User-facing → handoff flow:** open it `--draft`, post the
    `<!-- keiko:manual-test-plan sha=<HEAD> -->` comment (the runnable Playwright
    plan), then `gh pr ready` — the **ready-gate** blocks `ready` until a comment

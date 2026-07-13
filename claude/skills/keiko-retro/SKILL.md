@@ -16,6 +16,10 @@ you and resolve the rest with `gh`. It is optional: if omitted, infer the unit f
 the current branch or the chat, but **the link is preferred post-merge** (the branch
 is usually deleted and this may be a fresh session).
 
+## Mode: post-merge (default) vs interrupted / pre-merge
+
+Default assumes the unit **merged into `dev`** (human-fix delta + closure evidence exist). If the epic/issue was **interrupted or is pre-merge** — no `epic → dev` merge yet (abandoned, escalated, or retro'd early) — run the same pass but **record human-fix delta and closure evidence as `unavailable (not merged)`** instead of inferring or fabricating them. Reflect on the evidence that _does_ exist (plan vs reality, audit/CI findings, workflow friction, why it stalled). **State the mode explicitly** in the final report.
+
 ## 1. Gather the full evidence trail
 
 Do **not** reflect on the chat alone — it is compaction-lossy. Assemble the complete

@@ -46,6 +46,16 @@ Bad: "Should the API accept `chatId + assistantMessageId + marker`?" · "Should 
 
 Define the smallest useful, shippable v1 — not a platform rewrite. Challenge every expansion against user value, implementation risk, ADR alignment, governance, and whether it should be a follow-up epic. Preserve out-of-scope ideas on the parent epic so they are not lost. If the idea needs multiple epics, say so and split it.
 
+## User journey & platform surface (user-facing / cross-platform epics)
+
+For any epic that ships user-facing UI or runs cross-platform, pin these in the epic body **before** slicing — each is an acceptance anchor children verify against, not prose:
+
+- **Primary user journey** — the single end-to-end path a user takes, bound to a **branch/SHA baseline** so "done" is measured against a known state, not a moving target.
+- **Platform matrix** — the OSes/runtimes that must pass (macOS / Windows / Linux, per the CI cross-platform smoke); each becomes a verification target, not an afterthought.
+- **UI surface** — the exact screens/components/states in scope (feeds design-system `state-matrix.md` coverage + evidence).
+
+Backend-only epics with no user-facing or platform surface may skip this. If a journey / platform / surface cannot be pinned by inspection, that is an `ask user` question — resolve it before the epic is Ready.
+
 ## Slicing into child issues
 
 Use `to-issues` for the slicing **method only** — thin tracer-bullet vertical slices (each a complete path through every layer, independently verifiable), created in dependency order (blockers first). Its "quiz the user" step is **subordinated to the Core-rule classify-gate**: derive dependencies and sequencing by inspection; ask the user only slicing questions that change scope, UX, policy, or risk.

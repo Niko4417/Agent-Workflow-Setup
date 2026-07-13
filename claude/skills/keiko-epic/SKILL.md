@@ -77,11 +77,20 @@ are cut **off the epic branch**, not off `dev`.
    `user_facing=true` with a **green ui-verify receipt at the audited commit** (the
    Playwright plan actually ran green) **and** the marked test-plan comment present.
 
-3. After merge, confirm the epic branch still builds (`verify.sh`); add a child
-   comment linking PR/commit + evidence; update the board.
+3. **Child closeout — mechanical checklist (all must hold before the next child):**
+   - [ ] PR **base** is the epic branch (not `dev`/`main`/`release`).
+   - [ ] **Merge** landed (auto-merge gate passed, or human-merged).
+   - [ ] **Post-merge verification:** epic branch still builds (`verify.sh`) at the new epic HEAD.
+   - [ ] **Closure evidence** recorded: child comment linking PR/commit + verification/audit evidence; board updated.
+         Any unchecked box → stop and resolve before moving on.
 4. Rebase/merge `dev` into the epic branch regularly (esp. before the final PR).
-   Activate a child only when its dependencies are satisfied; never start `blocked`
-   work. Parallelize children only when section 1's safety conditions all hold.
+   **Dependency-readiness trace (before starting any runtime/dependent child):** do
+   not start a child on the strength of an upstream issue merely being "closed" —
+   trace the dependency **end-to-end** and confirm it is _actually_ ready: the
+   upstream runtime / contract / artifact it consumes exists on the epic branch,
+   builds, and its interface contract holds. If the trace fails, the child stays
+   `blocked`. Never start `blocked` work. Parallelize children only when section 1's
+   safety conditions all hold.
 
 ## 4. Final epic PR (human-gated)
 
