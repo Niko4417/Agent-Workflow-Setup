@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
 #
-# verify.sh — local CI mirror. Run from the TARGET repo root before opening a PR.
+# verify.sh — local pre-PR gate. Run from the TARGET repo root before opening a PR.
 #
-# Runs the exact gate sequence from .github/workflows/ci.yml so CI becomes a
-# confirmation, not a discovery. Does NOT modify package.json — it just invokes
-# the scripts the repo already defines.
+# Prefers the repo's CANONICAL `codex:pre-pr` aggregate
+# (scripts/codex-pre-pr.mjs — owner-maintained, kept in sync with ci.yml) when it
+# exists, so this gate stays drift-free and inherits new checks automatically.
+# Falls back to the legacy inline CI-mirror step list on branches that don't have
+# `codex:pre-pr` yet (older branches not rebased on dev).
 #
 # Usage (from the Keiko repo root):
-#   bash /path/to/Agent-Workflow-Setup/scripts/verify.sh
-#   bash /path/to/Agent-Workflow-Setup/scripts/verify.sh --fast   # skip the full test run
+#   bash /path/to/Agent-Workflow-Setup/scripts/verify.sh          # full canonical pre-PR check
+#   bash /path/to/Agent-Workflow-Setup/scripts/verify.sh --fast   # quick legacy smoke (skips full test)
 #
 # Note: a few CI jobs cannot be mirrored locally and remain CI-only:
 #   installable-package smoke (needs a clean `npm ci`), CodeQL,
@@ -24,7 +26,25 @@ if [[ ! -f package.json ]]; then
   exit 1
 fi
 
-# CI order from ci.yml.
+# Does the repo define a given npm script? (node is always present in this repo.)
+has_script() { node -e "process.exit(((require('./package.json').scripts)||{})['$1']?0:1)" 2>/dev/null; }
+
+# Canonical path: run the owner-maintained codex:pre-pr aggregate (broader + CI-synced).
+# Skipped in --fast mode, which is a quick local smoke via the legacy steps below.
+if [[ $FAST -eq 0 ]] && has_script "codex:pre-pr"; then
+  echo "─── npm run codex:pre-pr (canonical pre-PR gate) ───"
+  if npm run codex:pre-pr; then
+    echo
+    echo "✓ verify GREEN (codex:pre-pr) — safe to open the PR"
+    exit 0
+  fi
+  echo
+  echo "✗ verify RED (codex:pre-pr) — fix before opening the PR"
+  exit 1
+fi
+
+# Fallback: legacy inline CI-mirror steps (ci.yml order) — used when codex:pre-pr
+# is absent, or in --fast mode.
 steps=(
   "typecheck"
   "check:version-consistency"
@@ -48,7 +68,7 @@ done
 
 echo
 if [[ $fail -eq 0 ]]; then
-  echo "✓ verify GREEN — safe to open the PR$([[ $FAST -eq 1 ]] && echo ' (fast: full test run skipped)')"
+  echo "✓ verify GREEN (legacy mirror$([[ $FAST -eq 1 ]] && echo ', fast: full test skipped')) — safe to open the PR"
 else
   echo "✗ verify RED — fix before opening the PR"
 fi
