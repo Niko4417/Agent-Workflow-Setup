@@ -66,9 +66,23 @@ Author every issue with the **Keiko templates** (`epic.md` for the parent, `feat
 
 > Requires the `to-issues` skill (personal skill store). If unavailable, apply the same vertical-slice method inline.
 
+## Release / enterprise-acceptance QA gate (mandatory, every epic)
+
+Every epic carries a **release-acceptance QA gate** that qualifies the whole epic before its `-> dev` PR — as a **dedicated final child** (substantial epics) or an **epic-body acceptance section** (small epics). No epic is Ready without it. Generalizes the policy made explicit in epic #2384 (see child #2396). Acceptance **scales to the epic's surface** — include only applicable rows, but never drop the two CORE rows:
+
+- **User-path matrix** — enumerate every top-level user/enterprise journey the epic touches; the rows below are asserted per path.
+- **Contract + unit** coverage for every path.
+- **Mocked integration tests** across the failure envelope: errors, races, cancellation, malformed responses, disconnects, recovery.
+- **Real production-composition functional tests** — the actually-wired runtime/product, not fixtures. **(CORE — never dropped.)**
+- **User-facing surface:** full **Playwright** per top-level journey; **packaged-product** coverage on the reference install (e.g. macOS arm64 via Computer Use); **cross-platform release-gate equivalents** (Windows x64, macOS x64) — packaged / native / functional / Playwright-equivalent.
+- **NFR matrices** as the surface warrants: security, accessibility, responsive, visual, performance, memory, backpressure.
+- **Machine enforcement** — the gate **rejects manual-only, mock-only, screenshot-only, or fixture-only** coverage; every claim is backed by a real reproducible run (ties to `ui-verify`/`verify` receipts, never self-reported). **(CORE — never dropped.)**
+
+**Scale rule:** a backend-only epic omits Playwright / Computer-Use / responsive / visual but keeps contract + integration + real production-composition + performance/backpressure + security + machine enforcement. Match the matrix to the real surface; never force irrelevant rows, never drop the two CORE rows.
+
 ## Definition of Ready (exit criterion)
 
-Every child issue must satisfy the workflow Definition-of-Ready gate (`docs/workflow-contract.md` §1) so `keiko-issue`/`keiko-epic` can pick it up: acceptance criteria + a verification command, and the issue claimable (unassigned). Encode each technical unknown as an inspected, answered fact or as an explicit child-issue constraint — never leave it as an open user question the project could have answered.
+Every child issue must satisfy the workflow Definition-of-Ready gate (`docs/workflow-contract.md` §1) so `keiko-issue`/`keiko-epic` can pick it up: acceptance criteria + a verification command, and the issue claimable (unassigned). Encode each technical unknown as an inspected, answered fact or as an explicit child-issue constraint — never leave it as an open user question the project could have answered. **The epic is not Ready until its release-acceptance QA gate exists** (dedicated final child or epic acceptance section, scaled to surface).
 
 ## GitHub hygiene
 
