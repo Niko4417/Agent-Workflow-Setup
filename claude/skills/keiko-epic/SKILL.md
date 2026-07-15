@@ -40,11 +40,13 @@ are cut **off the epic branch**, not off `dev`.
 
 1. Run **`keiko-issue` `#child`** on its branch off the epic branch (it runs
    `verify.sh` + `keiko-issue-audit` as part of its flow).
-2. The child PR targets the **epic branch**. CI does not run on `epic/*` PRs, so
-   the child→epic gate is the **audit**, not GitHub CI:
+2. The child PR targets the **epic branch**. Auto-merge requires a completed,
+   successful GitHub `ci` check on the exact PR head **and** matching SHA-bound
+   local verify/audit evidence:
    - **Non-user-facing child (no UI):** run `keiko-issue-audit`; when it reports
      confirmed findings, **fix them and re-audit, looping until the audit is clean**
-     (`findings=0`), then **auto-merge** into the epic branch, no human. Each loop
+     (`findings=0`), wait for exact-head GitHub `ci`, then **auto-merge** into the
+     epic branch, no human. Each loop
      fixes the findings (scoped `implementor`/`developer`/`test-engineer`),
      re-runs the audit (which re-runs `verify.sh` and re-writes the SHA-bound
      receipt), and continues. **Bound the loop to 3 materially distinct fix
@@ -72,10 +74,15 @@ are cut **off the epic branch**, not off `dev`.
    Auto-merge is the only place merges happen without a human, and it is
    **enforced** by `epic-merge-gate.sh` (a PreToolUse hook on `gh pr merge`): it
    **always blocks** an agent merge into `dev`/`main`/`release` (human-only via the
-   UI); into an epic / integration branch it allows the merge only when a green
-   verify receipt and (`findings=0`) hold **and** either `user_facing=false`, or
+   UI); into a canonical `epic/*` branch it allows the merge only when exact-head
+   GitHub `ci`, a matching green verify receipt, and (`findings=0`) hold **and**
+   either `user_facing=false`, or
    `user_facing=true` with a **green ui-verify receipt at the audited commit** (the
    Playwright plan actually ran green) **and** the marked test-plan comment present.
+   Invoke exactly `gh pr merge <N> --auto --squash --match-head-commit
+   <audited-sha>` (optionally `--delete-branch`); the gate rejects other selectors,
+   repository/content overrides, shell chaining, missing or stale merge-time
+   guards, and every admin bypass.
 
 3. **Child closeout — mechanical checklist (all must hold before the next child):**
    - [ ] PR **base** is the epic branch (not `dev`/`main`/`release`).

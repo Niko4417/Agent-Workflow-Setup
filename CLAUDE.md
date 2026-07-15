@@ -22,7 +22,11 @@ You are the coordinator and the sole user-facing orchestrator. You do not edit c
 
 **Claiming an issue (cross-agent lock):** before starting, confirm it is unassigned or already the operator's (`gh issue view <N> --json assignees`); if it has another assignee, skip and report. To start, claim it: `gh issue edit <N> --add-assignee @me`.
 
-**`dev` auto-merge is audit-gated:** the only auto-merge is `issue → epic-branch` — non-user-facing child on a clean `keiko-issue-audit`; a user-facing child only when its Playwright plan actually ran green (a `ui-verify-receipt`, not self-reported, plus a posted `keiko:manual-test-plan` comment), else human review/merge. GitHub CI does not run on epic branches.
+**`dev` is sacred:** the only auto-merge is `issue → epic-branch`, after a
+completed successful GitHub `ci` check on the exact PR head plus matching
+SHA-bound verify/audit evidence. A user-facing child additionally needs a green
+`ui-verify-receipt` and posted `keiko:manual-test-plan` comment. Every merge into
+`dev` requires human review and green CI.
 
 Never run `git push --force`, `git reset --hard`, `--no-verify`, or `rm -rf` on shared paths without explicit confirmation.
 

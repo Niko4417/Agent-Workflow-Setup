@@ -38,9 +38,9 @@ fan-out first; only disjoint write scopes in parallel.
   design-system evidence):
   - **-> `dev`** (any issue): green GitHub CI **+ human review** — always, no
     exceptions (sacred `dev`).
-  - **-> `epic/*`, non-user-facing**: a clean `keiko-issue-audit` is sufficient —
-    **auto-merge**, no human, no GitHub CI (CI does not run on `epic/*`; the audit
-    runs `verify.sh`, the CI mirror, locally). The orchestrator drives the audit
+  - **-> `epic/*`, non-user-facing**: completed successful GitHub `ci` on the exact
+    PR head plus a matching clean `keiko-issue-audit` is required — **auto-merge**,
+    no human. The orchestrator drives the audit
     clean — fix findings and re-audit in a loop until `findings=0`, bounded by the
     3-attempt escalation rule (else escalate, do not merge).
   - **-> `epic/*`, user-facing**: drive the audit clean the same way (loop to
@@ -56,9 +56,9 @@ fan-out first; only disjoint write scopes in parallel.
 - **`dev` is sacred**: every merge into `dev` (epic or standalone) requires a
   **human reviewer + green CI**.
 - Epic model: long-lived `epic/<name>` off `dev`; child `issue/...` off the epic
-  branch; final epic PR -> `dev` is the human-gated handoff (full CI + human). The
-  child→epic audit gate runs `verify.sh` (the CI mirror) locally; real GitHub CI
-  re-runs on the accumulated epic at the epic->`dev` PR. \*\*The epic->`dev` PR only
+  branch; final epic PR -> `dev` is the human-gated handoff (full CI + human).
+  Every child→epic merge requires both server-side exact-head GitHub `ci` and the
+  matching local verify/audit receipts. \*\*The epic->`dev` PR only
   opens after `dev` is rebased into the epic and the integrated surface passes,
   at HEAD, the full local set — green verify, audit `findings=0`, and (user-facing)
   a green ui-verify Playwright run (`audit-gate` enforces a clean audit: findings=0
@@ -90,9 +90,9 @@ fan-out first; only disjoint write scopes in parallel.
    auto-fills the PR template with evidence. **A user-facing-component change is
    not verified until its design-system fidelity + a11y evidence is captured under
    `docs/design-system/evidence/<N>/` (ADR-0049/0050/0051).**
-6. **PR.** `issue -> epic` is **audit-gated** (non-UI: auto-merge on a clean
-   `keiko-issue-audit`; UI: audit + human review/merge); any `-> dev` waits for a
-   human + green CI.
+6. **PR.** `issue -> epic` requires exact-head GitHub `ci` plus matching SHA-bound
+   local verify/audit evidence (UI adds its Playwright receipt and plan comment);
+   any `-> dev` waits for a human + green CI.
 7. **Completion judge.** Strong-model gate vs acceptance criteria; <=2 re-loops
    then escalate.
 8. **Flush + report.** Orchestrator writes current state + next action to the
@@ -135,7 +135,10 @@ failed, why further autonomous recovery is unlikely.
    with `verify-gate`, no PR opens unless verify + audit + (UI) Playwright are all
    clean at HEAD.
    The **epic-merge gate** (`epic-merge-gate.sh`, PreToolUse on `gh pr merge`)
-   re-checks the same at the merge HEAD and adds the **SHA-bound** test-plan
+   requires a unique completed successful GitHub `ci` check, re-checks the local
+   evidence at the PR head, and accepts only `gh pr merge <N> --auto --squash
+   --match-head-commit <audited-sha>` (optionally `--delete-branch`) so the merge
+   API rejects a concurrent head change. It also adds the **SHA-bound** test-plan
    comment `<!-- keiko:manual-test-plan sha=<commit> -->` (gh-checked, must name the
    audited commit) for a user-facing auto-merge; it **always blocks** an agent merge
    into `dev`/`main`/`release` (human-only, via the GitHub UI — the human-review
