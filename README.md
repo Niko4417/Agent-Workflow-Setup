@@ -78,10 +78,11 @@ open, ready, merge, or repush around them.
 | open / ready a PR          | `audit-gate`      | the audit **ran and is clean** — `findings=0`, plus a green **ui-verify** receipt (real Playwright run) when user-facing |
 | ready a user-facing PR     | `ready-gate`      | a **SHA-bound test-plan comment** for the current commit is posted                                                       |
 | repush a fix to a `dev` PR | `push-gate`       | the fix re-passes verify + clean-audit (+ ui-verify + reposted plan)                                                     |
-| auto-merge into an epic    | `epic-merge-gate` | clean audit + green verify + (UI) Playwright + comment; **never** into `dev`/`main`/`release`                            |
+| auto-merge into an epic    | `epic-merge-gate` | exact-head GitHub `ci` + matching clean audit/verify + (UI) Playwright/comment; **never** into `dev`/`main`/`release`   |
 
-**`dev` is sacred:** the only agent auto-merge is a _non-user-facing_ child into its
-epic branch. Everything into `dev` — standalone issue or accumulated epic — needs a
+**`dev` is sacred:** the only agent auto-merge is a child into its canonical
+`epic/*` branch after every applicable gate passes. Everything into `dev` —
+standalone issue or accumulated epic — needs a
 **human reviewer + green GitHub CI**. Local gates are fast feedback; the target's
 protected `dev` is the authoritative backstop.
 

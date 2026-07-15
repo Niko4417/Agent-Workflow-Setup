@@ -1,105 +1,152 @@
 #!/usr/bin/env bash
 #
-# epic-merge-gate.sh — gate the agent/CLI `gh pr merge` path:
-#   * into dev / main / release  -> ALWAYS blocked (a human merges via the UI).
-#   * into an epic / integration -> allowed only when verify.sh passed green at the
-#     branch (any other base)        audited commit (verify receipt) AND the
-#                                     keiko-issue-audit receipt is clean (findings=0)
-#                                     AND either:
-#                                      - the issue is non-user-facing, OR
-#                                      - it is user-facing AND a green ui-verify
-#                                        receipt (the Playwright plan actually ran
-#                                        green) exists at the audited commit AND a
-#                                        marked manual-test-plan comment is on the PR.
-#
-# Rationale: GitHub CI does not run on epic integration-branch PRs, so the
-# child->epic gate is the audit. A clean non-user-facing child auto-merges. A
-# user-facing child auto-merges only when its Playwright plan actually ran green
-# (a ui-verify receipt at the audited commit) and the documentation comment
-# exists; otherwise a human merges via the GitHub UI (which does not run this
-# hook). Subjective visual / screen-reader review happens at the epic->dev gate.
-#
-# Wired to a PreToolUse hook on `gh pr merge`. Also runnable by hand.
-#   exit 0 = allowed / not applicable      exit 1 = blocked
-#
-# Trust model: verify and ui-verify are REAL runs (the receipt scripts execute
-# verify.sh / Playwright and stamp only on green); the test-plan comment is checked
-# for real via gh. findings/user_facing remain self-reported by the audit skill.
-# Authoritative enforcement is server-side (protected dev + the epic->dev PR).
+# epic-merge-gate.sh — allow agent/CLI merges only from an issue PR into a
+# canonical epic/* base after GitHub CI and SHA-bound local audit evidence pass.
+# A human merges every other target through the GitHub UI.
 
 set -uo pipefail
 
-cmd="${1:-}"   # full `gh pr merge ...` command, used to extract a PR number
+cmd="${1:-}"
 marker="keiko:manual-test-plan"
 
-prnum="$(printf '%s' "$cmd" | grep -oE 'merge[[:space:]]+[0-9]+' | grep -oE '[0-9]+' || true)"
-ghpr() { if [ -n "$prnum" ]; then gh pr view "$prnum" "$@"; else gh pr view "$@"; fi; }
+block() {
+  printf '[epic-merge-gate] BLOCKED: %s\n' "$1" >&2
+  exit 1
+}
 
-info="$(ghpr --json baseRefName,headRefName 2>/dev/null || true)"
-# Can't determine the PR (offline / no PR yet) -> fail open: audit-gate already
-# proved an audit ran, and the epic->dev PR is the hard backstop.
-[ -n "$info" ] || exit 0
+json_string() {
+  jq -er "$2 | strings | select(length > 0)" "$1" 2>/dev/null
+}
 
-base="$(printf '%s' "$info" | sed -n 's/.*"baseRefName":"\([^"]*\)".*/\1/p')"
-head="$(printf '%s' "$info" | sed -n 's/.*"headRefName":"\([^"]*\)".*/\1/p')"
+is_sha() { [[ "$1" =~ ^[0-9a-fA-F]{40}$ ]]; }
 
-# Branch naming is not standardized (epics are feat/<name>-<n>, children vary), so
-# detect by elimination. dev / main / release are sacred: never auto-merge there
-# from the agent/CLI path. Any OTHER base is an epic / integration branch.
+# Parse and whitelist one canonical command without evaluating it. Text matching
+# is insufficient because a fake flag embedded in --body could otherwise satisfy
+# the guard or a repository override could make the lookup and merge disagree.
+if ! parsed_command="$(python3 - "$cmd" <<'PY'
+import shlex
+import sys
+
+try:
+    args = shlex.split(sys.argv[1], posix=True)
+except ValueError:
+    raise SystemExit(2)
+
+if len(args) < 4 or args[0] != "gh" or args[1:3] != ["pr", "merge"]:
+    raise SystemExit(2)
+if not args[3].isascii() or not args[3].isdigit() or int(args[3]) <= 0:
+    raise SystemExit(2)
+
+matches = []
+seen = set()
+index = 4
+while index < len(args):
+    arg = args[index]
+    if arg == "--match-head-commit":
+        if index + 1 >= len(args):
+            raise SystemExit(2)
+        matches.append(args[index + 1])
+        index += 2
+        continue
+    elif arg.startswith("--match-head-commit="):
+        matches.append(arg.split("=", 1)[1])
+    elif arg in {"--auto", "--squash", "-s", "--delete-branch", "-d"}:
+        canonical = {"-s": "--squash", "-d": "--delete-branch"}.get(arg, arg)
+        if canonical in seen:
+            raise SystemExit(2)
+        seen.add(canonical)
+    else:
+        raise SystemExit(2)
+    index += 1
+
+if len(matches) != 1 or "--auto" not in seen or "--squash" not in seen:
+    raise SystemExit(2)
+print(f"{args[3]}\t{matches[0]}")
+PY
+)"; then
+  block 'use only: gh pr merge <number> --auto --squash [--delete-branch] --match-head-commit <sha>; overrides, admin, content flags, and shell chaining are denied.'
+fi
+IFS=$'\t' read -r prnum match_sha <<<"$parsed_command"
+ghpr() { gh pr view "$prnum" "$@"; }
+
+# Query all merge-critical GitHub facts in one snapshot. A lookup or parse error
+# is not evidence that a merge is safe.
+if ! info="$(ghpr --json baseRefName,headRefName,headRefOid,statusCheckRollup 2>/dev/null)"; then
+  block 'could not look up the pull request; refusing to auto-merge.'
+fi
+if ! base="$(printf '%s' "$info" | jq -er '.baseRefName | strings | select(length > 0)' 2>/dev/null)" ||
+   ! head="$(printf '%s' "$info" | jq -er '.headRefName | strings | select(length > 0)' 2>/dev/null)" ||
+   ! head_sha="$(printf '%s' "$info" | jq -er '.headRefOid | strings | select(length > 0)' 2>/dev/null)"; then
+  block 'pull-request lookup returned malformed JSON; refusing to auto-merge.'
+fi
+is_sha "$head_sha" || block 'pull-request head SHA is malformed; refusing to auto-merge.'
+
+# Make the merge API itself reject a concurrent head update after this hook
+# returns. A preflight-only SHA comparison would leave a check-to-merge race.
+[ "$match_sha" = "$head_sha" ] ||
+  block "--match-head-commit ($match_sha) must match PR head SHA ($head_sha)."
+
 case "$base" in
-  dev|main|master|release/*)
-    printf '[epic-merge-gate] BLOCKED: never auto-merge into %s. A human must review and merge via the GitHub UI.\n' "$base" >&2
-    exit 1 ;;
-  *) ;;
+  epic/*) [ -n "${base#epic/}" ] || block "base '$base' is not a canonical epic branch." ;;
+  dev|main|master|release/*) block "never auto-merge into $base. A human must review and merge via the GitHub UI." ;;
+  *) block "base '$base' is not a canonical epic branch." ;;
+esac
+case "$head" in
+  issue/*) [ -n "${head#issue/}" ] || block "head '$head' is not a canonical issue branch." ;;
+  *) block "head '$head' is not a canonical issue branch." ;;
 esac
 
-gd="$(git rev-parse --git-dir 2>/dev/null)"
+# GitHub is authoritative for CI. A local receipt is supplementary evidence,
+# never a substitute for a completed successful direct ci check.
+if ! printf '%s' "$info" | jq -e '
+  (.statusCheckRollup | arrays) as $checks
+  | any($checks[];
+      .__typename == "CheckRun"
+      and .name == "ci"
+      and .workflowName == "CI"
+      and .status == "COMPLETED"
+      and .conclusion == "SUCCESS")
+' >/dev/null 2>&1; then
+  block "GitHub check 'ci' is not completed successfully for $head_sha."
+fi
+
+gd="$(git rev-parse --git-dir 2>/dev/null)" || block 'not inside a Git repository.'
 slug="$(printf '%s' "$head" | tr '/' '_')"
 receipt="$gd/keiko-audit/$slug.json"
-
-if [ ! -f "$receipt" ]; then
-  printf '[epic-merge-gate] BLOCKED: no keiko-issue-audit receipt for %s. Run the audit before merging into %s.\n' "$head" "$base" >&2
-  exit 1
-fi
-
-findings="$(sed -n 's/.*"findings":"\([^"]*\)".*/\1/p' "$receipt")"
-user_facing="$(sed -n 's/.*"user_facing":"\([^"]*\)".*/\1/p' "$receipt")"
-
-if [ "$findings" != "0" ]; then
-  printf '[epic-merge-gate] BLOCKED: audit findings=%s for %s (need 0 to auto-merge into %s). Resolve findings, re-audit, or have a human merge.\n' "${findings:-unknown}" "$head" "$base" >&2
-  exit 1
-fi
-
-# verify.sh must have passed green at the SAME commit the audit covered (audit
-# fixes change HEAD, so re-verification is required before auto-merge).
-audited="$(sed -n 's/.*"audited_sha":"\([^"]*\)".*/\1/p' "$receipt")"
 vreceipt="$gd/keiko-verify/$slug.json"
-verified="$(sed -n 's/.*"verified_sha":"\([^"]*\)".*/\1/p' "$vreceipt" 2>/dev/null || true)"
-if [ ! -f "$vreceipt" ] || [ -z "$verified" ] || [ "$verified" != "$audited" ]; then
-  printf '[epic-merge-gate] BLOCKED: no green verify receipt at the audited commit for %s (verified=%s, audited=%s). Run verify-receipt.sh, then re-audit.\n' "$head" "${verified:-none}" "${audited:-none}" >&2
-  exit 1
+
+[ -f "$receipt" ] || block "no keiko-issue-audit receipt for $head."
+[ -f "$vreceipt" ] || block "no green verify receipt for $head."
+if ! findings="$(json_string "$receipt" '.findings')" ||
+   ! user_facing="$(json_string "$receipt" '.user_facing')" ||
+   ! audited="$(json_string "$receipt" '.audited_sha')" ||
+   ! verified="$(json_string "$vreceipt" '.verified_sha')"; then
+  block 'audit or verify receipt is malformed; refusing to auto-merge.'
 fi
+
+[ "$findings" = '0' ] || block "audit findings=$findings for $head (need 0)."
+is_sha "$audited" && is_sha "$verified" || block 'audit or verify receipt SHA is malformed.'
+[ "$audited" = "$head_sha" ] && [ "$verified" = "$head_sha" ] ||
+  block "audit SHA ($audited), verify SHA ($verified), and PR head SHA ($head_sha) must match."
 
 case "$user_facing" in
   false)
-    printf '[epic-merge-gate] OK: clean, non-user-facing audit for %s -> %s; auto-merge allowed.\n' "$head" "$base"
+    printf '[epic-merge-gate] OK: GitHub ci and SHA-bound clean non-user-facing audit allow %s -> %s.\n' "$head" "$base"
     exit 0 ;;
   true)
     uvreceipt="$gd/keiko-ui-verify/$slug.json"
-    uv_sha="$(sed -n 's/.*"ui_verified_sha":"\([^"]*\)".*/\1/p' "$uvreceipt" 2>/dev/null || true)"
-    if [ ! -f "$uvreceipt" ] || [ "$uv_sha" != "$audited" ]; then
-      printf '[epic-merge-gate] BLOCKED: %s is user-facing but has no green Playwright (ui-verify) receipt at the audited commit (ui_verified=%s, audited=%s). Run ui-verify-receipt.sh, or have a human review and merge.\n' "$head" "${uv_sha:-none}" "${audited:-none}" >&2
-      exit 1
+    [ -f "$uvreceipt" ] || block "$head is user-facing but has no ui-verify receipt."
+    if ! uv_sha="$(json_string "$uvreceipt" '.ui_verified_sha')"; then
+      block 'ui-verify receipt is malformed; refusing to auto-merge.'
     fi
-    comments="$(ghpr --json comments -q '.comments[].body' 2>/dev/null || true)"
-    # SHA-bound: the comment must name the audited commit being merged.
-    if ! printf '%s' "$comments" | grep -q "$marker sha=$audited"; then
-      printf '[epic-merge-gate] BLOCKED: %s is user-facing but has no manual-test-plan comment for the audited commit (<!-- %s sha=%s -->). Repost the test plan for this commit before auto-merge.\n' "$head" "$marker" "$audited" >&2
-      exit 1
+    is_sha "$uv_sha" && [ "$uv_sha" = "$head_sha" ] ||
+      block "ui-verify SHA ($uv_sha) must match PR head SHA ($head_sha)."
+    if ! comments="$(ghpr --json comments -q '.comments[].body' 2>/dev/null)"; then
+      block 'could not read PR comments for the required manual test plan.'
     fi
-    printf '[epic-merge-gate] OK: user-facing audit clean, Playwright-verified, test-plan comment present for %s -> %s; auto-merge allowed.\n' "$head" "$base"
+    printf '%s\n' "$comments" | grep -Fq "<!-- $marker sha=$head_sha -->" ||
+      block "$head has no manual-test-plan comment for PR head $head_sha."
+    printf '[epic-merge-gate] OK: GitHub ci and SHA-bound user-facing audit evidence allow %s -> %s.\n' "$head" "$base"
     exit 0 ;;
-  *)
-    printf '[epic-merge-gate] BLOCKED: user_facing=%s (unknown) for %s — fail-closed. A human must review and merge.\n' "${user_facing:-unknown}" "$head" >&2
-    exit 1 ;;
+  *) block "user_facing=$user_facing is invalid; refusing to auto-merge." ;;
 esac

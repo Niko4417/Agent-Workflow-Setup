@@ -91,13 +91,16 @@ audited commit):
 
 `--findings`/`--user-facing` are optional (default `unknown`); omit them for a
 standalone audit. They feed the **epic auto-merge** decision
-(`.keiko-scripts/epic-merge-gate.sh`): a child PR into an epic / integration branch
-(any base other than `dev`/`main`/`release`) may auto-merge **only** when a green
-verify receipt and `findings=0` hold **and** either `user_facing=false`, or
+(`.keiko-scripts/epic-merge-gate.sh`): a canonical `issue/*` child PR into a
+canonical `epic/*` branch may auto-merge **only** when GitHub `ci` completed
+successfully on the exact PR head, the merge command carries
+`--match-head-commit <audited-sha>`, a matching green verify receipt and
+`findings=0` hold, **and** either `user_facing=false`, or
 `user_facing=true` with a **green ui-verify receipt at this commit** (the Playwright
 plan actually ran green — not self-reported) and a marked
 `<!-- keiko:manual-test-plan -->` comment on the PR — otherwise a human reviews and
-merges. Fail-closed: `unknown` never auto-merges.
+merges. Fail-closed: `unknown`, missing GitHub state, noncanonical branches,
+repository overrides, and admin bypasses never auto-merge.
 
 This binds the audit to the current HEAD commit. The PR gate
 (`.keiko-scripts/audit-gate.sh`, wired into a PreToolUse hook) **blocks any

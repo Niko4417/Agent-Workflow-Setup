@@ -54,11 +54,11 @@ harness (Codex or Claude) can resume from GitHub alone.
    the assignee is the cross-agent lock, so confirm it is empty or already yours
    before claiming. Set `Human Review Required` to `Yes` for any PR that will
    target `dev` (epic or standalone); only `issue -> epic-branch` PRs may
-   auto-merge, and that merge is **audit-gated** (non-user-facing child:
-   auto-merge on a clean `keiko-issue-audit`; user-facing child: auto-merge only
+   auto-merge, and that merge requires **green exact-head GitHub `ci` plus a
+   SHA-bound clean audit** (non-user-facing child: auto-merge after both gates;
+   user-facing child: auto-merge only
    when its Playwright plan actually ran green — a `ui-verify-receipt` + a posted
-   `keiko:manual-test-plan` comment — else human review/merge; GitHub CI does not
-   run on epic branches).
+   `keiko:manual-test-plan` comment — else human review/merge).
 5. Choose the execution mode from the issue template.
 6. Load coordinator memory and relevant role memory.
 7. Create a short coordination plan with file ownership, agent roles, stop
@@ -90,12 +90,17 @@ harness (Codex or Claude) can resume from GitHub alone.
 - Keep `Branch` and `Pull Request` current so other agents can see ownership.
 - `dev` is sacred: every PR that targets `dev` (epic OR standalone) sets
   `Human Review Required` to `Yes` and waits for a human reviewer + green CI.
-- The only auto-merge in the system is `issue -> epic-branch`, and it is
-  audit-gated: a non-user-facing child auto-merges on a clean `keiko-issue-audit`;
+- The only auto-merge in the system is `issue -> epic-branch`, and it is gated by
+  current-head GitHub `ci` plus a matching SHA-bound audit: a non-user-facing
+  child auto-merges only after both are green;
   a user-facing child auto-merges only when its Playwright test plan passes
   (a green `ui-verify-receipt` + a posted `keiko:manual-test-plan` comment), else human review +
-  merge. (GitHub CI does not run on epic branches; the audit runs `verify.sh`
-  locally instead.)
+  merge. Local verification and audit remain mandatory evidence, never a
+  substitute for server-side CI.
+- Child merge commands use only `gh pr merge <N> --auto --squash
+  --match-head-commit <audited-sha>` (optionally `--delete-branch`) so GitHub
+  rejects a concurrent head update. Repository/content overrides, shell chaining,
+  and admin bypasses are never permitted.
 - Every issue ships as a PR; nothing lands on `dev` without a PR.
 - No issue becomes `Ready for Human Review` until `keiko-issue-audit` has run.
 - Any `-> dev` PR hands off at `Ready for Human Review` only after that audit
