@@ -22,11 +22,15 @@ You are the coordinator and the sole user-facing orchestrator. You do not edit c
 
 **Claiming an issue (cross-agent lock):** before starting, confirm it is unassigned or already the operator's (`gh issue view <N> --json assignees`); if it has another assignee, skip and report. To start, claim it: `gh issue edit <N> --add-assignee @me`.
 
-**`dev` is sacred:** the only auto-merge is `issue → epic-branch`, after a
-completed successful GitHub `ci` check on the exact PR head plus matching
-SHA-bound verify/audit evidence. A user-facing child additionally needs a green
-`ui-verify-receipt` and posted `keiko:manual-test-plan` comment. Every merge into
-`dev` requires human review and green CI.
+**`dev` is sacred:** the only auto-merge is `issue → epic-branch`, and every merge
+into `dev` requires human review and green CI — in **every** profile. The exact
+auto-merge conditions are **profile-provided** ([`profiles/`](profiles/README.md)).
+_keiko-web_: a completed successful exact-head GitHub `ci` check plus matching
+SHA-bound verify/audit evidence; a user-facing child additionally needs a green
+`ui-verify-receipt` and a posted `keiko:manual-test-plan` comment. _keiko-native_:
+merge only by the target's dedicated automation identity into the epic branch the
+accepted issue names, with all required exact-head gates green and acceptance/audit
+evidence complete.
 
 Never run `git push --force`, `git reset --hard`, `--no-verify`, or `rm -rf` on shared paths without explicit confirmation.
 
@@ -66,7 +70,7 @@ When a task spans multiple layers and the workers are independent, use an agent 
 - Tests are mutation-robust: a single-line mutation in the implementation must be caught.
 - React: stable keys, correct hook dependencies, Server Components by default.
 - Next.js: Route Handlers and Server Actions have authz; no secrets in Client Components.
-- Design-system conformance (user-facing UI): changes to user-facing components conform to the Keiko Design System (`docs/design-system/`) — consume Tier-2/3/4 semantic/component tokens in `globals.css`, never raw Tier-1 primitives or hex literals; cover every state in `state-matrix.md`; follow the `governance.md` change-rules and component register. Produce the fidelity + a11y evidence under `docs/design-system/evidence/<N>/` that ADR-0049 (fidelity gates), ADR-0050 (component state & governance contract), and ADR-0051 (visual-regression & acceptance gate) require.
+- User-facing UI evidence follows the **active profile's evidence model** ([`profiles/`](profiles/README.md)). _keiko-web_: conform to the Keiko Design System (`docs/design-system/`) — Tier-2/3/4 semantic/component tokens only (no raw Tier-1 primitives or hex), full `state-matrix.md` coverage, `governance.md` change-rules, and fidelity + a11y evidence under `docs/design-system/evidence/<N>/` (ADR-0049/0050/0051). _keiko-native_: satisfy the issue's **Acceptance Journey** with machine-evaluated automated/a11y/visual/recovery/platform evidence generated anew (no design system yet; see `docs/planning/native-design-baseline.md`).
 - No comments explaining WHAT — only WHY when non-obvious.
 - Conventional commits with issue number: `feat: ... (#123)`.
 

@@ -17,13 +17,29 @@ for branching, gates, and the sacred-`dev` rule — follow them, do not restate.
 
 You are the lead session — the sole orchestrator. Do not edit code yourself.
 
+## 0. Select the product profile (before intake)
+
+Select the product profile against the target checkout and **state it on your first
+output line**. Per [`profiles/README.md`](../../../profiles/README.md): Native
+markers (`CONTEXT.md` + `docs/planning/decision-addendum.md` + `quality/project.json`)
+→ `keiko-native`; `docs/design-system/` with Native markers absent → `keiko-web`;
+ambiguous → **stop and ask**. **Load only the selected profile** and take the
+Definition of Ready, verify command, templates, evidence model, branch/merge
+authority, labels, and exclusions from it. Explicit operator selection overrides
+detection.
+
 ## 1. Intake (Definition-of-Ready gate)
 
-Fetch `#N` (body, labels, comments, linked PRs/children). The issue must have
-acceptance criteria + a verification command. If missing → triage first
-(comment the gap, `status: new`), do not start. If it's an epic, do not run this
-skill — use `keiko-epic`. If ambiguous or conflicting with governance, stop and
-report.
+Fetch `#N` (body, labels, comments, linked PRs/children). Apply the **active
+profile's Definition of Ready**. **keiko-web:** the issue must have acceptance
+criteria + a verification command. **keiko-native:** it must be a machine-validated
+accepted contract — a single `type:*` label, `status: ready` with a matching
+readiness record (validated `Planning contract` version + fingerprint), and a
+complete **Execution Authority** + **Quality Plan**; an instruction to consult the
+private Fachkonzept or infer omitted requirements is a missing-requirement defect
+(stop, return to planning). If missing/unready → triage first (comment the gap,
+`status: new`), do not start. If it's an epic, use `keiko-epic`. If ambiguous or
+conflicting with governance, stop and report.
 
 **Collision check (do this first):** if `#N` already has a GitHub assignee other
 than the operator, **do not start** — it's being worked by someone else. Skip and
@@ -46,7 +62,7 @@ Smallest effective shape:
 - `fix` with unclear root cause → debug fan-out (competing hypotheses) before any fix; reproduce first when steps exist.
 - `fix` known/scoped → `implementor` (minimal diff).
 - `feature` single-scope → `developer` (spec-first, TDD); cross-layer → feature team with strict, disjoint file ownership.
-- **User-facing component** change → `ui-engineer` builds against the Keiko Design System (`docs/design-system/`); `a11y-auditor` reviews **WCAG + design-system fidelity** (token conformance, `state-matrix.md` coverage, evidence).
+- **User-facing component** change → `ui-engineer` builds against the active profile's UI standard (keiko-web: Keiko Design System `docs/design-system/`; **keiko-native:** `docs/planning/native-design-baseline.md`, evidence generated anew); `a11y-auditor` reviews **WCAG 2.2 AA** plus that standard's fidelity and the issue's **Acceptance Journey** checkpoints.
 - Add `security-triage`→`security-auditor`, `performance-engineer`, `a11y-auditor`, `architect`, `docs` only when the changed surface creates that risk.
   Assign explicit, disjoint file ownership before any write agent starts.
 
@@ -55,18 +71,23 @@ Smallest effective shape:
 Quality bars (per contract): complexity ≤10, function ≤50 LOC, file ≤400 LOC,
 no `any`, TDD for new behavior, mandatory 2-pass self-critique. Issue-scoped only;
 no unrelated refactors, TODOs, or placeholders. **User-facing components** conform
-to the Keiko Design System (`docs/design-system/`): semantic/component tokens only
-(no raw Tier-1 primitives or hex), full `state-matrix.md` coverage, governance
-change-rules. Out-of-scope blockers → report up, the lead files a linked issue
+to the active profile's UI standard (keiko-web: Keiko Design System — semantic/
+component tokens only, full `state-matrix.md` coverage, governance change-rules;
+**keiko-native:** `native-design-baseline.md`, satisfying the issue's Acceptance
+Journey). In **keiko-native** honor the issue's frozen **Execution Authority** (write
+scope, delivery target, prohibitions) and **never** store/quote/request the private
+Fachkonzept. Out-of-scope blockers → report up, the lead files a linked issue
 (`status: new`); never expand scope.
 
 ## 5. Verify, audit, ship (per contract — sacred-`dev`)
 
-1. **Verify-green loop.** Run `.keiko-scripts/verify-receipt.sh #N` — it runs
-   `verify.sh` (the CI mirror) and writes the verify receipt **only if green**. If
-   red, fix and re-run, **looping until green** (bounded by 3 distinct attempts →
-   escalate). The PR-create **verify-gate** blocks `gh pr create`/`gh pr ready`
-   until a green verify receipt exists at HEAD.
+1. **Verify-green loop.** Run `.keiko-scripts/verify-receipt.sh #N` — it runs the
+   **active profile's verify command** (keiko-web: `verify.sh`, the CI mirror;
+   **keiko-native:** `npm ci --ignore-scripts && npm run quality && npm audit
+--audit-level=high` on Node 24.18.x) and writes the verify receipt **only if
+   green**. If red, fix and re-run, **looping until green** (bounded by 3 distinct
+   attempts → escalate). The PR-create **verify-gate** blocks `gh pr create`/`gh pr
+ready` until a green verify receipt exists at HEAD.
    **Cross-layer issue (spans ≥2 layers/packages):** a green unit suite is _not_
    sufficient — tests have passed while production wiring was broken (e.g. a
    composition silently dropping a configured Model-Gateway URL). Beyond tests, the
@@ -83,10 +104,16 @@ change-rules. Out-of-scope blockers → report up, the lead files a linked issue
    (it stamps the ui-verify receipt only on green), and post the PR comment marked
    **`<!-- keiko:manual-test-plan sha=<HEAD> -->`** (SHA-bound: name the exact
    commit; repost it whenever HEAD changes).
-3. Branch `issue/<N>-<short>` off `dev`; Conventional Commit referencing `#N`;
-   `verifier` fills the PR "Verification evidence" section. For a user-facing
-   change, capture design-system evidence under `docs/design-system/evidence/<N>/`
-   (theme screenshots + `*-fidelity-proof.json` + `a11y-proof.json`, ADR-0049/0051).
+3. Branch off the base the profile names (keiko-web: `issue/<N>-<short>` off `dev`;
+   **keiko-native:** a runner-prefixed source branch unique to the issue and
+   **including its number**, off the frozen target the accepted issue names — never
+   change that target); Conventional Commit referencing `#N`; `verifier` fills the
+   PR "Verification evidence" section. For a user-facing change, capture the
+   profile's evidence (keiko-web: design-system evidence under
+   `docs/design-system/evidence/<N>/` — theme screenshots + `*-fidelity-proof.json` +
+   `a11y-proof.json`, ADR-0049/0051; **keiko-native:** the issue's **Acceptance
+   Journey** automated/a11y/visual/recovery/platform evidence, machine-evaluated and
+   bound to the exact head).
 4. **PR gates.** Before opening the PR, two PreToolUse gates must pass and
    **block `gh pr create`** otherwise: `verify-gate` (green verify @ HEAD) and
    `audit-gate` (a **clean** audit @ HEAD — ran, `findings=0`, **and** a green

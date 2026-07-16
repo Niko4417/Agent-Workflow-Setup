@@ -26,6 +26,32 @@ if [[ ! -f package.json ]]; then
   exit 1
 fi
 
+here="$(cd "$(dirname "$0")" && pwd -P)"
+# shellcheck source=/dev/null
+. "$here/profile-detect.sh"
+
+# keiko-native: the local green bar is `npm run quality` (+ npm audit). See
+# profiles/keiko-native.md. --fast skips the audit for a quick smoke.
+if [[ "$KEIKO_PROFILE" == "keiko-native" ]]; then
+  echo "─── npm run quality (keiko-native green bar) ───"
+  if ! npm run quality; then
+    echo
+    echo "✗ verify RED (npm run quality) — fix before opening the PR"
+    exit 1
+  fi
+  if [[ $FAST -eq 0 ]]; then
+    echo "─── npm audit --audit-level=high ───"
+    if ! npm audit --audit-level=high; then
+      echo
+      echo "✗ verify RED (npm audit --audit-level=high) — fix before opening the PR"
+      exit 1
+    fi
+  fi
+  echo
+  echo "✓ verify GREEN (keiko-native: npm run quality$([[ $FAST -eq 0 ]] && echo ' + audit')) — safe to open the PR"
+  exit 0
+fi
+
 # Does the repo define a given npm script? (node is always present in this repo.)
 has_script() { node -e "process.exit(((require('./package.json').scripts)||{})['$1']?0:1)" 2>/dev/null; }
 

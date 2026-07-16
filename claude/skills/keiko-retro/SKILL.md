@@ -16,6 +16,19 @@ you and resolve the rest with `gh`. It is optional: if omitted, infer the unit f
 the current branch or the chat, but **the link is preferred post-merge** (the branch
 is usually deleted and this may be a fresh session).
 
+## 0. Select the product profile (before gathering)
+
+Select the product profile against the target checkout and **state it on your first
+output line**. Per [`profiles/README.md`](../../../profiles/README.md): Native
+markers (`CONTEXT.md` + `docs/planning/decision-addendum.md` + `quality/project.json`)
+→ `keiko-native`; `docs/design-system/` with Native markers absent → `keiko-web`;
+ambiguous → **stop and ask**. **Load only the selected profile.** A retro may
+**propose** workflow/harness changes but **must not implicitly edit product
+authority** — never modify a target's `AGENTS.md`, `CONTEXT.md`, ADRs, templates, or
+gates; surface those as proposals for the human. In **keiko-native**, never store,
+quote, or copy the private Fachkonzept or raw private-source content into memory or
+the report — counts, summaries, and redacted learnings only.
+
 ## Mode: post-merge (default) vs interrupted / pre-merge
 
 Default assumes the unit **merged into `dev`** (human-fix delta + closure evidence exist). If the epic/issue was **interrupted or is pre-merge** — no `epic → dev` merge yet (abandoned, escalated, or retro'd early) — run the same pass but **record human-fix delta and closure evidence as `unavailable (not merged)`** instead of inferring or fabricating them. Reflect on the evidence that _does_ exist (plan vs reality, audit/CI findings, workflow friction, why it stalled). **State the mode explicitly** in the final report.
