@@ -9,6 +9,20 @@ Turn a rough Keiko feature idea into an implementation-ready parent epic plus sc
 
 **Input:** a rough feature idea (→ new epic), or an existing epic number `#E` to harden.
 
+## 0. Select the product profile (before anything else)
+
+Select the product profile against the target checkout and **state it on your first
+output line** (e.g. `Profile: keiko-native (detected)`). Per
+[`profiles/README.md`](../../../profiles/README.md): Native markers (`CONTEXT.md` +
+`docs/planning/decision-addendum.md` + `quality/project.json`) → `keiko-native`;
+`docs/design-system/` with Native markers absent → `keiko-web`; ambiguous → **stop
+and ask**. **Load only the selected profile** and take the Definition of Ready,
+templates, evidence model, platform matrix, labels, and exclusions from it. Explicit
+operator selection overrides detection.
+
+In **`keiko-native`** this becomes a **contract/schema-driven grill** — see
+[Native mode](#native-mode-keiko-native--contractschema-driven-grill) below.
+
 ## Core rule
 
 No question cap. Unlimited useful questions, zero self-answerable ones. Classify every question before asking:
@@ -42,6 +56,42 @@ Good: "Should v1 include text selection/copy, given governance implications?" ·
 
 Bad: "Should the API accept `chatId + assistantMessageId + marker`?" · "Should we reuse the window config sanitizer?" · "Should the issue use the current template?" → inspect and encode the answer into the epic or child issue.
 
+## Native mode (`keiko-native`) — contract/schema-driven grill
+
+When the profile is `keiko-native`, the readiness bar is a **machine validator**
+(`quality/issue-contract.mjs` via the target's `issue-readiness` workflow), so the
+grill is driven by the contract, not a free decision tree:
+
+- **Spine = the machine schema.** Walk the exact required sections for the issue's
+  `type:*` (epic / task / decision / defect) as the checklist; each must reach a
+  resolved, **placeholder-free** state, with a `Planning contract` version. Read the
+  authoritative section list from `quality/issue-contract.mjs` in the target repo —
+  do not restate it.
+- **Answers = the authority docs.** Restate requirements from
+  **`docs/planning/agent-planning-baseline.md`** (the repository-owned Fachkonzept
+  projection — global requirements + the affected capability packets) and resolve
+  every `inspect` question from the docs the profile names (`decision-addendum.md`,
+  `code-quality-standard.md`, `CONTEXT.md`, accepted ADRs, Parity Ledger) **before**
+  asking the user. Native raises the `inspect : ask user` ratio sharply — most
+  technical unknowns are already decided by a doc.
+- **Capability selection.** Every epic identifies its **Parity Ledger row** _or_ an
+  **approved net-new capability** — development continues past parity, so net-new and
+  mandatory-delta epics are first-class, not out of scope. Bind the outcome to one or
+  more **acceptance journeys** and flag unresolved **decision gates** before any
+  technology/architecture is assumed.
+- **`grill-me` = residual only.** Use its interview technique solely for the genuine
+  product / UX / policy / risk / scope / rollout decisions the docs cannot answer.
+- **Restate, never expose the source.** The Planning Contract must restate every
+  relevant requirement so an implementer needs no source access. **Never store,
+  quote, log, or request the private Fachkonzept** or its location; a missing
+  requirement is resolved with the product owner or the authorized planner, not by
+  reaching for the source.
+- **Native semantics** the grill must settle (from the addendum): greenfield rewrite
+  (no shared runtime/source dep on Existing Keiko; every reuse candidate gets a
+  recorded Reuse Assessment), Codex-App-Server runtime behind a governed adapter, no
+  OpenCode work, platforms **Windows + macOS only (Linux deferred)**, local inference
+  deferred.
+
 ## Scope control
 
 Define the smallest useful, shippable v1 — not a platform rewrite. Challenge every expansion against user value, implementation risk, ADR alignment, governance, and whether it should be a follow-up epic. Preserve out-of-scope ideas on the parent epic so they are not lost. If the idea needs multiple epics, say so and split it.
@@ -51,8 +101,8 @@ Define the smallest useful, shippable v1 — not a platform rewrite. Challenge e
 For any epic that ships user-facing UI or runs cross-platform, pin these in the epic body **before** slicing — each is an acceptance anchor children verify against, not prose:
 
 - **Primary user journey** — the single end-to-end path a user takes, bound to a **branch/SHA baseline** so "done" is measured against a known state, not a moving target.
-- **Platform matrix** — the OSes/runtimes that must pass (macOS / Windows / Linux, per the CI cross-platform smoke); each becomes a verification target, not an afterthought.
-- **UI surface** — the exact screens/components/states in scope (feeds design-system `state-matrix.md` coverage + evidence).
+- **Platform matrix** — the OSes/runtimes that must pass **per the active profile** (keiko-web: per the CI cross-platform smoke; **keiko-native: Windows + macOS only, Linux deferred — never add it to acceptance**); each becomes a verification target, not an afterthought.
+- **UI surface** — the exact screens/components/states in scope, feeding the profile's evidence model (keiko-web: design-system `state-matrix.md` coverage; keiko-native: the issue's **Acceptance Journey** checkpoints).
 
 Backend-only epics with no user-facing or platform surface may skip this. If a journey / platform / surface cannot be pinned by inspection, that is an `ask user` question — resolve it before the epic is Ready.
 
@@ -62,13 +112,13 @@ Use `to-issues` for the slicing **method only** — thin tracer-bullet vertical 
 
 For every cross-child dependency, define the **interface contract** (inputs, outputs, types, error/empty states) in both issues, so the dependent slice is built against a stable boundary.
 
-Author every issue with the **Keiko templates** (`epic.md` for the parent, `feature_task.md` for children). `to-issues`' minimal body is _not_ Keiko-compliant — it omits the reuse gate, board workflow, verification gates, stop conditions, and epic linking. One parent epic + child issues; declare dependencies; prefer one PR per child; children target the epic branch, not `dev` (see contract).
+Author every issue with the **active profile's templates** (keiko-web: `epic.md` for the parent, `feature_task.md` for children; **keiko-native:** the typed templates `epic.md` / `feature_task.md` / `decision_evaluation.md` / `defect_finding.md`, exactly one `type:*` label each, and every implementation issue carrying its **Execution Authority** + **Quality Plan**). `to-issues`' minimal body is _not_ compliant — it omits the reuse gate, board workflow, verification gates, stop conditions, and epic linking. One parent epic + child issues; declare dependencies; prefer one PR per child; children target the epic branch, not `dev` (see contract).
 
 > Requires the `to-issues` skill (personal skill store). If unavailable, apply the same vertical-slice method inline.
 
 ## Release / enterprise-acceptance QA gate (mandatory, every epic)
 
-Every epic carries a **release-acceptance QA gate** that qualifies the whole epic before its `-> dev` PR — as a **dedicated final child** (substantial epics) or an **epic-body acceptance section** (small epics). No epic is Ready without it. Generalizes the policy made explicit in epic #2384 (see child #2396). Acceptance **scales to the epic's surface** — include only applicable rows, but never drop the two CORE rows:
+Every epic carries a **release-acceptance QA gate** that qualifies the whole epic before its `-> dev` PR — as a **dedicated final child** (substantial epics) or an **epic-body acceptance section** (small epics). No epic is Ready without it. In **`keiko-native`** this gate **is** the epic's **Quality Envelope / Integrated verification** (`docs/engineering/code-quality-standard.md`); the two CORE rows below are exactly Native's two core obligations (verify the wired production composition; machine-evaluated evidence for every automatable claim). Generalizes the policy made explicit in epic #2384 (see child #2396). Acceptance **scales to the epic's surface** — include only applicable rows, but never drop the two CORE rows:
 
 - **User-path matrix** — enumerate every top-level user/enterprise journey the epic touches; the rows below are asserted per path.
 - **Contract + unit** coverage for every path.
@@ -82,7 +132,7 @@ Every epic carries a **release-acceptance QA gate** that qualifies the whole epi
 
 ## Definition of Ready (exit criterion)
 
-Every child issue must satisfy the workflow Definition-of-Ready gate (`docs/workflow-contract.md` §1) so `keiko-issue`/`keiko-epic` can pick it up: acceptance criteria + a verification command, and the issue claimable (unassigned). Encode each technical unknown as an inspected, answered fact or as an explicit child-issue constraint — never leave it as an open user question the project could have answered. **The epic is not Ready until its release-acceptance QA gate exists** (dedicated final child or epic acceptance section, scaled to surface).
+Every child issue must satisfy the **active profile's** Definition of Ready so `keiko-issue`/`keiko-epic` can pick it up. **keiko-web:** acceptance criteria + a verification command, and the issue claimable (unassigned). **keiko-native:** the body must pass the machine validator (`quality/issue-contract.mjs`) so the target's `issue-readiness` workflow grants `status: ready` — exact per-type sections, a `Planning contract` version, no placeholders, checked DoR, an observable acceptance criterion, and a `Required`/reasoned-`Not applicable` journey. Encode each technical unknown as an inspected, answered fact or an explicit child-issue constraint — never leave it as an open user question the project could have answered. **The epic is not Ready until its release-acceptance QA gate exists** (dedicated final child or epic acceptance section, scaled to surface).
 
 ## GitHub hygiene
 

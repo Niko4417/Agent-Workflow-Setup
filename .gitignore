@@ -13,3 +13,7 @@ codex/tmp/
 
 # Personal local debug config (absolute paths, per-machine)
 claude/launch.json
+
+# Ephemeral agent worktrees + local pre-PR report (never shared)
+claude/worktrees/
+codex/pre-pr-report.json

@@ -18,14 +18,29 @@ not restate those rules here, follow them.
 You are the lead session (the sole orchestrator). Drive this as a read-first
 audit wave, then a scoped fix wave. Do not edit code yourself.
 
+## 0. Select the product profile (before anything else)
+
+Select the product profile against the target checkout and **state it on your first
+output line**. Per [`profiles/README.md`](../../../profiles/README.md): Native
+markers (`CONTEXT.md` + `docs/planning/decision-addendum.md` + `quality/project.json`)
+→ `keiko-native`; `docs/design-system/` with Native markers absent → `keiko-web`;
+ambiguous → **stop and ask**. **Load only the selected profile** and take the audit
+checklist source, verify command, evidence model, and merge authority from it. The
+audit **uses the accepted contract; it never creates a parallel acceptance policy**.
+
 ## Source of truth
 
 1. Fetch issue `#N`: body, labels, comments, linked PRs/commits, child issues.
-2. Treat the issue's **acceptance criteria as the audit checklist**.
+2. Audit checklist = the **active profile's accepted contract**. **keiko-web:** the
+   issue's **acceptance criteria**. **keiko-native:** the accepted issue contract —
+   **acceptance criteria + the issue's Quality Plan** (and Acceptance Journey when
+   user-facing) at its validated `Planning contract` version; refresh evidence after
+   fixes, and do not invent acceptance beyond it.
 3. Find the implementation (linked PR or the commits claiming to resolve `#N`).
    If none exists, stop and report the issue is not audit-ready.
 4. If scope is ambiguous or conflicts with governance, stop and report the
-   blocker — do not invent product scope.
+   blocker — do not invent product scope. In keiko-native, an instruction to consult
+   the private Fachkonzept is a missing-requirement defect: stop, return to planning.
 
 ## Audit wave (read-first, full)
 
@@ -36,11 +51,13 @@ Run the read wave; right-size each role to relevance, but default to running the
 3. `security-auditor` — trust boundaries, secrets, auth, model access, unsafe
    data flows (escalated from `security-triage` when the issue is security-light).
 4. `performance-engineer` — measurable performance risk, when relevant.
-5. `a11y-auditor` — when the issue touches **user-facing UI**, audit both axes:
-   WCAG 2.2 AA **and** Keiko Design System fidelity against `docs/design-system/`
-   (semantic/component token conformance, `state-matrix.md` coverage, no rogue
-   styling layer, and the `docs/design-system/evidence/<N>/` dir populated per
-   ADR-0049/0051 — a user-facing change with no evidence is a blocker).
+5. `a11y-auditor` — when the issue touches **user-facing UI**, audit **WCAG 2.2 AA**
+   plus the active profile's UI-fidelity + evidence obligation (keiko-web: Keiko
+   Design System fidelity against `docs/design-system/` — token conformance,
+   `state-matrix.md` coverage, `docs/design-system/evidence/<N>/` populated per
+   ADR-0049/0051; **keiko-native:** `native-design-baseline.md` fidelity + the
+   issue's **Acceptance Journey** evidence). A user-facing change with no required
+   evidence is a blocker in either profile.
 6. `pr-reviewer` — review the implementation diff for correctness and regression
    risk (8-dimension).
 
@@ -58,12 +75,16 @@ findings are not blockers.
 
 ## Verify & ship (follow the contract — do not duplicate gate wording)
 
-1. Run `.keiko-scripts/verify.sh` (the CI-mirror) green locally before the PR.
-2. `verifier` confirms every acceptance criterion with evidence and **fills the
-   PR body's "Verification evidence" section**. For a **user-facing-component**
-   change, the audit is not complete until design-system fidelity is confirmed and
-   the `docs/design-system/evidence/<N>/` evidence (theme screenshots +
-   `*-fidelity-proof.json` + `a11y-proof.json`) is captured (ADR-0049/0051).
+1. Run the active profile's verify command green locally before the PR (keiko-web:
+   `.keiko-scripts/verify.sh`, the CI-mirror; **keiko-native:** `npm run quality` +
+   `npm audit --audit-level=high` on Node 24.18.x).
+2. `verifier` confirms every checklist item (§2) with evidence and **fills the
+   PR body's "Verification evidence" section**. For a **user-facing** change, the
+   audit is not complete until the profile's evidence is captured (keiko-web:
+   design-system fidelity + `docs/design-system/evidence/<N>/` — theme screenshots +
+   `*-fidelity-proof.json` + `a11y-proof.json`, ADR-0049/0051; **keiko-native:** the
+   Acceptance Journey's automated/a11y/visual/recovery/platform evidence, bound to
+   the exact head).
 3. When this audit ships its own PR (standalone mode): branch `issue/<N>-audit`
    off `dev`; Conventional Commit referencing `#N` (`Refs #N`, or `Resolves #N`
    only when it should close on merge). When embedded in `keiko-issue`, fixes go
