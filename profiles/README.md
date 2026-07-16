@@ -33,7 +33,14 @@ checkout root, then states the result on its first output line
 | 4     | **Ambiguous / none** — **stop and ask** the operator which profile applies. Never assume a default.                   |
 
 Rule 4 is what prevents Native behavior from becoming an accidental global
-default: absent clear markers, the workflow refuses to guess.
+default: absent clear markers, an **interactive skill** refuses to guess and asks.
+
+**Non-interactive callers** (the gate scripts and `install.sh`, via
+`scripts/profile-detect.sh`) cannot prompt, so on ambiguity they fall back to the
+**safe `keiko-web` default** and **never auto-select `keiko-native`** — Native is
+chosen only when all its markers are present (or `KEIKO_PROFILE` is set explicitly).
+So "never guess Native" holds everywhere; only the ambiguity _fallback_ differs: a
+skill asks, a script defaults to web.
 
 ## Profile schema (what each profile provides)
 

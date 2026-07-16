@@ -91,6 +91,14 @@ grill is driven by the contract, not a free decision tree:
   recorded Reuse Assessment), Codex-App-Server runtime behind a governed adapter, no
   OpenCode work, platforms **Windows + macOS only (Linux deferred)**, local inference
   deferred.
+- **Desktop journey (user-facing epics).** Keiko Native is a **desktop app**, so pin
+  the desktop-specific acceptance rows the profile names — install/packaging, code
+  signing + notarization (per platform, authoritative runner), auto-update/upgrade
+  flow, first-run + OS permissions, offline/local-first behavior, crash/recovery, and
+  the Win+macOS matrix cadence. These are where a desktop app fails and a web app
+  never would; stay **host-neutral** (Native has not chosen Electron/Tauri — do not
+  assume a host or test runner). See `profiles/keiko-native.md` → _Desktop
+  release-acceptance dimensions_.
 
 ## Scope control
 
