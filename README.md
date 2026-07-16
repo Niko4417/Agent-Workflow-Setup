@@ -14,6 +14,13 @@ quality with local gates instead of trusting an agent to remember.**
   commit; user-facing changes can't ship without a real Playwright run; nothing
   reaches `dev` without a human.
 
+This repository governs the development workflow; it is not the Keiko product or
+the product's Agentic Coding runtime. The target repository owns its product
+context, architecture decisions, contribution contract, templates, quality gates,
+and runtime domain model. The current installer is specific to Existing Keiko and
+must not be pointed at Keiko Native until an additive, versioned Native profile is
+available. See [Target repository boundary](docs/target-repository-boundary.md).
+
 ---
 
 ## Install
@@ -33,6 +40,10 @@ immediately) and keeps the target git-clean:
 - a `post-checkout` hook re-links the harness on every `git worktree add` (a fresh
   worktree doesn't inherit the symlinks — without this an agent in a worktree loses
   CLAUDE.md, skills, memory, and the gates; see `scripts/link-worktree.sh`)
+
+This installation contract applies to Existing Keiko. Keiko Native has a
+repository-owned `AGENTS.md` and quality control plane; replacing them with these
+live symlinks would violate the target-repository boundary.
 
 ---
 
@@ -78,7 +89,7 @@ open, ready, merge, or repush around them.
 | open / ready a PR          | `audit-gate`      | the audit **ran and is clean** — `findings=0`, plus a green **ui-verify** receipt (real Playwright run) when user-facing |
 | ready a user-facing PR     | `ready-gate`      | a **SHA-bound test-plan comment** for the current commit is posted                                                       |
 | repush a fix to a `dev` PR | `push-gate`       | the fix re-passes verify + clean-audit (+ ui-verify + reposted plan)                                                     |
-| auto-merge into an epic    | `epic-merge-gate` | exact-head GitHub `ci` + matching clean audit/verify + (UI) Playwright/comment; **never** into `dev`/`main`/`release`   |
+| auto-merge into an epic    | `epic-merge-gate` | exact-head GitHub `ci` + matching clean audit/verify + (UI) Playwright/comment; **never** into `dev`/`main`/`release`    |
 
 **`dev` is sacred:** the only agent auto-merge is a child into its canonical
 `epic/*` branch after every applicable gate passes. Everything into `dev` —
