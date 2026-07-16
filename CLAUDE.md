@@ -82,7 +82,7 @@ Every agent runs a 2-pass adversarial self-critique before reporting done. The p
 
 The memory rule (read before / update after, no secrets) is in @AGENTS.md. Claude-side specifics:
 
-- Agent memory `.agents/memory/<role>/MEMORY.md` — keyed by the 16 canonical roles (`.agents/roles.yaml`), curated under 25 KB, shared with Codex.
+- Agent memory `.agents/memory/<role>/MEMORY.md` — keyed by the 15 canonical roles (`.agents/roles.yaml`), curated under 25 KB, shared with Codex.
 - Shared memory `.agents/memory/_shared/` — cross-cutting findings for multiple roles (see [memory/README.md](.agents/memory/README.md) for the eligibility rule).
 - High-signal entries only: codepaths, gotchas, patterns. No session logs, no "I searched the repo".
 - **Read-only teammates don't write memory** — they return a memory candidate to you (the lead); you record durable ones from a write-enabled context.

@@ -32,7 +32,7 @@ survives.
 | --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | 1   | **Codex-primary, Claude = second-opinion / token-overflow backup.** Invest depth in `.codex`; keep `.claude` lean but fully functional.                                                                                                                                                                                                                                                                                 | Maintain a second stack instead of consolidating to one.                                                                       |
 | 2   | **Task-shaped graduated delegation.** Default to the smallest effective shape; cluster only when parallel review materially helps. Trigger = the RUNBOOK's issue `type`/`area` label routing.                                                                                                                                                                                                                           | Coordinator must judge per-issue; not "always delegate", not "always solo".                                                    |
-| 3   | **`dev` is sacred.** Every issue gets a PR. The _only_ auto-merge is `issue → epic-branch`, after exact-head GitHub `ci` plus matching SHA-bound verify/audit evidence; a user-facing child additionally needs a green ui-verify Playwright run + test-plan comment. **Every merge into `dev` (epic or standalone) requires a human + green CI.** | Slower throughput into `dev` in exchange for a human gate on every `dev` entry and a PR-backed evidence trail on every change. |
+| 3   | **`dev` is sacred.** Every issue gets a PR. The _only_ auto-merge is `issue → epic-branch`, after exact-head GitHub `ci` plus matching SHA-bound verify/audit evidence; a user-facing child additionally needs a green ui-verify Playwright run + test-plan comment. **Every merge into `dev` (epic or standalone) requires a human + green CI.**                                                                       | Slower throughput into `dev` in exchange for a human gate on every `dev` entry and a PR-backed evidence trail on every change. |
 | 4   | **Canonical role vocabulary + alias map.** One source-of-truth role set; harness-specific names alias to it; harness-only specialists map to a canonical capability.                                                                                                                                                                                                                                                    | Upfront normalization; flattens a few harness-specific specialists into capabilities.                                          |
 | 5   | **Shared, tool-neutral memory tree keyed by canonical role**, read+written by both harnesses. Commit curated `MEMORY.md` (<25 KB) per role; per-issue exploration dumps are ephemeral scratch.                                                                                                                                                                                                                          | Tiny concurrent-write risk (rare in practice); must agree one memory format.                                                   |
 | 6   | **GitHub delivery board = single durable status source of truth.** No `.orchestrator/` state store. Activation discipline read off board states.                                                                                                                                                                                                                                                                        | More GitHub API chatter; no separate local state machine.                                                                      |
@@ -263,7 +263,7 @@ Server-side, out-of-band (human action, not an agent issue):
 
 ## Appendix A — Canonical role set (LOCKED)
 
-16 canonical roles. `coordinator` is intentionally absent — it is the lead
+15 canonical roles. `coordinator` is intentionally absent — it is the lead
 session's operating instructions, not a spawnable role (Decision #10).
 
 ### Read / analyze
@@ -319,7 +319,7 @@ Harness-specific names that resolve to a canonical role:
   rename/merge `docs-writer` → `docs`; add `browser-debugger` **as a capability
   pattern** (Playwright/Chrome MCP), not a new agent file; everything else maps
   1:1.
-- **Memory keys** (`.agents/memory/<role>/`) use the 16 canonical names only.
+- **Memory keys** (`.agents/memory/<role>/`) use the 15 canonical names only.
 
 ---
 

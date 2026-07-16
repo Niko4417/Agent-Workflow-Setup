@@ -77,6 +77,14 @@ Node **24.18.x** / npm **11.16.x**; `package-lock.json` is authoritative.
 is allowed; productive code requires declared source roots + target-specific
 build/test/coverage/arch/signing/package/platform gates in the same PR.
 
+> **Phase caveat (desktop):** `npm run quality` is the **complete** green bar only
+> in `bootstrap`. Once the phase is `productive`, the local verify (`verify.sh`) must
+> **also** run the target-specific desktop gates `quality/project.json` declares —
+> native build/test, coverage, packaging, code-signing/notarization, and
+> platform-matrix checks — on their **authoritative platform** (macOS evidence can't
+> stand in for Windows). Until then, `verify.sh` only runs `npm run quality`; treat
+> the extra target gates as required-but-not-yet-wired.
+
 ## PR contract & required checks
 
 The target's `pr-contract.mjs` fixes the PR body sections. Exact-head checks
@@ -118,6 +126,27 @@ and `.github/pull_request_template.md`.
 - **No design system yet** — `docs/planning/native-design-baseline.md` governs;
   all Native visual and accessibility acceptance evidence is generated anew (no
   inherited Existing-Keiko proofs).
+
+### Desktop release-acceptance dimensions (host-neutral)
+
+A desktop app fails in places a web app never does. Every user-facing epic's
+Quality Envelope must name the applicable rows below (the grill pins them). These
+are **host-neutral** — Native has not selected Electron/Tauri, so do not assume a
+host or a specific test runner; the accepted issue chooses the harness.
+
+- **Install / packaging** — verify the shipped **installer / packaged build** on the
+  reference install, not a dev build.
+- **Code signing + notarization** — per platform, generated on its **authoritative**
+  runner (macOS notarization can't be proven from Windows, and vice versa).
+- **Auto-update / upgrade flow** — the most-skipped desktop test: exercise the
+  update path against a mock/staging update source, including a failed/rolled-back update.
+- **First-run + permissions** — Gatekeeper / entitlements / SmartScreen, requested
+  OS permissions, and the initial-setup path.
+- **Offline / local-first behavior** — the product's core promise: correct behavior
+  with no network, and no data leaving the machine without consent.
+- **Crash / recovery** — recover cleanly on the packaged build (state, in-flight work).
+- **Platform-matrix cadence** — Windows + macOS both pass; build on the primary
+  platform continuously and run the **full matrix at release**, not as an afterthought.
 
 ## Product shape & lifecycle
 
