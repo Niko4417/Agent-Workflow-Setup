@@ -23,17 +23,28 @@ issue="${1:-}"
 [ "${1:-}" = "--" ] && shift
 
 if [ $# -eq 0 ]; then
-  printf '[ui-verify-receipt] no Playwright command given (usage: ui-verify-receipt.sh <issue> -- <cmd>)\n' >&2
+  printf '[ui-verify-receipt] no journey command given (usage: ui-verify-receipt.sh <issue> -- <cmd>)\n' >&2
   exit 2
 fi
-# Guard: the command must actually invoke Playwright.
-printf '%s ' "$@" | grep -qi 'playwright' || {
-  printf '[ui-verify-receipt] the command must run Playwright (got: %s)\n' "$*" >&2
-  exit 2
-}
+
+here="$(cd "$(dirname "$0")" && pwd -P)"
+# shellcheck source=/dev/null
+. "$here/profile-detect.sh"
+
+# Guard: the command must run the profile's user-facing verification harness.
+# keiko-web is a browser app, so the plan must invoke Playwright. keiko-native is a
+# desktop app whose Acceptance Journey may run a native / Computer-Use / e2e harness,
+# so any real command is accepted; the gh-checked test-plan comment remains the
+# human-auditable record of what the journey must cover.
+if [ "$KEIKO_PROFILE" != "keiko-native" ]; then
+  printf '%s ' "$@" | grep -qi 'playwright' || {
+    printf '[ui-verify-receipt] keiko-web: the command must run Playwright (got: %s)\n' "$*" >&2
+    exit 2
+  }
+fi
 
 if ! "$@"; then
-  printf '[ui-verify-receipt] Playwright plan FAILED — no receipt written. Fix and re-run, or hand to human review.\n' >&2
+  printf '[ui-verify-receipt] journey plan FAILED — no receipt written. Fix and re-run, or hand to human review.\n' >&2
   exit 1
 fi
 
@@ -47,4 +58,4 @@ mkdir -p "$dir"
 printf '{"branch":"%s","issue":"%s","ui_verified_sha":"%s","ts":"%s"}\n' \
   "$branch" "$issue" "$sha" "$(date -u +%FT%TZ)" > "$dir/$slug.json"
 
-printf 'ui-verify receipt written: %s @ %s (Playwright plan green)\n' "$branch" "${sha:0:8}"
+printf 'ui-verify receipt written: %s @ %s (%s journey plan green)\n' "$branch" "${sha:0:8}" "$KEIKO_PROFILE"

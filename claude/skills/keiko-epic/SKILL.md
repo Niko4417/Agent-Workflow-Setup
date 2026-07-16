@@ -17,6 +17,21 @@ child) and `keiko-issue-audit`. Do not restate contract rules.
 You are the lead session — the sole orchestrator. Never spawn a sub-coordinator.
 Do not edit code yourself; delegate child execution to `keiko-issue`.
 
+## 0. Select the product profile (before planning)
+
+Select the product profile against the target checkout and **state it on your first
+output line**. Per [`profiles/README.md`](../../../profiles/README.md): Native
+markers (`CONTEXT.md` + `docs/planning/decision-addendum.md` + `quality/project.json`)
+→ `keiko-native`; `docs/design-system/` with Native markers absent → `keiko-web`;
+ambiguous → **stop and ask**. **Load only the selected profile.** The child-loop and
+final-PR mechanics below are written for **keiko-web**; take from the profile any
+divergence for **keiko-native** — the verify command (`npm run quality`), the
+platform matrix (**Windows + macOS only, no Linux**), the user-facing evidence
+model (**Acceptance Journey**, not design-system), the **frozen target branch** +
+runner-prefixed source branches, and child→`epic/**` auto-merge only by the target's
+**dedicated automation identity** under its readiness-bound gates. In keiko-native,
+**never** store/quote/request the private Fachkonzept.
+
 ## 1. Read & plan
 
 Fetch `#E`: body, comments, labels, child issues (sub-issues + linked), linked
@@ -80,7 +95,7 @@ are cut **off the epic branch**, not off `dev`.
    `user_facing=true` with a **green ui-verify receipt at the audited commit** (the
    Playwright plan actually ran green) **and** the marked test-plan comment present.
    Invoke exactly `gh pr merge <N> --auto --squash --match-head-commit
-   <audited-sha>` (optionally `--delete-branch`); the gate rejects other selectors,
+<audited-sha>` (optionally `--delete-branch`); the gate rejects other selectors,
    repository/content overrides, shell chaining, missing or stale merge-time
    guards, and every admin bypass.
 

@@ -31,9 +31,15 @@ if [[ ! -d "$TARGET/.git" ]]; then
   echo "WARNING: $TARGET does not look like a git repo (no .git)." >&2
 fi
 
+# Detect the target's product profile (honors a KEIKO_PROFILE override). keiko-native
+# owns its own AGENTS.md / CLAUDE.md (machine-checked contract), so we AUGMENT — never
+# overlay those — per docs/target-repository-boundary.md.
+PROFILE="$(cd "$TARGET" && KEIKO_PROFILE="${KEIKO_PROFILE:-}" bash "$REPO_DIR/scripts/profile-detect.sh")"
+
 echo "Installing Agent Workflow Setup"
-echo "  source: $REPO_DIR"
-echo "  target: $TARGET"
+echo "  source:  $REPO_DIR"
+echo "  target:  $TARGET"
+echo "  profile: $PROFILE"
 echo
 
 link_one() {
@@ -62,8 +68,14 @@ link_one "$REPO_DIR/.agents" "$TARGET/.agents"
 
 # Root entry docs both harnesses read at the repo root.
 # (Codex reads AGENTS.md as its project doc; Claude reads CLAUDE.md.)
-link_one "$REPO_DIR/AGENTS.md" "$TARGET/AGENTS.md"
-link_one "$REPO_DIR/CLAUDE.md" "$TARGET/CLAUDE.md"
+# keiko-native owns these — do NOT overlay them; the target's own contract governs
+# and our orchestration is delivered via the skills + .codex/.claude configs (augment).
+if [[ "$PROFILE" == "keiko-native" ]]; then
+  echo "  = keiko-native: preserving the repo's own AGENTS.md / CLAUDE.md (augment, not replace)"
+else
+  link_one "$REPO_DIR/AGENTS.md" "$TARGET/AGENTS.md"
+  link_one "$REPO_DIR/CLAUDE.md" "$TARGET/CLAUDE.md"
+fi
 
 # Project MCP servers for Claude Code (read from the project root).
 link_one "$REPO_DIR/claude/mcp.json" "$TARGET/.mcp.json"
@@ -96,7 +108,11 @@ if [[ -d "$TARGET/.git" ]]; then
   EXCLUDE="$TARGET/.git/info/exclude"
   mkdir -p "$(dirname "$EXCLUDE")"
   # No trailing slash: must match symlinks, not just real directories.
-  for entry in "/.codex" "/.claude" "/.agents" "/.mcp.json" "/.keiko-scripts" "/AGENTS.md" "/CLAUDE.md" "/.claude.bak" "/.codex.bak"; do
+  exclude_entries=("/.codex" "/.claude" "/.agents" "/.mcp.json" "/.keiko-scripts" "/.claude.bak" "/.codex.bak")
+  # Only exclude the root docs when we actually overlay them (keiko-web). On
+  # keiko-native they are the repo's own tracked files — never exclude them.
+  [[ "$PROFILE" != "keiko-native" ]] && exclude_entries+=("/AGENTS.md" "/CLAUDE.md")
+  for entry in "${exclude_entries[@]}"; do
     if ! grep -qxF "$entry" "$EXCLUDE" 2>/dev/null; then
       echo "$entry" >> "$EXCLUDE"
     fi

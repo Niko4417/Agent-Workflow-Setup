@@ -5,8 +5,13 @@ The single, harness-neutral governance contract. The fat harness docs
 compaction-critical essentials inline; this file is the full reference both
 point back to.
 
-> Target repo: any repo that uses this setup (built for **Keiko** first).
-> Integration branch: **`dev`**.
+> Target repo: any repo that uses this setup, selected via a **product profile**
+> ([`profiles/`](../profiles/README.md)). The concrete product values in this
+> contract — Definition of Ready, verify command, evidence model, branch/merge
+> authority, templates, labels — are the **keiko-web** profile defaults; the
+> **active profile overrides them**. Select the profile first (skill Step 0) and
+> load only that one file. Default integration branch: **`dev`** (a profile may
+> freeze a different target).
 
 ---
 
@@ -137,7 +142,7 @@ failed, why further autonomous recovery is unlikely.
    The **epic-merge gate** (`epic-merge-gate.sh`, PreToolUse on `gh pr merge`)
    requires a unique completed successful GitHub `ci` check, re-checks the local
    evidence at the PR head, and accepts only `gh pr merge <N> --auto --squash
-   --match-head-commit <audited-sha>` (optionally `--delete-branch`) so the merge
+--match-head-commit <audited-sha>` (optionally `--delete-branch`) so the merge
    API rejects a concurrent head change. It also adds the **SHA-bound** test-plan
    comment `<!-- keiko:manual-test-plan sha=<commit> -->` (gh-checked, must name the
    audited commit) for a user-facing auto-merge; it **always blocks** an agent merge
