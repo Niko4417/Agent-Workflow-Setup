@@ -175,6 +175,35 @@ The Existing-Keiko taxonomy plus Native additions `type: decision` and
 `type: defect` (per `repository-activation.md`). Exactly one supported `type:*`
 label is required by the Native issue contract.
 
+## Issue lifecycle (target-owned)
+
+The nine `status:*` labels and their transitions are **owned by the target repo** —
+`status: new · triaged · ready · in progress · pr open · ready for human review ·
+done`, plus the paused states `blocked` and `waiting for user`. Authority: the
+target's `AGENTS.md` + **`docs/qa/issue-lifecycle.md`** (the canonical operational
+contract, published by Native **#21**) and the accepted **ADR-0004**. Read it at
+runtime; do not restate or reinterpret it here.
+
+Consumer rules the skills rely on (from accepted ADR-0004):
+
+- **Done = closed + exactly `status: done`.** A completed issue, once its PR is
+  merged (into its epic branch or `dev`) with delivery evidence, is closed and
+  carries **only** `status: done`; every other `status:*` label is removed.
+- A **closed non-completed** issue (not-planned / duplicate) carries **no** `status:*`
+  label. **Reopening starts at `status: new`** and requires fresh readiness.
+- Every governed **open** issue has **exactly one** `status:*` label; readiness is a
+  separate authority from lifecycle state (never equate "currently ready" with the
+  label still reading `status: ready`).
+- **Fail closed:** if the `status:*` label set or the lifecycle contract is missing,
+  stale, contradictory, or unsupported, do not transition — stop and surface it. The
+  board and issue comments are projections and never grant lifecycle authority.
+
+> **Scope note:** only the **done/closure** transition is consumed today (it rests on
+> accepted ADR-0004). The **full** lifecycle alignment that Agent-Workflow-Setup #9
+> asks for — `triaged` as a first-class state, pause/resume, reopen, and the complete
+> transition table — waits on Native **#21** publishing `docs/qa/issue-lifecycle.md`
+> (currently open + `blocked`). Do not implement those against draft prose.
+
 ## Exclusions (hard)
 
 - **Private Fachkonzept:** never store, copy, log, quote, or request it or its

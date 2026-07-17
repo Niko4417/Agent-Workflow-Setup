@@ -103,7 +103,19 @@ are cut **off the epic branch**, not off `dev`.
    - [ ] PR **base** is the epic branch (not `dev`/`main`/`release`).
    - [ ] **Merge** landed (auto-merge gate passed, or human-merged).
    - [ ] **Post-merge verification:** epic branch still builds (`verify.sh`) at the new epic HEAD.
-   - [ ] **Closure evidence** recorded: child comment linking PR/commit + verification/audit evidence; board updated.
+   - [ ] **Close the child as done.** Once the child PR is **merged into the epic
+         branch** (the child's frozen delivery target) with its verify/audit evidence
+         complete, transition the child to the active profile's **done** state and
+         **close the issue**. **keiko-native:** set exactly **`status: done`** (remove
+         any other `status:*` label) and close with the _completed_ reason — this is a
+         projection of the target's lifecycle contract (its `AGENTS.md` +
+         `docs/qa/issue-lifecycle.md` once published by Native #21; ADR-0004 today).
+         Read that contract at runtime and **fail closed** if the `status:*` labels or
+         contract are missing/stale/contradictory — never invent the transition, and
+         never let the board or a comment grant it. **keiko-web:** close the child and
+         set `status: done` per the Keiko taxonomy. Do **not** close a child whose PR is
+         not merged.
+   - [ ] **Closure evidence** recorded: child comment linking PR/commit + verification/audit evidence; board updated (a projection of the closed/`done` issue state).
          Any unchecked box → stop and resolve before moving on.
 4. Rebase/merge `dev` into the epic branch regularly (esp. before the final PR).
    **Dependency-readiness trace (before starting any runtime/dependent child):** do

@@ -137,6 +137,18 @@ ready` until a green verify receipt exists at HEAD.
    new commit — so fix → re-run the loops → repost the comment → push.
 6. Set `Workflow State` = `PR Open` → `Ready for Human Review`; flush
    current-state + next-action to the issue/PR.
+7. **Close as done on merge.** When the issue's linked PR is **merged** — a child
+   auto-merged into its **epic branch**, or a standalone PR merged into `dev` by a
+   human — transition the issue to the active profile's **done** state and **close
+   it**. **keiko-native:** set exactly **`status: done`** (remove any other
+   `status:*` label) and close with the _completed_ reason, as a projection of the
+   target's lifecycle contract (its `AGENTS.md` + `docs/qa/issue-lifecycle.md` once
+   published by Native #21; ADR-0004 today) — read it at runtime and **fail closed**
+   if the labels/contract are missing/stale; the board and comments never grant the
+   transition. **keiko-web:** close + `status: done` per the Keiko taxonomy. Only a
+   **merged** PR closes an issue as done — a `dev` PR still at `Ready for Human
+Review` stays open (the human merge is the trigger); never close on `Ready for
+Human Review` alone, and never merge `dev` yourself.
 
 ## Escalate (stop, report)
 
