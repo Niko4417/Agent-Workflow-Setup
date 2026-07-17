@@ -1,5 +1,6 @@
 ---
 name: keiko-grill-epic
+disable-model-invocation: true
 description: Turn a rough Keiko feature idea (or an existing epic) into an implementation-ready GitHub epic with scoped child issues, through one evidence-first grilling session. Use when planning a Keiko epic, stress-testing feature scope, converting a product idea into child issues, or hardening an epic before implementation. Inspects current dev, ADRs, templates, styleguide, security guardrails, code, and GitHub metadata before asking; asks only product, UX, policy, risk, or scope questions that project evidence cannot answer.
 ---
 
@@ -116,13 +117,13 @@ Backend-only epics with no user-facing or platform surface may skip this. If a j
 
 ## Slicing into child issues
 
-Use `to-issues` for the slicing **method only** — thin tracer-bullet vertical slices (each a complete path through every layer, independently verifiable), created in dependency order (blockers first). Its "quiz the user" step is **subordinated to the Core-rule classify-gate**: derive dependencies and sequencing by inspection; ask the user only slicing questions that change scope, UX, policy, or risk.
+Use `to-tickets` for the slicing **method only** — thin tracer-bullet vertical slices (each a complete path through every layer, independently verifiable), created in dependency order (blockers first). Its "quiz the user" step is **subordinated to the Core-rule classify-gate**: derive dependencies and sequencing by inspection; ask the user only slicing questions that change scope, UX, policy, or risk.
 
 For every cross-child dependency, define the **interface contract** (inputs, outputs, types, error/empty states) in both issues, so the dependent slice is built against a stable boundary.
 
-Author every issue with the **active profile's templates** (keiko-web: `epic.md` for the parent, `feature_task.md` for children; **keiko-native:** the typed templates `epic.md` / `feature_task.md` / `decision_evaluation.md` / `defect_finding.md`, exactly one `type:*` label each, and every implementation issue carrying its **Execution Authority** + **Quality Plan**). `to-issues`' minimal body is _not_ compliant — it omits the reuse gate, board workflow, verification gates, stop conditions, and epic linking. One parent epic + child issues; declare dependencies; prefer one PR per child; children target the epic branch, not `dev` (see contract).
+Author every issue with the **active profile's templates** (keiko-web: `epic.md` for the parent, `feature_task.md` for children; **keiko-native:** the typed templates `epic.md` / `feature_task.md` / `decision_evaluation.md` / `defect_finding.md`, exactly one `type:*` label each, and every implementation issue carrying its **Execution Authority** + **Quality Plan**). `to-tickets`' minimal body is _not_ compliant — it omits the reuse gate, board workflow, verification gates, stop conditions, and epic linking. One parent epic + child issues; declare dependencies; prefer one PR per child; children target the epic branch, not `dev` (see contract).
 
-> Requires the `to-issues` skill (personal skill store). If unavailable, apply the same vertical-slice method inline.
+> Requires the `to-tickets` skill (personal skill store; formerly `to-issues`). If unavailable, apply the same vertical-slice method inline.
 
 ## Release / enterprise-acceptance QA gate (mandatory, every epic)
 

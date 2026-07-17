@@ -1,5 +1,6 @@
 ---
 name: keiko-epic
+disable-model-invocation: true
 description: Drive a multi-issue GitHub epic end-to-end — plan and order child issues, run them on an epic integration branch, and hand off one green epic PR to dev for human review. Use when the operator selects an epic to work on. Composes keiko-issue per child. Takes an epic number.
 ---
 

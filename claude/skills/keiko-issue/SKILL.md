@@ -1,12 +1,13 @@
 ---
 name: keiko-issue
+disable-model-invocation: true
 description: Drive a single GitHub issue (task / feature / bug / user-finding) end-to-end from origin/dev to a green PR, the standard Keiko way — Definition-of-Ready gate, task-shaped agent team, quality bars, mandatory keiko-issue-audit, sacred-dev delivery. Use when the operator selects one issue to work on. Takes an issue number.
 ---
 
 # keiko-issue
 
 Canonical, parameterized single-issue workflow for both harnesses. Replaces the
-old `codex-task-prompt.md` / `claude-issue-prompt.md` run-cards. **Composes the 16
+old `codex-task-prompt.md` / `claude-issue-prompt.md` run-cards. **Composes the 15
 canonical roles** (`.agents/roles.yaml`), **defers to** `docs/workflow-contract.md`
 for branching, gates, and the sacred-`dev` rule — follow them, do not restate.
 

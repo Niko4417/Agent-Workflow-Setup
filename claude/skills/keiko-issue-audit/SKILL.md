@@ -1,12 +1,13 @@
 ---
 name: keiko-issue-audit
+disable-model-invocation: true
 description: Audit a GitHub issue's implementation against its acceptance criteria with a read-first agent wave, fix confirmed gaps, and ship a green PR targeting dev. Use as the final pass before an issue is PR-ready / Ready for Human Review, or on demand to audit an already-claimed-done issue. Takes an issue number.
 ---
 
 # keiko-issue-audit
 
 Canonical, parameterized issue-audit procedure for both harnesses (Codex primary,
-Claude backup). Replaces the old copy-paste audit prompts. It **composes the 16
+Claude backup). Replaces the old copy-paste audit prompts. It **composes the 15
 canonical roles** (`.agents/roles.yaml`) and **defers to the governance contract**
 (`docs/workflow-contract.md`) for branching, gates, and the delivery model — do
 not restate those rules here, follow them.
