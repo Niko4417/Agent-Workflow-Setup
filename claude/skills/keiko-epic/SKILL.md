@@ -53,6 +53,12 @@ are cut **off the epic branch**, not off `dev`.
 
 ## 3. Child loop (per `ready` child)
 
+**Children run AFK (no human-in-the-loop per child).** A child integrates into the
+epic branch **autonomously** — there is no per-child human review or sign-off. The
+human's single review point is the **epic → `dev`** PR (the full feature). A child
+either **auto-merges on green machine evidence**, or it **escalates as an exception**
+(something went wrong); it never pauses to wait for a human to approve that one child.
+
 1. Run **`keiko-issue` `#child`** on its branch off the epic branch (it runs
    `verify.sh` + `keiko-issue-audit` as part of its flow).
 2. The child PR targets the **epic branch**. Auto-merge requires a completed,
@@ -82,9 +88,14 @@ are cut **off the epic branch**, not off `dev`.
      3. Run it via **`.keiko-scripts/ui-verify-receipt.sh #child -- <playwright cmd>`**
         — it executes the spec and writes the ui-verify receipt **only on a real
         green exit** (the result is not self-reported).
-     - ui-verify receipt green at HEAD **and** comment present → **auto-merge**.
-     - Playwright red, or a result it cannot assert → **human review + merge** (the
-       fallback).
+     - ui-verify receipt green at HEAD **and** comment present → **auto-merge** (AFK).
+     - Playwright **red** after the bounded 3 attempts → **stop and escalate to the
+       operator** (an exception surfaced to the epic-level human — **not** a per-child
+       human merge).
+     - A result the automated journey **cannot assert** (subjective visual /
+       screen-reader judgment) → **auto-merge on the machine-green evidence** and
+       **carry the deferred items into the epic→`dev` human review** (recorded on the
+       epic). No per-child human sign-off.
 
    Auto-merge is the only place merges happen without a human, and it is
    **enforced** by `epic-merge-gate.sh` (a PreToolUse hook on `gh pr merge`): it

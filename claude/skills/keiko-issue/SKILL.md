@@ -123,10 +123,15 @@ ready` until a green verify receipt exists at HEAD.
    superseded verification runs and close their agents** (their receipts are stale
    by design) — never leave duplicate or orphaned verification agents running
    against an outdated HEAD.
-5. Open PR. **User-facing → handoff flow:** open it `--draft`, post the
-   `<!-- keiko:manual-test-plan sha=<HEAD> -->` comment (the runnable Playwright
-   plan), then `gh pr ready` — the **ready-gate** blocks `ready` until a comment
-   naming the current commit exists.
+5. Open PR. **Know which mode you're in — issues run AFK:** an **epic child**
+   (PR → the epic branch) has **no human-in-the-loop** — `keiko-epic` auto-merges it
+   on green machine evidence or escalates as an exception; there is no per-child human
+   review, no `Ready for Human Review` handoff. A **standalone** issue (PR → `dev`) is
+   itself the full-feature unit the human reviews (sacred-`dev`); the handoff flow
+   below applies to it. **User-facing → handoff flow (standalone → `dev`):** open it
+   `--draft`, post the `<!-- keiko:manual-test-plan sha=<HEAD> -->` comment (the
+   runnable Playwright plan), then `gh pr ready` — the **ready-gate** blocks `ready`
+   until a comment naming the current commit exists.
    (Non-user-facing PRs open ready directly.) **Every merge into `dev` is
    human-gated + green CI** — never auto-merge to `dev`, never enable auto-merge.
    `pr-shepherd` drives CI/review to merge-ready; bounded CI repair (stop after 3
@@ -135,8 +140,9 @@ ready` until a green verify receipt exists at HEAD.
    clean-audit (+ ui-verify) receipts exist at the new HEAD — and, for a
    user-facing PR, the `keiko:manual-test-plan sha=<HEAD>` comment reposted for the
    new commit — so fix → re-run the loops → repost the comment → push.
-6. Set `Workflow State` = `PR Open` → `Ready for Human Review`; flush
-   current-state + next-action to the issue/PR.
+6. **Standalone → `dev` only:** set `Workflow State` = `PR Open` → `Ready for Human
+Review`; flush current-state + next-action to the issue/PR. (An **epic child** does
+   not stop here — it proceeds to AFK auto-merge under `keiko-epic`.)
 
 ## Escalate (stop, report)
 
