@@ -1,6 +1,5 @@
 ---
 name: keiko-issue-audit
-disable-model-invocation: true
 description: Audit a GitHub issue's implementation against its acceptance criteria with a read-first agent wave, fix confirmed gaps, and ship a green PR targeting dev. Use as the final pass before an issue is PR-ready / Ready for Human Review, or on demand to audit an already-claimed-done issue. Takes an issue number.
 ---
 

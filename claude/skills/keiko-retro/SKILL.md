@@ -1,6 +1,5 @@
 ---
 name: keiko-retro
-disable-model-invocation: true
 description: Post-merge retrospective for a Keiko epic (or a notable standalone issue). Gathers the FULL GitHub evidence trail — the epic issue + every child issue + every child PR + the epic PR, with all their comments/reviews, the audit findings, and the human-fix delta (what a human changed by hand after review) — plus whatever survived in chat, then distills durable process/workflow learnings into agent memory and lints + reconciles the memory. Use after the work has merged into dev. Takes an epic link / issue # / PR #.
 ---
 
