@@ -33,6 +33,7 @@ separate from the product's own Agentic Coding runtime roles.
 - `docs/product/source-baseline.md` — private-source identity + provenance only.
 - `docs/engineering/code-quality-standard.md` — quality lifecycle (Quality Envelope, Quality Plan, Acceptance Journeys, classification).
 - `docs/qa/quality-gates.md`, `docs/qa/repository-activation.md` — gate + activation authority.
+- `docs/qa/issue-lifecycle.md` — the **canonical 9-state issue lifecycle** contract (states, edge graph, permitted label requests, preconditions/recovery). ADR-0004 is its decision record.
 - Accepted Native ADRs under `docs/adr/`.
 
 ## Definition of Ready — machine-validated
@@ -71,6 +72,11 @@ npm ci --ignore-scripts
 npm run quality
 npm audit --audit-level=high
 ```
+
+**Repository-owned gate precedence (#12):** when the target exposes **`agent:pre-pr`**
+(Native epic #42), `verify.sh` runs **that** exactly once and defers entirely to it —
+the target owns its gate list. The `npm run quality` (+ audit) commands above are the
+**fallback** used only when `agent:pre-pr` is absent.
 
 Node **24.18.x** / npm **11.16.x**; `package-lock.json` is authoritative.
 `quality/project.json` is the phase gate — during `bootstrap` no productive source
@@ -174,6 +180,46 @@ model/runtime boundary neutral but out of first scope.
 The Existing-Keiko taxonomy plus Native additions `type: decision` and
 `type: defect` (per `repository-activation.md`). Exactly one supported `type:*`
 label is required by the Native issue contract.
+
+## Issue lifecycle (target-owned — consume, never reimplement)
+
+The nine `status:*` states, their **edge graph**, permitted label **requests**, and
+preconditions/recovery are defined by **`docs/qa/issue-lifecycle.md`** (decision:
+ADR-0004). Read it at runtime; **never** restate or reimplement the transition graph
+here — that would be a forbidden second policy source. Consumer rules the skills obey:
+
+- **Nine states**, one per open issue: `new · triaged · ready · in progress · pr open ·
+ready for human review · blocked · waiting for user · done`. **`triaged` is a
+  first-class, non-executable planning state** (reviewed/classified/ordered, contract
+  not yet accepted, readiness absent) — distinct from `new` and `ready`.
+- **Readiness ≠ the label.** "Currently ready" is an evidence predicate over the
+  accepted contract version + fingerprint; it is **not** the label still reading
+  `status: ready`. Evaluate readiness independently; a label never grants readiness and
+  a readiness record never bypasses the current state's action limits.
+- **Claim only genuinely current-ready work** in an allowed claimable state; claiming is
+  a real GitHub **assign** action, not a label write.
+- **Direct label gestures for the derived states** (`in progress` / `pr open` / `ready
+for human review` / `done`) are **never authority** — perform the real action (assign,
+  open/synchronize/close/merge the PR, complete) and let the target reconcile the label;
+  the workflow reads back the canonical state. Planner / `blocked` / `waiting for user`
+  are **requests** via the target's protected interface, per the contract.
+- **Pause/resume:** `blocked` and `waiting for user` retain any readiness but grant no
+  authority to continue; resume is explicit and **never** restores `ready for human
+review`. **Reopen always returns to `new`** and requires fresh readiness.
+- **Project/board fields are one-way projections** of canonical issue/PR state — they
+  never grant readiness, lifecycle, merge, or execution authority, and must not mask
+  disagreement with the canonical state.
+- **Fail closed** on zero/multiple/unknown `status:*` labels, stale or replayed
+  readiness, mismatched issue identity, unauthorized actor, or missing/unavailable
+  contract — stop and surface it; do not guess the transition.
+
+> **Activation boundary (deferred to Agent-Workflow-Setup #13).** The concrete
+> **protected request/observation interface**, the **restricted non-merge agent
+> identity**, and canonical **read-back** land with Native activation (epics
+> [#49](https://github.com/oscharko-dev/Keiko-Native/issues/49) /
+> [#51](https://github.com/oscharko-dev/Keiko-Native/issues/51)). Until those are on
+> `dev`, consume the **current** operational contract and fail closed on the
+> not-yet-live interface — do not invent the request protocol.
 
 ## Exclusions (hard)
 

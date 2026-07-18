@@ -37,7 +37,11 @@ accepted contract — a single `type:*` label, `status: ready` with a matching
 readiness record (validated `Planning contract` version + fingerprint), and a
 complete **Execution Authority** + **Quality Plan**; an instruction to consult the
 private Fachkonzept or infer omitted requirements is a missing-requirement defect
-(stop, return to planning). If missing/unready → triage first (comment the gap,
+(stop, return to planning). Follow the profile's **Issue lifecycle** rules
+(`profiles/keiko-native.md`): **evaluate readiness independently of the `status:*`
+label** (a label is not authority), treat **`triaged` as non-executable**, claim only
+a genuinely **current-ready** claimable state, and **fail closed** on zero/multiple/
+unknown labels or stale readiness. If missing/unready → triage first (comment the gap,
 `status: new`), do not start. If it's an epic, use `keiko-epic`. If ambiguous or
 conflicting with governance, stop and report.
 
@@ -50,10 +54,13 @@ report. (`gh issue view <N> --json assignees`.)
 Claiming is mandatory before any implementation:
 
 - **Assign the operator on GitHub** — `gh issue edit <N> --add-assignee @me`. The
-  assignee is the cross-agent lock; never start an issue you haven't claimed.
-- Add to `Keiko Product Delivery` if missing; `status: in progress`; `Workflow
-State`/`Status` = `In Progress`; `Owner / Agent` = active agent; `Human Review
-Required` = `Yes` for any PR targeting `dev`; fill `Branch` once created.
+  assignee is the cross-agent lock; never start an issue you haven't claimed. In
+  **keiko-native** the assign **is** the claim (the claimable-state trigger).
+- Board update. **keiko-web:** set `status: in progress`; `Workflow State`/`Status` =
+  `In Progress`. **keiko-native:** **do not hand-write the derived `status: in
+progress` label** — it is a reconciled effect the target owns; board / project fields
+  are **one-way projections**, never authority. In both: `Owner / Agent` = active agent;
+  `Human Review Required` = `Yes` for any PR targeting `dev`; fill `Branch` once created.
 
 ## 3. Route (task-shaped)
 
@@ -143,6 +150,16 @@ ready` until a green verify receipt exists at HEAD.
 6. **Standalone → `dev` only:** set `Workflow State` = `PR Open` → `Ready for Human
 Review`; flush current-state + next-action to the issue/PR. (An **epic child** does
    not stop here — it proceeds to AFK auto-merge under `keiko-epic`.)
+7. **Close as done on merge.** When the issue's linked PR is **merged** — a child
+   auto-merged into its **epic branch**, or a standalone PR merged into `dev` by a
+   human — transition the issue to the profile's **done** state and **close it**.
+   **keiko-native:** the issue is closed with reason `completed` carrying exactly
+   **`status: done`** (every other `status:*` removed), as a **projection** of the
+   target's `docs/qa/issue-lifecycle.md` (done = closed + `status: done`; reopen →
+   `new`) — read it at runtime and **fail closed** if labels/contract are missing/stale.
+   **keiko-web:** close + `status: done` per the Keiko taxonomy. Only a **merged** PR
+   closes an issue as done — never on `Ready for Human Review` alone, and never merge
+   `dev` yourself.
 
 ## Escalate (stop, report)
 

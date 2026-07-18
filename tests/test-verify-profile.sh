@@ -18,6 +18,7 @@ mkdir -p "$T/bin"
 cat > "$T/bin/npm" <<'STUB'
 #!/usr/bin/env bash
 printf '%s\n' "$*" >> "$NPM_LOG"
+case "$*" in *"${NPM_FAIL:-__nomatch__}"*) exit 1 ;; esac
 exit 0
 STUB
 chmod +x "$T/bin/npm"
@@ -66,6 +67,31 @@ KEIKO_PROFILE=keiko-native bash "$UIV" 42 -- true >/dev/null 2>&1
 g=$?
 check "native: non-Playwright journey command accepted" [ "$g" -eq 0 ]
 check "native: ui-verify receipt written" bash -c 'ls .git/keiko-ui-verify/*.json >/dev/null 2>&1'
+
+# --- agent:pre-pr precedence (issue #12) ---
+printf '{"scripts":{"typecheck":"true","quality":"true","codex:pre-pr":"true","agent:pre-pr":"true"}}\n' > package.json
+
+# keiko-native + agent:pre-pr present -> runs it once, NOT quality/audit
+native_markers
+export NPM_LOG="$T/ap-native.log"; : > "$NPM_LOG"
+bash "$ROOT/scripts/verify.sh" >/dev/null 2>&1
+check "native: agent:pre-pr takes precedence"          grep -q "run agent:pre-pr" "$NPM_LOG"
+check "native: agent:pre-pr present -> no 'run quality'" bash -c '! grep -q "run quality" "$1"' _ "$NPM_LOG"
+check "native: agent:pre-pr present -> no audit"        bash -c '! grep -q "audit" "$1"' _ "$NPM_LOG"
+check "native: agent:pre-pr invoked exactly once"       bash -c '[ "$(grep -c "run agent:pre-pr" "$1")" = "1" ]' _ "$NPM_LOG"
+
+# keiko-web + agent:pre-pr present -> runs it once, NOT codex:pre-pr / legacy
+rm -rf CONTEXT.md docs quality
+export NPM_LOG="$T/ap-web.log"; : > "$NPM_LOG"
+bash "$ROOT/scripts/verify.sh" >/dev/null 2>&1
+check "web: agent:pre-pr takes precedence"             grep -q "run agent:pre-pr" "$NPM_LOG"
+check "web: agent:pre-pr present -> no codex:pre-pr"    bash -c '! grep -q "codex:pre-pr" "$1"' _ "$NPM_LOG"
+check "web: agent:pre-pr present -> no legacy typecheck" bash -c '! grep -q "run typecheck" "$1"' _ "$NPM_LOG"
+
+# non-zero agent:pre-pr -> verification fails (no green receipt)
+export NPM_LOG="$T/ap-fail.log"; : > "$NPM_LOG"
+NPM_FAIL="agent:pre-pr" bash "$ROOT/scripts/verify.sh" >/dev/null 2>&1
+check "agent:pre-pr non-zero -> verify.sh fails" [ "$?" -ne 0 ]
 
 echo "---"
 echo "passed=$pass failed=$fail"

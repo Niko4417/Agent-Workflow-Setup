@@ -2,11 +2,11 @@
 #
 # verify.sh — local pre-PR gate. Run from the TARGET repo root before opening a PR.
 #
-# Prefers the repo's CANONICAL `codex:pre-pr` aggregate
-# (scripts/codex-pre-pr.mjs — owner-maintained, kept in sync with ci.yml) when it
-# exists, so this gate stays drift-free and inherits new checks automatically.
-# Falls back to the legacy inline CI-mirror step list on branches that don't have
-# `codex:pre-pr` yet (older branches not rebased on dev).
+# Precedence (drift-free — the target owns its gate list):
+#   1. `agent:pre-pr`  — the repository-owned canonical agent gate (issue #12), if present.
+#   2. keiko-native    → `npm run quality` + `npm audit`; keiko-web → `codex:pre-pr`.
+#   3. legacy inline CI-mirror steps (older Keiko branches without `codex:pre-pr`).
+# The highest-precedence command that exists runs EXACTLY ONCE; nothing else runs.
 #
 # Usage (from the Keiko repo root):
 #   bash /path/to/Agent-Workflow-Setup/scripts/verify.sh          # full canonical pre-PR check
@@ -30,8 +30,27 @@ here="$(cd "$(dirname "$0")" && pwd -P)"
 # shellcheck source=/dev/null
 . "$here/profile-detect.sh"
 
-# keiko-native: the local green bar is `npm run quality` (+ npm audit). See
-# profiles/keiko-native.md. --fast skips the audit for a quick smoke.
+# Does the repo define a given npm script? (node is always present in this repo.)
+has_script() { node -e "process.exit(((require('./package.json').scripts)||{})['$1']?0:1)" 2>/dev/null; }
+
+# Repository-owned canonical gate (issue #12): when the target exposes `agent:pre-pr`
+# it owns its full gate list — run it EXACTLY ONCE and defer entirely to it, in either
+# profile, before any profile-specific or codex:pre-pr fallback. A non-zero result is a
+# verification failure (no green receipt). --fast keeps the quick local smoke below.
+if [[ $FAST -eq 0 ]] && has_script "agent:pre-pr"; then
+  echo "─── npm run agent:pre-pr (repository-owned canonical gate) ───"
+  if npm run agent:pre-pr; then
+    echo
+    echo "✓ verify GREEN (agent:pre-pr) — safe to open the PR"
+    exit 0
+  fi
+  echo
+  echo "✗ verify RED (agent:pre-pr) — fix before opening the PR"
+  exit 1
+fi
+
+# keiko-native fallback (no agent:pre-pr): the local green bar is `npm run quality`
+# (+ npm audit). See profiles/keiko-native.md. --fast skips the audit for a quick smoke.
 if [[ "$KEIKO_PROFILE" == "keiko-native" ]]; then
   echo "─── npm run quality (keiko-native green bar) ───"
   if ! npm run quality; then
@@ -51,9 +70,6 @@ if [[ "$KEIKO_PROFILE" == "keiko-native" ]]; then
   echo "✓ verify GREEN (keiko-native: npm run quality$([[ $FAST -eq 0 ]] && echo ' + audit')) — safe to open the PR"
   exit 0
 fi
-
-# Does the repo define a given npm script? (node is always present in this repo.)
-has_script() { node -e "process.exit(((require('./package.json').scripts)||{})['$1']?0:1)" 2>/dev/null; }
 
 # Canonical path: run the owner-maintained codex:pre-pr aggregate (broader + CI-synced).
 # Skipped in --fast mode, which is a quick local smoke via the legacy steps below.

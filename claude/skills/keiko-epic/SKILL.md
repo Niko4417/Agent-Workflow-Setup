@@ -38,7 +38,7 @@ Fetch `#E`: body, comments, labels, child issues (sub-issues + linked), linked
 PRs, board state. Build the execution plan:
 
 - list every child with state, labels, area, likely file ownership, dependencies, verification, **and current GitHub assignee**;
-- classify each: `ready` / `blocked` / `done` / `needs-triage`; treat a child already assigned to someone other than the operator as **owned — skip it** (someone else is on it);
+- classify each by the profile's lifecycle state — **executable** (`ready`, or in-flight `in progress`/`pr open`) vs **non-executable** (`new`, `triaged`, `blocked`, `waiting for user`) vs `done`. **keiko-native:** these are the target's `status:*` states (`profiles/keiko-native.md` → Issue lifecycle); **`triaged` is planned-but-not-yet-ready — non-executable**, and readiness is judged independently of the label. **Never start non-executable work.** Treat a child already assigned to someone other than the operator as **owned — skip it**;
 - respect the epic's required order; detect safe parallelism **only** when children have disjoint file ownership, independent acceptance criteria, and no ordering dependency.
   If the epic has no executable children and scope isn't clear enough to create them, stop and report.
 
@@ -114,7 +114,14 @@ either **auto-merges on green machine evidence**, or it **escalates as an except
    - [ ] PR **base** is the epic branch (not `dev`/`main`/`release`).
    - [ ] **Merge** landed (auto-merge gate passed, or human-merged).
    - [ ] **Post-merge verification:** epic branch still builds (`verify.sh`) at the new epic HEAD.
-   - [ ] **Closure evidence** recorded: child comment linking PR/commit + verification/audit evidence; board updated.
+   - [ ] **Close the child as done.** With the child PR **merged into the epic branch**
+         and its evidence complete, transition the child to the profile's **done** state
+         and **close it**. **keiko-native:** close with reason `completed` carrying
+         exactly **`status: done`** (other `status:*` removed), a projection of
+         `docs/qa/issue-lifecycle.md` — read it at runtime and **fail closed** if
+         labels/contract are missing/stale; never let the board grant the transition.
+         **keiko-web:** close + `status: done`. Never close a child whose PR is not merged.
+   - [ ] **Closure evidence** recorded: child comment linking PR/commit + verification/audit evidence; board updated (a projection of the closed/`done` state).
          Any unchecked box → stop and resolve before moving on.
 4. Rebase/merge `dev` into the epic branch regularly (esp. before the final PR).
    **Dependency-readiness trace (before starting any runtime/dependent child):** do
