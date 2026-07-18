@@ -55,9 +55,12 @@ fan-out first; only disjoint write scopes in parallel.
     gate-checked; repost on any fix), and run
     it via `ui-verify-receipt.sh` (which stamps a receipt **only on a real green
     Playwright exit** — not self-reported). **Green ui-verify receipt + comment →
-    auto-merge.** Any failure or a result Playwright cannot assert → \*\*human review
-    - merge\*\* (fallback). Subjective visual / screen-reader judgment is deferred to the
-      epic->`dev` human review, not the child plan.
+    auto-merge (AFK).** **Children run AFK — no per-child human review.** A hard
+    failure after the bounded 3 attempts → **stop and escalate** to the operator (an
+    exception, not a per-child human merge). Anything the automated journey **cannot
+    assert** (subjective visual / screen-reader judgment) auto-merges on the
+    machine-green evidence and is **carried into the epic->`dev` human review**, not
+    reviewed per child.
 - **`dev` is sacred**: every merge into `dev` (epic or standalone) requires a
   **human reviewer + green CI**.
 - Epic model: long-lived `epic/<name>` off `dev`; child `issue/...` off the epic

@@ -51,6 +51,7 @@ Apply `grill-me` principles inside Keiko guardrails:
 - One question at a time; include a recommended answer and why the decision matters.
 - Walk the decision tree to shared understanding.
 - Never ask what inspection can answer; never ask confirmations the contract/ADRs already imply.
+- **Be relentlessly wary of scope.** Treat scope creep as the **default failure mode**, present in every answer. Before any capability enters v1, ask "does this have to ship _now_, or is it a follow-up epic?" Every "yes, include it" must earn its place against user value + implementation risk; when in doubt, **cut it to a preserved follow-up**. Push back on the user's own additions too — a bigger epic is a worse epic.
 
 Good: "Should v1 include text selection/copy, given governance implications?" · "Should a recoverable citation failure open an in-viewer recovery state, or only an inline chat error?" · "Is this follow-up part of v1, or a later epic?"
 
@@ -102,7 +103,7 @@ grill is driven by the contract, not a free decision tree:
 
 ## Scope control
 
-Define the smallest useful, shippable v1 — not a platform rewrite. Challenge every expansion against user value, implementation risk, ADR alignment, governance, and whether it should be a follow-up epic. Preserve out-of-scope ideas on the parent epic so they are not lost. If the idea needs multiple epics, say so and split it.
+Scope is the thing to worry about **constantly** — from the first question through the last slice. Define the smallest useful, shippable v1 — not a platform rewrite. Your default answer to "should we also…" is **no, follow-up epic** until proven otherwise. Challenge every expansion against user value, implementation risk, ADR alignment, governance, and whether it should be a follow-up epic; make the case for _cutting_ before the case for keeping. Preserve out-of-scope ideas on the parent epic so they are not lost — cutting is not losing. If the idea needs multiple epics, say so and split it. A v1 that ships beats a v2 that stalls.
 
 ## User journey & platform surface (user-facing / cross-platform epics)
 
@@ -116,13 +117,23 @@ Backend-only epics with no user-facing or platform surface may skip this. If a j
 
 ## Slicing into child issues
 
-Use `to-issues` for the slicing **method only** — thin tracer-bullet vertical slices (each a complete path through every layer, independently verifiable), created in dependency order (blockers first). Its "quiz the user" step is **subordinated to the Core-rule classify-gate**: derive dependencies and sequencing by inspection; ask the user only slicing questions that change scope, UX, policy, or risk.
+Use `to-tickets` for the slicing **method only** — thin tracer-bullet vertical slices (each a complete path through every layer, independently verifiable), created in dependency order (blockers first). Its "quiz the user" step is **subordinated to the Core-rule classify-gate**: derive dependencies and sequencing by inspection; ask the user only slicing questions that change scope, UX, policy, or risk.
+
+**Stay scope-wary while slicing, too.** Each slice is the **thinnest** complete path that delivers observable value — resist padding it with "while we're here" extras. A slice that has grown fat is two slices; a slice that isn't independently verifiable is mis-cut. Keep every slice sized to a single fresh context window, and keep anything not required for _this_ slice's acceptance out of it.
 
 For every cross-child dependency, define the **interface contract** (inputs, outputs, types, error/empty states) in both issues, so the dependent slice is built against a stable boundary.
 
-Author every issue with the **active profile's templates** (keiko-web: `epic.md` for the parent, `feature_task.md` for children; **keiko-native:** the typed templates `epic.md` / `feature_task.md` / `decision_evaluation.md` / `defect_finding.md`, exactly one `type:*` label each, and every implementation issue carrying its **Execution Authority** + **Quality Plan**). `to-issues`' minimal body is _not_ compliant — it omits the reuse gate, board workflow, verification gates, stop conditions, and epic linking. One parent epic + child issues; declare dependencies; prefer one PR per child; children target the epic branch, not `dev` (see contract).
+**Wide refactors — the exception to vertical slicing.** A change whose blast radius fans across the whole codebase (rename a shared symbol/column, retype a shared type) can't land as one green vertical slice, and forcing it into one breaks thousands of call sites at once. Sequence it **expand → migrate → contract** instead:
 
-> Requires the `to-issues` skill (personal skill store). If unavailable, apply the same vertical-slice method inline.
+1. **Expand** — add the new form _beside_ the old so nothing breaks (both exist).
+2. **Migrate** — move call sites in blast-radius-sized batches (per package / per directory), **each batch its own child** blocked by the expand; CI stays green batch to batch because the old form still exists.
+3. **Contract** — delete the old form once no caller remains, in a child blocked by every migrate batch.
+
+If the batches can't stay green alone, keep the sequence but let them share an **integration branch** that all block a final integrate-and-verify child — green is promised only there. Never force a wide refactor into a single tracer bullet.
+
+Author every issue with the **active profile's templates** (keiko-web: `epic.md` for the parent, `feature_task.md` for children; **keiko-native:** the typed templates `epic.md` / `feature_task.md` / `decision_evaluation.md` / `defect_finding.md`, exactly one `type:*` label each, and every implementation issue carrying its **Execution Authority** + **Quality Plan**). `to-tickets`' minimal body is _not_ compliant — it omits the reuse gate, board workflow, verification gates, stop conditions, and epic linking. One parent epic + child issues; declare dependencies; prefer one PR per child; children target the epic branch, not `dev` (see contract).
+
+> Requires the `to-tickets` skill (personal skill store; formerly `to-issues`). If unavailable, apply the same vertical-slice method inline.
 
 ## Release / enterprise-acceptance QA gate (mandatory, every epic)
 

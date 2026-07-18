@@ -6,7 +6,7 @@ description: Audit a GitHub issue's implementation against its acceptance criter
 # keiko-issue-audit
 
 Canonical, parameterized issue-audit procedure for both harnesses (Codex primary,
-Claude backup). Replaces the old copy-paste audit prompts. It **composes the 16
+Claude backup). Replaces the old copy-paste audit prompts. It **composes the 15
 canonical roles** (`.agents/roles.yaml`) and **defers to the governance contract**
 (`docs/workflow-contract.md`) for branching, gates, and the delivery model — do
 not restate those rules here, follow them.
