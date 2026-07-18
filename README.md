@@ -206,7 +206,13 @@ lead drives directly (Playwright / Chrome MCP), per the `CLAUDE.md` routing tabl
 bash /path/to/Agent-Workflow-Setup/scripts/verify.sh                          # local CI mirror, from Keiko root
 KEIKO_ROOT=/path/to/Keiko /path/to/Agent-Workflow-Setup/scripts/keiko-watch   # live per-agent activity feed
 /path/to/Agent-Workflow-Setup/scripts/consolidate-memory                      # memory budget check (<25 KB/role)
+cd "$(scripts/edit-worktree.sh feat/my-change)"                               # edit this repo in an isolated worktree
 ```
+
+**Editing this repo:** targets read it through live symlinks, so the primary checkout
+must stay on merged `main`. Edit in a worktree (`edit-worktree.sh`); the primary
+self-updates on SessionStart (`self-update.sh`). See
+[docs/local-editing.md](docs/local-editing.md).
 
 The gate scripts (`verify-gate`, `audit-gate`, `ready-gate`, `push-gate`,
 `epic-merge-gate`) and receipt writers (`verify-receipt`, `audit-receipt`,
