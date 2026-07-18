@@ -1,26 +1,36 @@
 # Agent Workflow Setup
 
-**Turn a Keiko checkout into a governed, multi-agent delivery line.** Clone this
-repo, symlink it into Keiko, and drive epics and issues from a rough idea all the
-way to a green, human-reviewed PR — through one consistent process that **enforces
-quality with local gates instead of trusting an agent to remember.**
+_A disciplined delivery line for AI coding agents — so they ship real, reviewed work instead of plausible-looking guesses._
 
-- **Two harnesses, one brain.** Primary **Codex**, backup **Claude Code** — same
-  roles, same skills, same memory, same gates.
-- **Nothing leaks into Keiko.** The target's `.claude/` / `.codex/` are git-ignored;
-  the setup, the agent roster, and accumulated learnings all live _here_. The target
-  stays clean.
-- **Hard gates, not vibes.** A PR can't even open with a red build or an unaudited
-  commit; user-facing changes can't ship without a real UI-journey run (Playwright on
-  web, a native desktop harness on Native); nothing reaches `dev` without a human.
+Point an AI coding agent at a codebase and it will happily write code, open a pull
+request, and tell you it's done. The hard part was never generating code — it's
+**trusting** it. This project is the process layer that makes that trust _earned_: you
+tell it what to build, and it takes a rough idea all the way to a green, human-reviewed
+pull request through the same repeatable steps every time — and it **won't let an agent
+skip the checks.** The proof has to exist before the next step is even allowed.
 
-This repository governs the development workflow; it is not the Keiko product or
-the product's Agentic Coding runtime. The target repository owns its product
-context, architecture decisions, contribution contract, templates, quality gates,
-and runtime domain model. It supports **two products** through lightweight
-**profiles** (see below) — the original **Keiko** (web) and the greenfield
-**Keiko Native** (desktop) — without copying either one's rules into this repo.
-See [Target repository boundary](docs/target-repository-boundary.md).
+You set it up on a project once, then just say what you want:
+
+> "Run epic #532." · "Resolve issue #178."
+
+…and it plans the work, breaks it into small pieces, builds and tests each one, and
+hands you a reviewed PR at the end.
+
+### Why it exists
+
+- **Trust, not vibes.** Agents are fast but forgetful. Instead of _hoping_ an agent ran
+  the tests, this makes passing them a **requirement** — a PR literally can't open on a
+  broken build or unchecked code.
+- **One process, either assistant.** Works the same whether you drive it with **Codex**
+  or **Claude Code** — same roles, same steps, same memory.
+- **Stays out of your project's way.** All the machinery lives _here_ and is linked in;
+  your actual product code stays clean.
+- **Two products, one workflow.** It runs both **Keiko** (the web app) and **Keiko
+  Native** (the desktop app), adapting automatically to whichever you're working in.
+
+> **A note on boundaries:** this repo is the _how-we-work_ layer, not the product. Each
+> product owns its own rules, architecture, and quality bar; this setup just orchestrates
+> them. See [Target repository boundary](docs/target-repository-boundary.md).
 
 ---
 
@@ -117,13 +127,13 @@ Work flows through four stages — plan → deliver → verify → learn:
 
 ---
 
-## The gate chain — why you can trust the output
+## The safety net — why you can trust what it ships
 
-Six **PreToolUse gates** fire on the agent's own `gh` / `git` commands. They don't
-run the tests themselves — they **block the action until proof exists** (SHA-bound
-receipts, a real UI-journey run, a `gh`-checked comment). An agent literally cannot
-open, ready, merge, or repush around them. Each gate reads the **active profile**, so
-"verify" and "UI-journey" mean the right thing per product (see the profile table above).
+This is the heart of it. Six automatic **checkpoints** watch the agent's own commands.
+They don't run your tests _for_ you — they **refuse to let the agent open, merge, or
+push until the proof already exists**: a passing build, a real UI test run, a posted
+test plan. The agent can't talk its way around them, and each one adapts to the product
+you're in (see the profile table above). Here's what each guards:
 
 | Moment                     | Gate              | Blocks unless…                                                                                                           |
 | -------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------ |
