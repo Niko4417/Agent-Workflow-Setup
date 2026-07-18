@@ -1,85 +1,91 @@
 {
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "cmd=$(jq -r '.tool_input.command // empty'); printf '%s' \"$cmd\" | grep -qiE 'gh pr (create|ready)' || exit 0; gate=\"$(git rev-parse --show-toplevel)/.keiko-scripts/audit-gate.sh\"; [ -x \"$gate\" ] || exit 0; \"$gate\" >&2 || exit 2; exit 0",
-            "timeout": 10,
-            "statusMessage": "Audit gate"
-          },
-          {
-            "type": "command",
-            "command": "cmd=$(jq -r '.tool_input.command // empty'); printf '%s' \"$cmd\" | grep -qiE 'gh pr (create|ready)' || exit 0; gate=\"$(git rev-parse --show-toplevel)/.keiko-scripts/verify-gate.sh\"; [ -x \"$gate\" ] || exit 0; \"$gate\" >&2 || exit 2; exit 0",
-            "timeout": 10,
-            "statusMessage": "Verify gate"
-          },
-          {
-            "type": "command",
-            "command": "cmd=$(jq -r '.tool_input.command // empty'); printf '%s' \"$cmd\" | grep -qE '(>>?|tee)[^|;&]*agent-memory' && { echo '[memory-path] BLOCKED: write agent memory to .agents/memory/<role>/, not the legacy .claude/agent-memory/.' >&2; exit 2; }; exit 0",
-            "timeout": 10,
-            "statusMessage": "Memory path guard"
-          },
-          {
-            "type": "command",
-            "command": "cmd=$(jq -r '.tool_input.command // empty'); printf '%s' \"$cmd\" | grep -qiE 'gh pr merge' || exit 0; gate=\"$(git rev-parse --show-toplevel)/.keiko-scripts/epic-merge-gate.sh\"; [ -x \"$gate\" ] || exit 0; \"$gate\" \"$cmd\" >&2 || exit 2; exit 0",
-            "timeout": 15,
-            "statusMessage": "Epic merge gate"
-          },
-          {
-            "type": "command",
-            "command": "cmd=$(jq -r '.tool_input.command // empty'); printf '%s' \"$cmd\" | grep -qiE 'gh pr ready' || exit 0; gate=\"$(git rev-parse --show-toplevel)/.keiko-scripts/ready-gate.sh\"; [ -x \"$gate\" ] || exit 0; \"$gate\" \"$cmd\" >&2 || exit 2; exit 0",
-            "timeout": 15,
-            "statusMessage": "Ready gate"
-          },
-          {
-            "type": "command",
-            "command": "cmd=$(jq -r '.tool_input.command // empty'); printf '%s' \"$cmd\" | grep -qE 'git +push' || exit 0; gate=\"$(git rev-parse --show-toplevel)/.keiko-scripts/push-gate.sh\"; [ -x \"$gate\" ] || exit 0; \"$gate\" >&2 || exit 2; exit 0",
-            "timeout": 25,
-            "statusMessage": "Push gate"
-          }
+    "hooks": {
+        "PreToolUse": [
+            {
+                "matcher": "Bash",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "cmd=$(jq -r '.tool_input.command // empty'); printf '%s' \"$cmd\" | grep -qiE 'gh pr (create|ready)' || exit 0; gate=\"$(git rev-parse --show-toplevel)/.keiko-scripts/audit-gate.sh\"; [ -x \"$gate\" ] || exit 0; \"$gate\" >&2 || exit 2; exit 0",
+                        "timeout": 10,
+                        "statusMessage": "Audit gate"
+                    },
+                    {
+                        "type": "command",
+                        "command": "cmd=$(jq -r '.tool_input.command // empty'); printf '%s' \"$cmd\" | grep -qiE 'gh pr (create|ready)' || exit 0; gate=\"$(git rev-parse --show-toplevel)/.keiko-scripts/verify-gate.sh\"; [ -x \"$gate\" ] || exit 0; \"$gate\" >&2 || exit 2; exit 0",
+                        "timeout": 10,
+                        "statusMessage": "Verify gate"
+                    },
+                    {
+                        "type": "command",
+                        "command": "cmd=$(jq -r '.tool_input.command // empty'); printf '%s' \"$cmd\" | grep -qE '(>>?|tee)[^|;&]*agent-memory' && { echo '[memory-path] BLOCKED: write agent memory to .agents/memory/<role>/, not the legacy .claude/agent-memory/.' >&2; exit 2; }; exit 0",
+                        "timeout": 10,
+                        "statusMessage": "Memory path guard"
+                    },
+                    {
+                        "type": "command",
+                        "command": "cmd=$(jq -r '.tool_input.command // empty'); printf '%s' \"$cmd\" | grep -qiE 'gh pr merge' || exit 0; gate=\"$(git rev-parse --show-toplevel)/.keiko-scripts/epic-merge-gate.sh\"; [ -x \"$gate\" ] || exit 0; \"$gate\" \"$cmd\" >&2 || exit 2; exit 0",
+                        "timeout": 15,
+                        "statusMessage": "Epic merge gate"
+                    },
+                    {
+                        "type": "command",
+                        "command": "cmd=$(jq -r '.tool_input.command // empty'); printf '%s' \"$cmd\" | grep -qiE 'gh pr ready' || exit 0; gate=\"$(git rev-parse --show-toplevel)/.keiko-scripts/ready-gate.sh\"; [ -x \"$gate\" ] || exit 0; \"$gate\" \"$cmd\" >&2 || exit 2; exit 0",
+                        "timeout": 15,
+                        "statusMessage": "Ready gate"
+                    },
+                    {
+                        "type": "command",
+                        "command": "cmd=$(jq -r '.tool_input.command // empty'); printf '%s' \"$cmd\" | grep -qE 'git +push' || exit 0; gate=\"$(git rev-parse --show-toplevel)/.keiko-scripts/push-gate.sh\"; [ -x \"$gate\" ] || exit 0; \"$gate\" >&2 || exit 2; exit 0",
+                        "timeout": 25,
+                        "statusMessage": "Push gate"
+                    }
+                ]
+            }
+        ],
+        "SessionStart": [
+            {
+                "matcher": "startup|resume",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "/usr/bin/python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/cluster_lifecycle_logger.py\" session-start",
+                        "timeout": 5,
+                        "statusMessage": "Logging session start"
+                    },
+                    {
+                        "type": "command",
+                        "command": "bash \"$(git rev-parse --show-toplevel)/.keiko-scripts/self-update.sh\" 2>/dev/null || true",
+                        "timeout": 10,
+                        "statusMessage": "Syncing workflow main"
+                    }
+                ]
+            }
+        ],
+        "PostToolUse": [
+            {
+                "matcher": "Bash",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "/usr/bin/python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/cluster_lifecycle_logger.py\" post-tool-use",
+                        "timeout": 5,
+                        "statusMessage": "Logging shell result"
+                    }
+                ]
+            }
+        ],
+        "Stop": [
+            {
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "/usr/bin/python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/cluster_lifecycle_logger.py\" stop",
+                        "timeout": 5,
+                        "statusMessage": "Logging session stop"
+                    }
+                ]
+            }
         ]
-      }
-    ],
-    "SessionStart": [
-      {
-        "matcher": "startup|resume",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/usr/bin/python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/cluster_lifecycle_logger.py\" session-start",
-            "timeout": 5,
-            "statusMessage": "Logging session start"
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/usr/bin/python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/cluster_lifecycle_logger.py\" post-tool-use",
-            "timeout": 5,
-            "statusMessage": "Logging shell result"
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/usr/bin/python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/cluster_lifecycle_logger.py\" stop",
-            "timeout": 5,
-            "statusMessage": "Logging session stop"
-          }
-        ]
-      }
-    ]
-  }
+    }
 }
