@@ -173,9 +173,10 @@ failed, why further autonomous recovery is unlikely.
 - **GitHub delivery board** is the single durable status source of truth.
   No local state store. Activation discipline (don't start `blocked` work) is
   read off board states.
-- **Shared memory** lives at `.agents/memory/<role>/MEMORY.md`, keyed by
-  canonical role, read+written by both harnesses. Commit curated files (<25 KB).
-  Audit trail = GitHub (PRs/comments/evidence); memory = learnings only.
+- **Memory** lives at `.agents/memory/<role>/MEMORY.md`, keyed by canonical role,
+  read+written by both harnesses on the machine. It is **local-only (git-ignored,
+  <25 KB per file), never committed** — user directive; see `.gitignore` /
+  `AGENTS.md`. Audit trail = GitHub (PRs/comments/evidence); memory = learnings only.
 
 ## Observability
 
