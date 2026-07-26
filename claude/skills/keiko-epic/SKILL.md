@@ -47,6 +47,13 @@ claims, and skips any child that's already assigned to someone else.
 
 ## 2. Epic branch
 
+**Dev-baseline preflight (before committing to a long epic).** Confirm the target
+branch is **currently green** — its required checks are passing at `dev` HEAD — before
+you sink days into an epic branched off it. Building a multi-issue epic on a red `dev`
+(e.g. a failing Sonar branch gate) means the final `epic → dev` PR inherits that
+failure and can't close out clean. If `dev` is red, surface it and resolve or wait
+before starting.
+
 Create one long-lived `epic/<name>` off the latest `dev`. Record it on the board
 and an epic comment before implementation starts. Child branches `issue/<id>-<short>`
 are cut **off the epic branch**, not off `dev`.
@@ -164,6 +171,12 @@ When all required children are integrated on the epic branch:
 5. **Only once CI is green**, set the epic and remaining children to `Ready for
 Human Review`. **Sacred-`dev`: human review + green CI required.** Do **not**
    merge the epic PR or close the epic without explicit maintainer authorization.
+6. **Closure evidence — capture the post-merge baseline.** After the human merges the
+   epic into `dev`, the epic is only truly closed out when `dev` is green **at the new
+   HEAD**: record the **post-merge branch analysis** (e.g. the `dev` Sonar branch run
+   and any other required post-merge check) as closure evidence on the epic. A merged
+   epic whose post-merge `dev` run is red is **merged but not closed out** — track the
+   failing check as follow-up, don't mark the epic done on a red post-merge baseline.
 
 ## Escalate (stop, report)
 
