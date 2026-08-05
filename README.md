@@ -25,12 +25,17 @@ hands you a reviewed PR at the end.
   or **Claude Code** — same roles, same steps, same memory.
 - **Stays out of your project's way.** All the machinery lives _here_ and is linked in;
   your actual product code stays clean.
-- **Two products, one workflow.** It runs both **Keiko** (the web app) and **Keiko
-  Native** (the desktop app), adapting automatically to whichever you're working in.
+- **Two products, one workflow.** It runs both
+  [**Keiko**](https://github.com/oscharko-dev/Keiko) (the web app) and
+  [**Keiko Native**](https://github.com/oscharko-dev/Keiko-Native) (the desktop app),
+  adapting automatically to whichever you're working in.
 
-> **A note on boundaries:** this repo is the _how-we-work_ layer, not the product. Each
-> product owns its own rules, architecture, and quality bar; this setup just orchestrates
-> them. See [Target repository boundary](docs/target-repository-boundary.md).
+> **The products this drives:**
+> [oscharko-dev/Keiko](https://github.com/oscharko-dev/Keiko) (web) ·
+> [oscharko-dev/Keiko-Native](https://github.com/oscharko-dev/Keiko-Native) (desktop).
+> This repo is the _how-we-work_ layer, **not** the product — each product owns its own
+> rules, architecture, and quality bar; this setup just orchestrates them. See
+> [Target repository boundary](docs/target-repository-boundary.md).
 
 ---
 
@@ -38,8 +43,8 @@ hands you a reviewed PR at the end.
 
 The same skills, roles, and gates drive **two products**:
 
-- **Keiko** — the original **browser / web** app.
-- **Keiko Native** — the greenfield, local-first **desktop** app.
+- [**Keiko**](https://github.com/oscharko-dev/Keiko) — the original **browser / web** app.
+- [**Keiko Native**](https://github.com/oscharko-dev/Keiko-Native) — the greenfield, local-first **desktop** app.
 
 They follow different rules: how an issue becomes "ready", how you verify it, what
 counts as UI evidence, how branches merge. Rather than fork the whole workflow, each
@@ -249,8 +254,8 @@ templates/   target-side gate snippets (husky / lint-staged / PR evidence)
 ## Server-side prerequisite (repo admin)
 
 The full-local-access posture is safe **because `dev` is protected** — which needs
-`admin` on the target repo. On `oscharko-dev/Keiko`, protect `dev`: require a PR, the
-green `ci` check, and human review. Until then the local gates are fast feedback but
+`admin` on the target repo. On [`oscharko-dev/Keiko`](https://github.com/oscharko-dev/Keiko),
+protect `dev`: require a PR, the green `ci` check, and human review. Until then the local gates are fast feedback but
 the _authoritative_ backstop is absent — treat agent merges toward `dev` with care.
 The airtight form of proof-of-audit lives here too: emit PR-visible evidence and make
 it a **required status check** on `dev`.
