@@ -152,20 +152,26 @@ space (`type: task`); area labels do not (`area:model-gateway`).
 - `area:packaging-docs`: add `docs` and `architect` (npm packaging, documentation,
   customer runbooks).
 
-## Reasoning-effort escalation (lead-driven, on-demand)
+## Model and reasoning-effort routing
 
-Agents run at their `.codex/agents/*.toml` default effort. The lead may raise it
-for a single spawn by passing `reasoning_effort` on `spawn_agent` (available only
-while the V2 `hide_spawn_agent_metadata = false` workaround holds). Escalate, do
-not make it the default:
+The standing model and effort are defined in `.agents/roles.yaml` and implemented
+in `.codex/agents/*.toml`. The lead defaults to GPT-6.1 Sol / high; read the
+[model-routing policy](../docs/model-routing.md) before escalating.
 
-- **`architect` → `xhigh`** only when the decision is genuinely deep: a
-  boundary/dependency-direction ADR, a hard-to-reverse choice spanning multiple
-  layers, or reconciling conflicting constraints (security vs performance vs the
-  deterministic-first architecture). Keep the `high` default for routine
-  structure/ownership/pattern-fit calls (the majority).
-- Same principle for other roles if a specific task warrants it; never raise the
-  standing default in the toml to avoid taxing every spawn.
+- Bounded lookup, mechanical scans, and straightforward docs may use Luna.
+- Ambiguous exploration, auth/permissions, migrations, concurrency, and architectural
+  judgment require Sol or the relevant specialist before implementation proceeds.
+- Diagnose missing context or an oversized task before retrying. Raise effort or
+  model only for a specific unresolved difficulty; do not repeat an unchanged prompt.
+- Reserve Astra / high for consequential uncertainty that Sol leaves unresolved.
+- Keep named-role spawns independent, with exact `agent_type` and no model/effort
+  override for a baseline run. An explicit escalation is the exception.
+- Check runtime records for actual model, effort, role, and sandbox. Record the
+  escalation reason, elapsed time, retries, and verification outcome without secrets.
+- If a tool schema omits `agent_type`, report that named-role inheritance cannot be
+  verified through that interface. A model-only probe does not prove role inheritance.
+
+Run `python scripts/check-routing.py` before changing or publishing routing.
 
 ## Job-timeout recovery (lead-driven)
 

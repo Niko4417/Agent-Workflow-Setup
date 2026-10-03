@@ -101,3 +101,7 @@ context. Only write-enabled roles (or the lead) touch `MEMORY.md`.
      if Codex rejects the call, drop `fork_turns`, never `agent_type`.
   4. Give the child a bounded goal, owned files or read surface, expected evidence, a stop condition, and the required
      return format.
+  5. Verify the child's actual model, effort, role, and sandbox before relying on its posture. Some runtimes apply role
+     model/effort but inherit the parent's sandbox. If a read-only role records broader access, run it from a read-only
+     parent or stop that delegation; a role instruction alone does not enforce filesystem permissions. See
+     [`docs/model-routing.md`](docs/model-routing.md) for tested scope and limitations.

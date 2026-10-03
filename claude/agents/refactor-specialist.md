@@ -1,7 +1,7 @@
 ---
 name: refactor-specialist
 description: PROACTIVELY identify and execute behavior-preserving refactoring. SOLID violations, code smells, duplication, cyclomatic complexity > 10, god objects. Writes code with strict "no behavior change" discipline.
-model: sonnet
+model: claude-sonnet-5-5
 permissionMode: bypassPermissions
 tools: Read, Edit, Write, Grep, Glob, Bash
 maxTurns: 60

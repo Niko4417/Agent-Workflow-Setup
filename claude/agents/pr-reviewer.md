@@ -1,11 +1,11 @@
 ---
 name: pr-reviewer
 description: PROACTIVELY review pull requests with severity-gated verdicts. Deep 8-dimension review covering correctness, security, performance, architecture, tests, accessibility, ADR alignment, and breaking changes. Read-only.
-model: sonnet
+model: claude-opus-5-5
 permissionMode: bypassPermissions
 tools: Read, Grep, Glob, Bash, WebFetch
 maxTurns: 80
-effort: high
+effort: medium
 color: purple
 memory: project
 background: true

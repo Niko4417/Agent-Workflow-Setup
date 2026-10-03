@@ -1,11 +1,11 @@
 ---
 name: verifier
 description: PROACTIVELY verify implementation against acceptance criteria. Evidence-driven, property-based thinking, mutation-aware, regression-conscious. Never implements changes.
-model: sonnet
+model: claude-sonnet-5-5
 permissionMode: bypassPermissions
 tools: Read, Grep, Glob, Bash, WebFetch
 maxTurns: 60
-effort: high
+effort: medium
 color: yellow
 memory: project
 background: true

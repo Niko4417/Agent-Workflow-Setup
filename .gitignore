@@ -17,3 +17,6 @@ claude/launch.json
 # Ephemeral agent worktrees + local pre-PR report (never shared)
 claude/worktrees/
 codex/pre-pr-report.json
+
+# Python validation caches
+__pycache__/
