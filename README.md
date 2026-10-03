@@ -184,8 +184,16 @@ The lead defaults to **GPT-6.1 Sol / high** or **Claude Opus 5.5 / medium**.
 
 Use GPT-6 Luna / Claude Haiku 4.5 for bounded lookup and straightforward docs;
 GPT-6.1 Sol / Claude Sonnet 5.5 for scoped execution; and stronger settings for
-complex features, architecture, or review. Escalate to GPT-6 Astra / Claude Fable
-5.1 only when consequential uncertainty remains. See [model routing](docs/model-routing.md)
+complex features, architecture, or review. Codex escalation stays on **Sol 6.1**:
+Luna → Sol 6.1 / medium → Sol 6.1 / high → Sol 6.1 / xhigh for a specific
+unresolved problem. Start at the role's standing setting; these are not mandatory
+retry steps. Correct missing context and task scope before raising effort.
+
+**Astra is manual-only.** No standing role uses it, and failure, high risk, or
+uncertainty does not authorize switching to it. Spawn Astra only when the operator
+explicitly requests it. A measured benefit on representative tasks can justify a
+recommendation, but requires that explicit request before use. Claude's exceptional
+escalation remains Fable 5.1 / high. See [model routing](docs/model-routing.md)
 for risk rules, research, capability checks, and local validation.
 
 | Agent | Codex model | Effort | Claude model | Effort |
@@ -211,6 +219,27 @@ for risk rules, research, capability checks, and local validation.
 capability with Sonnet 5.5 at medium effort. Haiku 4.5 has no effort setting.
 Claude model IDs are pinned so provider aliases cannot silently change this policy.
 Runtime provider/availability overrides must be reported with the actual model.
+
+### Why Sol 6.1 instead of Astra?
+
+As of 2026-10-04, standard API rates per million tokens for inputs up to 272K are:
+
+| Token category | GPT-6.1 Sol | GPT-6 Astra | Astra multiplier |
+| --- | --- | --- | --- |
+| Input | $2 | $10 | 5× |
+| Cached input | $0.10 | $1 | 10× |
+| Output | $10 | $50 | 5× |
+
+Sources: [Sol 6.1](https://developers.openai.com/api/docs/models/gpt-6.1-sol) and
+[Astra](https://developers.openai.com/api/docs/models/gpt-6-astra). These API rates
+do not directly measure Codex subscription quota consumption or total task cost.
+
+Official OpenAI documentation describes Sol 6.1 as delivering near-Astra
+performance, not identical quality on every task. We have no representative
+Keiko evaluation showing that Astra's benefit justifies its premium. The completed
+Astra spawn probe established availability only; it was not a coding-quality
+benchmark. Keep ordinary execution and escalation on Sol until evidence supports
+recommending an explicitly requested Astra run.
 
 ---
 

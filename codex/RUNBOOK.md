@@ -163,7 +163,11 @@ in `.codex/agents/*.toml`. The lead defaults to GPT-6.1 Sol / high; read the
   judgment require Sol or the relevant specialist before implementation proceeds.
 - Diagnose missing context or an oversized task before retrying. Raise effort or
   model only for a specific unresolved difficulty; do not repeat an unchanged prompt.
-- Reserve Astra / high for consequential uncertainty that Sol leaves unresolved.
+- For a specific unresolved problem, raise Sol 6.1 from high to xhigh after
+  correcting context and task scope. Astra / high is manual-only: the operator
+  must explicitly request it. Failure or consequential uncertainty does not
+  authorize switching to Astra. Measured benefit may justify recommending it,
+  but not spawning it without that request.
 - Keep named-role spawns independent, with exact `agent_type` and no model/effort
   override for a baseline run. An explicit escalation is the exception.
 - Check runtime records for actual model, effort, role, and sandbox. Record the

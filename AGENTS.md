@@ -91,6 +91,11 @@ context. Only write-enabled roles (or the lead) touch `MEMORY.md`.
   `ci-repair.md` when the task matches those workflows.
 - Agent model tiers live in `.codex/agents/*.toml`; the canonical role map is `.agents/roles.yaml`. Right-size the model
   per role — do not promote an agent to the frontier tier without reason.
+- **Cost-aware Codex escalation**: use Luna for bounded work, then Sol 6.1 at medium/high as the task requires.
+  For a specific unresolved problem, raise Sol 6.1 to `xhigh` after correcting context and task scope. Never select
+  Astra automatically, including after a failed attempt or for a high-risk role. Use it only when the operator
+  explicitly requests it. A measured task-specific benefit may justify recommending Astra; it does not authorize
+  spawning it. No standing role uses Astra.
 - **Spawn contract** — for every custom child:
   1. Pass the exact `agent_type` from `.codex/agents/*.toml`. **Never** omit it to make a rejected spawn call pass —
      that silently inherits the lead's model and sandbox, defeating the per-agent tiers and read-only postures.

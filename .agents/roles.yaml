@@ -16,8 +16,10 @@ lead:
   effort: { codex: high, claude: medium }
 
 escalation:
-  model: { codex: gpt-6-astra, claude: claude-fable-5-1 }
-  effort: { codex: high, claude: high }
+  model: { codex: gpt-6.1-sol, claude: claude-fable-5-1 }
+  effort: { codex: xhigh, claude: high }
+  # Astra is excluded from autonomous escalation; the operator must explicitly request it.
+  manual_only_codex_models: [gpt-6-astra]
 
 roles:
   # ---- read / analyze ----

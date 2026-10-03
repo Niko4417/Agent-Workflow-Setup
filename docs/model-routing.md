@@ -14,8 +14,10 @@ against the README, Claude table, lead defaults, and final Claude quality hook.
 - Scoped implementation and browser work: GPT-6.1 Sol or Claude Sonnet 5.5 / medium.
 - Complex features, architecture, and review use the stronger standing settings
   in the role table. Accessibility auditing uses Sol/Sonnet rather than Haiku.
-- Exceptional escalation: GPT-6 Astra / high or Claude Fable 5.1 / high.
-  Raise effort further only when a bounded evaluation shows a quality benefit.
+- Codex escalation: GPT-6.1 Sol / xhigh for a specific problem that remains
+  unresolved after correcting context and scope. GPT-6 Astra / high is manual-only:
+  the operator must explicitly request it; never select it automatically.
+- Claude exceptional escalation remains Fable 5.1 / high.
 
 Claude IDs are pinned; provider aliases and environment overrides can resolve to
 different versions. Check account/provider support before spawning. Availability
@@ -32,7 +34,12 @@ security audit. API prices do not measure subscription quota consumption.
    appropriate specialist before implementation proceeds.
 3. After a failure, diagnose missing context and task size first. Narrow or correct
    the request; then raise effort or model for a specific unresolved difficulty.
-   Existing repair-attempt and human-review gates remain binding.
+   On Codex, use Luna → Sol 6.1 / medium → Sol 6.1 / high → Sol 6.1 / xhigh,
+   starting at the role's standing setting rather than running every step.
+   Failure, high risk, or uncertainty never authorizes an automatic Astra spawn.
+   A measured benefit can justify recommending Astra, but only an explicit
+   operator request authorizes using it. Existing repair-attempt and human-review
+   gates remain binding.
 4. Give reviewers acceptance criteria, the diff, relevant code, and test results.
    Require reproducible findings independent of the implementer's summary.
 5. Capture requested and actual model, effort, role, sandbox, escalation reason,
@@ -91,6 +98,12 @@ and total usage. Small samples identify large regressions, not small superiority
 ## Research basis
 
 These are initial engineering choices, not a proven Keiko model ranking.
+
+Sol 6.1 is the default and autonomous escalation model because official guidance
+describes near-Astra performance at substantially lower standard API rates. No
+representative Keiko evaluation currently establishes an Astra benefit worth its
+premium. See the README's dated cost comparison. The Astra availability smoke
+test is not evidence of a quality advantage or authorization for routine use.
 
 - [OpenAI GPT-6 guidance](https://developers.openai.com/api/docs/guides/latest-model)
   positions Sol 6.1 for balanced complex coding and Luna for focused workloads.
