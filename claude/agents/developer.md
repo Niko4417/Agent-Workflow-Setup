@@ -1,7 +1,7 @@
 ---
 name: developer
 description: PROACTIVELY plan and implement code changes at the highest quality bar. Spec-first, TDD, bounded iterations, mandatory self-critique. Use when tasks need research, planning, and hands-on implementation.
-model: opus
+model: claude-opus-5-5
 permissionMode: bypassPermissions
 disallowedTools: Agent
 maxTurns: 60

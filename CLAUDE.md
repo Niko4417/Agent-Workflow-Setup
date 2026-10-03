@@ -36,26 +36,32 @@ Never run `git push --force`, `git reset --hard`, `--no-verify`, or `rm -rf` on 
 
 ## Agent routing table
 
-| Task signal                                     | Spawn                                                         |
-| ----------------------------------------------- | ------------------------------------------------------------- |
-| "explore", "where is", "how does this work"     | `explorer` (haiku, read-only)                                 |
-| ADR / boundary / dependency-direction decision  | `architect` (sonnet, docs/adr only)                           |
-| New feature with spec → impl → tests            | `developer` (opus, spec-first, TDD)                           |
-| Well-scoped task with definition of done        | `implementor` (sonnet, minimal diff)                          |
-| Test strategy / coverage gap                    | `test-engineer` (sonnet, test files only)                     |
-| Behavior-preserving cleanup, complexity > 10    | `refactor-specialist` (sonnet)                                |
-| First-pass security scan (OWASP, secrets, deps) | `security-triage` (sonnet, read-only)                         |
-| Deep security audit (crypto, auth, data-flow)   | `security-auditor` (opus, read-only — on demand)              |
-| LCP / INP / CLS / bundle / N+1                  | `performance-engineer` (sonnet, read-only)                    |
-| WCAG 2.2 AA review                              | `a11y-auditor` (haiku, read-only)                             |
-| PR review (8-dimension)                         | `pr-reviewer` (sonnet, read-only)                             |
-| Drive open PR to merge-ready                    | `pr-shepherd` (sonnet, delegates to implementor)              |
-| Acceptance-criteria verification                | `verifier` (sonnet, read-only)                                |
-| Figma → React component                         | `ui-engineer` (sonnet)                                        |
-| README / ADR / CHANGELOG / API docs             | `docs` (haiku, docs only)                                     |
-| Reproduce a UI bug in a real browser            | _capability_: drive Playwright / Chrome MCP — not a sub-agent |
+Pinned model IDs and standing effort live in `.agents/roles.yaml` and
+`.claude/agents/`. The lead defaults to Claude Opus 5.5 / medium. See
+[model routing](docs/model-routing.md) for risk-based escalation and override checks.
 
-When a task spans multiple layers and the workers are independent, use an agent team (parallel) instead of sequential subagents. Default team size: 3–5 teammates. Three reusable team templates live in [.claude/teams/](.claude/teams/):
+| Role | Model | Effort |
+| --- | --- | --- |
+| `explorer` | `claude-haiku-4-5-20251001` | n/a |
+| `docs` | `claude-haiku-4-5-20251001` | n/a |
+| `implementor` | `claude-sonnet-5-5` | medium |
+| `ui-engineer` | `claude-sonnet-5-5` | medium |
+| `developer` | `claude-opus-5-5` | high |
+| `architect` | `claude-opus-5-5` | medium |
+| `refactor-specialist` | `claude-sonnet-5-5` | high |
+| `test-engineer` | `claude-sonnet-5-5` | high |
+| `performance-engineer` | `claude-sonnet-5-5` | high |
+| `pr-reviewer` | `claude-opus-5-5` | medium |
+| `verifier` | `claude-sonnet-5-5` | medium |
+| `a11y-auditor` | `claude-sonnet-5-5` | medium |
+| `security-triage` | `claude-sonnet-5-5` | medium |
+| `security-auditor` | `claude-opus-5-5` | high |
+| `browser-debugger` | `claude-sonnet-5-5` | medium |
+| `pr-shepherd` | `claude-sonnet-5-5` | medium |
+
+`browser-debugger` is a lead-driven browser capability on Claude, not a named subagent.
+
+When a task spans multiple layers and the workers are independent, use an agent team (parallel) instead of sequential subagents. Use the smallest useful team, within the runtime concurrency limit; do not fan out sequential tasks. Three reusable team templates live in [.claude/teams/](.claude/teams/):
 
 - [review-team](.claude/teams/review-team.md) — parallel pre-merge audit (security-triage + performance + a11y, all read-only).
 - [feature-team](.claude/teams/feature-team.md) — cross-layer feature delivery (developer + test-engineer + ui-engineer, strict file ownership).
@@ -82,7 +88,7 @@ Every agent runs a 2-pass adversarial self-critique before reporting done. The p
 
 The memory rule (read before / update after, no secrets) is in @AGENTS.md. Claude-side specifics:
 
-- Agent memory `.agents/memory/<role>/MEMORY.md` — keyed by the 15 canonical roles (`.agents/roles.yaml`), curated under 25 KB, shared with Codex.
+- Agent memory `.agents/memory/<role>/MEMORY.md` — keyed by the 16 canonical roles (`.agents/roles.yaml`), curated under 25 KB, shared with Codex.
 - Shared memory `.agents/memory/_shared/` — cross-cutting findings for multiple roles (see [memory/README.md](.agents/memory/README.md) for the eligibility rule).
 - High-signal entries only: codepaths, gotchas, patterns. No session logs, no "I searched the repo".
 - **Read-only teammates don't write memory** — they return a memory candidate to you (the lead); you record durable ones from a write-enabled context.

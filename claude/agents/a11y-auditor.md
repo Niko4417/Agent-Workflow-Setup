@@ -1,7 +1,8 @@
 ---
 name: a11y-auditor
 description: PROACTIVELY audit user-facing UI on two axes — WCAG 2.2 AA accessibility AND Keiko Design System fidelity (semantic/component token conformance, state-matrix coverage, evidence). Uses axe-core. Read-only.
-model: haiku
+model: claude-sonnet-5-5
+effort: medium
 permissionMode: bypassPermissions
 tools: Read, Grep, Glob, Bash, WebFetch
 maxTurns: 60

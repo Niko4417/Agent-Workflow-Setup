@@ -177,41 +177,40 @@ Design + tradeoffs: **[docs/workflow-blueprint.md](docs/workflow-blueprint.md)**
 
 ## Agent roster & routing
 
-Each role is tiered onto the GPT-5.6 model family (Codex, primary harness) with a
-mirror on Claude (backup). **Reasoning** is the _standing_ effort — the orchestrator
-escalates a single task to `xhigh`/`max` when it's genuinely hard, then drops back.
-Model + effort live in `.codex/agents/*.toml`; the canonical map is
-[`.agents/roles.yaml`](.agents/roles.yaml).
+The standing model and effort settings are reviewed as of **2026-10-04**.
+`.agents/roles.yaml` is the canonical routing policy; the Codex and Claude role
+definitions implement it. Run `python scripts/check-routing.py` to detect drift.
+The lead defaults to **GPT-6.1 Sol / high** or **Claude Opus 5.5 / medium**.
 
-Tiers: **Sol** = frontier (ambiguous planning, high-risk review) · **Terra** =
-everyday build/test/review (the ex-`gpt-5.4` successor) · **Luna** = light recon,
-mechanical, docs.
+Use GPT-6 Luna / Claude Haiku 4.5 for bounded lookup and straightforward docs;
+GPT-6.1 Sol / Claude Sonnet 5.5 for scoped execution; and stronger settings for
+complex features, architecture, or review. Escalate to GPT-6 Astra / Claude Fable
+5.1 only when consequential uncertainty remains. See [model routing](docs/model-routing.md)
+for risk rules, research, capability checks, and local validation.
 
-| Agent                  | Routed for (task signal)                                   | Codex model     | Reasoning | Claude        | Access       |
-| ---------------------- | ---------------------------------------------------------- | --------------- | --------- | ------------- | ------------ |
-| `architect`            | ADR / module boundary / dependency-direction decision      | `gpt-5.6-sol`   | high      | opus          | docs/adr     |
-| `developer`            | spec-first feature: research → plan → TDD build (heavy)    | `gpt-5.6-sol`   | high      | opus          | full write   |
-| `security-auditor`     | deep audit — crypto/auth, data-flow, PR-scoped review      | `gpt-5.6-sol`   | xhigh     | opus          | read-only    |
-| `implementor`          | scoped minimal-diff task with a clear definition of done   | `gpt-5.6-terra` | medium    | sonnet        | full write   |
-| `test-engineer`        | test coverage, regression harnesses, mutation-robust tests | `gpt-5.6-terra` | high      | sonnet        | test files   |
-| `ui-engineer`          | Figma → component, design-system conformance, UI fixes     | `gpt-5.6-terra` | high      | sonnet        | full write   |
-| `refactor-specialist`  | behavior-preserving cleanup, complexity > 10               | `gpt-5.6-terra` | high      | sonnet        | full write   |
-| `pr-reviewer`          | multi-dimension PR review before merge                     | `gpt-5.6-terra` | high      | sonnet        | read-only    |
-| `verifier`             | acceptance-criteria verification + PR evidence capture     | `gpt-5.6-terra` | high      | sonnet        | read-only    |
-| `performance-engineer` | LCP / INP / CLS, bundle, N+1, hot paths                    | `gpt-5.6-terra` | high      | sonnet        | read-only    |
-| `a11y-auditor`         | WCAG 2.2 AA review                                         | `gpt-5.6-terra` | high      | haiku         | read-only    |
-| `explorer`             | code mapping + external doc/API grounding (Context7/web)   | `gpt-5.6-luna`  | medium    | haiku         | read-only    |
-| `docs`                 | README / API / ADR / CHANGELOG / migration notes           | `gpt-5.6-luna`  | medium    | haiku         | docs         |
-| `security-triage`      | fast first-pass scan (OWASP grep, secrets, authz)          | `gpt-5.6-luna`  | medium    | sonnet        | read-only    |
-| `browser-debugger`     | real-browser reproduction + evidence capture               | `gpt-5.6-luna`  | medium    | _capability_¹ | reproduction |
-| `pr-shepherd`          | drive an open PR to merge-ready (delegates fixes)          | `gpt-5.6-luna`  | medium    | sonnet        | drive        |
+| Agent | Codex model | Effort | Claude model | Effort |
+| --- | --- | --- | --- | --- |
+| `explorer` | `gpt-6-luna` | low | `claude-haiku-4-5-20251001` | n/a |
+| `docs` | `gpt-6-luna` | medium | `claude-haiku-4-5-20251001` | n/a |
+| `implementor` | `gpt-6.1-sol` | medium | `claude-sonnet-5-5` | medium |
+| `ui-engineer` | `gpt-6.1-sol` | medium | `claude-sonnet-5-5` | medium |
+| `developer` | `gpt-6.1-sol` | high | `claude-opus-5-5` | high |
+| `architect` | `gpt-6.1-sol` | high | `claude-opus-5-5` | medium |
+| `refactor-specialist` | `gpt-6.1-sol` | high | `claude-sonnet-5-5` | high |
+| `test-engineer` | `gpt-6.1-sol` | high | `claude-sonnet-5-5` | high |
+| `performance-engineer` | `gpt-6.1-sol` | high | `claude-sonnet-5-5` | high |
+| `pr-reviewer` | `gpt-6.1-sol` | high | `claude-opus-5-5` | medium |
+| `verifier` | `gpt-6.1-sol` | medium | `claude-sonnet-5-5` | medium |
+| `a11y-auditor` | `gpt-6.1-sol` | medium | `claude-sonnet-5-5` | medium |
+| `security-triage` | `gpt-6-luna` | medium | `claude-sonnet-5-5` | medium |
+| `security-auditor` | `gpt-6.1-sol` | high | `claude-opus-5-5` | high |
+| `browser-debugger` | `gpt-6.1-sol` | medium | `claude-sonnet-5-5` | medium |
+| `pr-shepherd` | `gpt-6.1-sol` | medium | `claude-sonnet-5-5` | medium |
 
-The **orchestrator** (the lead chat you invoke a skill from) is not a spawnable role —
-run it on **Sol**, `high` for executing an epic, `xhigh` when authoring one.
-
-¹ `browser-debugger` is a **Codex** agent (`codex/agents/browser-debugger.toml`). On
-Claude there is no separate agent — real-browser reproduction is a **capability** the
-lead drives directly (Playwright / Chrome MCP), per the `CLAUDE.md` routing table.
+`browser-debugger` is a named Codex agent; on Claude the lead drives the browser
+capability with Sonnet 5.5 at medium effort. Haiku 4.5 has no effort setting.
+Claude model IDs are pinned so provider aliases cannot silently change this policy.
+Runtime provider/availability overrides must be reported with the actual model.
 
 ---
 

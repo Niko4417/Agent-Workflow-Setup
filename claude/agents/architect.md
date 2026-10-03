@@ -1,11 +1,11 @@
 ---
 name: architect
 description: PROACTIVELY design system architecture. ADRs, module boundaries, dependency direction, cross-cutting concerns, technology selection. Writes ADRs to docs/adr/. Never implements feature code.
-model: sonnet
+model: claude-opus-5-5
 permissionMode: bypassPermissions
 tools: Read, Write, Edit, Grep, Glob, Bash, WebFetch
 maxTurns: 80
-effort: high
+effort: medium
 color: purple
 memory: project
 isolation: worktree

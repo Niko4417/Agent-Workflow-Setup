@@ -1,4 +1,6 @@
 #:schema https://developers.openai.com/codex/config-schema.json
+model = "gpt-6.1-sol"
+model_reasoning_effort = "high"
 approval_policy = "never"
 check_for_update_on_startup = true
 developer_instructions = """
@@ -36,13 +38,15 @@ multi_agent = true
 plugins = true
 prevent_idle_sleep = true
 
-# GPT-5.6 Sol/Terra select MultiAgent V2 via model metadata, which defaults
+# Reasoning models can select MultiAgent V2 via model metadata, which defaults
 # hide_spawn_agent_metadata = true and strips agent_type/model/reasoning_effort
 # from the model-visible spawn_agent schema -- silently forcing every subagent to
 # inherit the lead's model and sandbox, ignoring .codex/agents/*.toml.
 # openai/codex#31814 (tool_namespace avoids the reserved-name error).
 [features.multi_agent_v2]
+enabled = true
 hide_spawn_agent_metadata = false
+expose_spawn_agent_model_overrides = true
 max_concurrent_threads_per_session = 4
 tool_namespace = "agents"
 
@@ -137,6 +141,3 @@ inherit = "core"
 CLAUDE_AUTOCOMPACT_PCT_OVERRIDE = "85"
 CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS = "1"
 ENABLE_PROMPT_CACHING_1H = "1"
-
-[tools]
-view_image = true

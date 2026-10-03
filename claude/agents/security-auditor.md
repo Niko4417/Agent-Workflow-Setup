@@ -1,11 +1,11 @@
 ---
 name: security-auditor
 description: Deep security audit — spawned on demand when security-triage escalates, or for crypto/auth flows. OWASP Top 10, data-flow tracing, auth matrix, crypto review. Read-only — reports findings, never fixes. For first-pass routine scans, use security-triage instead.
-model: opus
+model: claude-opus-5-5
 permissionMode: bypassPermissions
 tools: Read, Grep, Glob, Bash, WebFetch
 maxTurns: 80
-effort: xhigh
+effort: high
 color: red
 memory: project
 background: true
