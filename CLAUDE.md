@@ -42,22 +42,22 @@ Pinned model IDs and standing effort live in `.agents/roles.yaml` and
 
 | Role | Model | Effort |
 | --- | --- | --- |
-| `explorer` | `claude-haiku-4-5-20251001` | n/a |
-| `docs` | `claude-haiku-4-5-20251001` | n/a |
-| `implementor` | `claude-sonnet-5-5` | medium |
-| `ui-engineer` | `claude-sonnet-5-5` | medium |
+| `explorer` | `claude-haiku-5-5` | medium |
+| `docs` | `claude-haiku-5-5` | medium |
+| `implementor` | `claude-opus-5-5` | medium |
+| `ui-engineer` | `claude-opus-5-5` | medium |
 | `developer` | `claude-opus-5-5` | high |
 | `architect` | `claude-opus-5-5` | medium |
-| `refactor-specialist` | `claude-sonnet-5-5` | high |
-| `test-engineer` | `claude-sonnet-5-5` | high |
-| `performance-engineer` | `claude-sonnet-5-5` | high |
+| `refactor-specialist` | `claude-opus-5-5` | high |
+| `test-engineer` | `claude-opus-5-5` | high |
+| `performance-engineer` | `claude-opus-5-5` | high |
 | `pr-reviewer` | `claude-opus-5-5` | medium |
-| `verifier` | `claude-sonnet-5-5` | medium |
-| `a11y-auditor` | `claude-sonnet-5-5` | medium |
-| `security-triage` | `claude-sonnet-5-5` | medium |
+| `verifier` | `claude-opus-5-5` | medium |
+| `a11y-auditor` | `claude-opus-5-5` | medium |
+| `security-triage` | `claude-opus-5-5` | medium |
 | `security-auditor` | `claude-opus-5-5` | high |
-| `browser-debugger` | `claude-sonnet-5-5` | medium |
-| `pr-shepherd` | `claude-sonnet-5-5` | medium |
+| `browser-debugger` | `claude-opus-5-5` | medium |
+| `pr-shepherd` | `claude-opus-5-5` | medium |
 
 `browser-debugger` is a lead-driven browser capability on Claude, not a named subagent.
 

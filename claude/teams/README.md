@@ -26,9 +26,9 @@ Quote from the Claude Code docs: "_Three focused teammates often outperform five
 
 | Template | Use case | Members | Parallelism | Cost profile |
 |----------|----------|---------|-------------|--------------|
-| [review-team](review-team.md) | PR pre-merge audit | security-triage, performance-engineer, a11y-auditor | High (all read-only) | Low (1 Haiku + 1 Sonnet + 1 Sonnet) |
-| [feature-team](feature-team.md) | Cross-layer feature delivery | developer, test-engineer, ui-engineer | Medium (different files) | High (1 Opus + 2 Sonnet) |
-| [debug-team](debug-team.md) | Adversarial root-cause analysis | 3× explorer with competing hypotheses | High (read-only) | Very low (3× Haiku) |
+| [review-team](review-team.md) | PR pre-merge audit | security-triage, performance-engineer, a11y-auditor | High (all read-only) | High (3 Opus 5.5) |
+| [feature-team](feature-team.md) | Cross-layer feature delivery | developer, test-engineer, ui-engineer | Medium (different files) | High (3 Opus 5.5) |
+| [debug-team](debug-team.md) | Adversarial root-cause analysis | 3× explorer with competing hypotheses | High (read-only) | Very low (3× Haiku 5.5 / medium) |
 
 ## Hard rules (apply to every team)
 
@@ -38,11 +38,15 @@ Quote from the Claude Code docs: "_Three focused teammates often outperform five
 4. **Watch for file conflicts** — pre-assign file ownership per teammate when implementing in parallel.
 5. **Wait for teammates** — if you (the lead) start implementing instead of delegating, tell yourself: "Wait for your teammates to complete their tasks before proceeding."
 
-## Cost guidance (per [shipyard.build/blog/claude-code-multi-agent](https://shipyard.build/blog/claude-code-multi-agent/))
+## Cost guidance
 
-- 1× Opus + 4× Sonnet ≈ **40% cheaper** than 5× Opus, with comparable quality on most tasks.
-- A 3-agent team burns rate-limit tokens ~3× as fast as a single agent.
-- Read-only teams (`review-team`, `debug-team`) are the safest first experiments — no merge conflicts possible.
+- Feature and review teams use three Opus 5.5 workers; no mixed-model savings apply.
+- Bounded debug lookup uses Haiku 5.5 / medium. Broad root-cause analysis requires
+  Opus; three cheap guesses are not an authoritative diagnosis.
+- Parallel teams add coordination/context costs and share rate limits. Measure
+  total usage and elapsed time; worker count alone does not predict either.
+- Use the [dated cost/effort assessment](../../docs/model-cost-effort.md) for
+  token rates, long-context thresholds, and accepted-task cost comparisons.
 
 ## Limitations to remember
 

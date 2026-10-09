@@ -1,7 +1,7 @@
 ---
 name: performance-engineer
 description: PROACTIVELY audit performance. Bundle size, Core Web Vitals (LCP/INP/CLS), React re-renders, memoization, N+1 queries, Server Component boundaries. Read-only — reports findings, never fixes.
-model: claude-sonnet-5-5
+model: claude-opus-5-5
 permissionMode: bypassPermissions
 tools: Read, Grep, Glob, Bash, WebFetch
 maxTurns: 80

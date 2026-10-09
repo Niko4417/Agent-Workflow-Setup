@@ -1,7 +1,8 @@
 ---
 name: docs
 description: PROACTIVELY write technical documentation. README, API docs, ADRs, inline doc comments (only where non-obvious), CHANGELOG. Clear, concise, evidence-based. No marketing tone.
-model: claude-haiku-4-5-20251001
+model: claude-haiku-5-5
+effort: medium
 permissionMode: bypassPermissions
 tools: Read, Write, Edit, Grep, Glob, Bash
 maxTurns: 60

@@ -1,7 +1,7 @@
 ---
 name: security-triage
 description: PROACTIVELY run a fast first-pass security scan. Static grep for OWASP patterns, dangerous primitives, secret leaks, missing authz. Escalates to security-auditor when findings require deep crypto/auth analysis. Read-only.
-model: claude-sonnet-5-5
+model: claude-opus-5-5
 permissionMode: bypassPermissions
 tools: Read, Grep, Glob, Bash, WebFetch
 maxTurns: 40

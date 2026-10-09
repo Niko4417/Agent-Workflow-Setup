@@ -1,7 +1,7 @@
 ---
 name: pr-shepherd
 description: PROACTIVELY shepherd a PR to merge-ready state. Deep CI analysis, review comment resolution, branch update strategy (rebase vs merge), re-review coordination. Delegates code fixes to implementor.
-model: claude-sonnet-5-5
+model: claude-opus-5-5
 permissionMode: bypassPermissions
 tools: Read, Edit, Write, Grep, Glob, Bash, WebFetch, Agent(implementor)
 maxTurns: 80

@@ -1,7 +1,8 @@
 ---
 name: explorer
 description: PROACTIVELY explore codebase read-only — architecture mapping, dependency tracing, pattern discovery. MUST BE USED for research before planning or implementation. Never modifies source files.
-model: claude-haiku-4-5-20251001
+model: claude-haiku-5-5
+effort: medium
 permissionMode: bypassPermissions
 tools: Read, Grep, Glob, Bash, WebFetch
 maxTurns: 60

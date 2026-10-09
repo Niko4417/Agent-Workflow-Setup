@@ -6,11 +6,14 @@
 
 | Teammate | Subagent type | Model | Owns |
 |----------|---------------|-------|------|
-| `dev` | `developer` | Opus | Backend / service code: `services/**`, `libs/**` |
-| `test` | `test-engineer` | Sonnet | All test files: `**/*.{test,spec}.{ts,tsx}`, `__tests__/`, `tests/`, `e2e/` |
-| `ui` | `ui-engineer` | Sonnet | Component code: `apps/**/components/**`, `*.tsx`, `*.css` |
+| `dev` | `developer` | Opus 5.5 | Backend / service code: `services/**`, `libs/**` |
+| `test` | `test-engineer` | Opus 5.5 | All test files: `**/*.{test,spec}.{ts,tsx}`, `__tests__/`, `tests/`, `e2e/` |
+| `ui` | `ui-engineer` | Opus 5.5 | Component code: `apps/**/components/**`, `*.tsx`, `*.css` |
 
-**Cost**: 1× Opus + 2× Sonnet ≈ **40% cheaper** than 3× Opus, comparable quality (see [Wave 2 routing rationale](../../CLAUDE.md)).
+**Cost**: 3× Opus 5.5; developer/test use high effort and UI uses medium.
+Parallelism may reduce wall time but adds coordination tokens. There is no
+mixed-model discount; compare total accepted-task cost using the
+[cost/effort assessment](../../docs/model-cost-effort.md).
 
 ## Pre-flight checklist (lead does this BEFORE spawning)
 

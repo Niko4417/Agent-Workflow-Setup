@@ -1,7 +1,7 @@
 ---
 name: test-engineer
 description: PROACTIVELY design and implement test strategy. Unit/integration/e2e/property-based/mutation testing. Coverage analysis. Test pyramid balance. Writes tests, never feature code.
-model: claude-sonnet-5-5
+model: claude-opus-5-5
 permissionMode: bypassPermissions
 tools: Read, Write, Edit, Grep, Glob, Bash
 maxTurns: 50

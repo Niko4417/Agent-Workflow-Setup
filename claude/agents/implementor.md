@@ -1,7 +1,7 @@
 ---
 name: implementor
 description: PROACTIVELY execute assigned tasks with minimal, clean changes. Use when a well-defined task with clear scope, inputs, and definition of done needs to be implemented. No planning, no delegation, mandatory self-critique.
-model: claude-sonnet-5-5
+model: claude-opus-5-5
 permissionMode: bypassPermissions
 disallowedTools: Agent
 maxTurns: 75

@@ -177,13 +177,13 @@ Design + tradeoffs: **[docs/workflow-blueprint.md](docs/workflow-blueprint.md)**
 
 ## Agent roster & routing
 
-The standing model and effort settings are reviewed as of **2026-10-04**.
+The standing model and effort settings are reviewed as of **2026-10-09**.
 `.agents/roles.yaml` is the canonical routing policy; the Codex and Claude role
 definitions implement it. Run `python scripts/check-routing.py` to detect drift.
 The lead defaults to **GPT-6.1 Sol / high** or **Claude Opus 5.5 / medium**.
 
-Use GPT-6 Luna / Claude Haiku 4.5 for bounded lookup and straightforward docs;
-GPT-6.1 Sol / Claude Sonnet 5.5 for scoped execution; and stronger settings for
+Use GPT-6 Luna / Claude Haiku 5.5 for bounded lookup and straightforward docs;
+GPT-6.1 Sol / Claude Opus 5.5 for scoped execution; and stronger settings for
 complex features, architecture, or review. Codex escalation stays on **Sol 6.1**:
 Luna → Sol 6.1 / medium → Sol 6.1 / high → Sol 6.1 / xhigh for a specific
 unresolved problem. Start at the role's standing setting; these are not mandatory
@@ -194,35 +194,38 @@ uncertainty does not authorize switching to it. Spawn Astra only when the operat
 explicitly requests it. A measured benefit on representative tasks can justify a
 recommendation, but requires that explicit request before use. Claude's exceptional
 escalation remains Fable 5.1 / high. See [model routing](docs/model-routing.md)
-for risk rules, research, capability checks, and local validation.
+for risk rules, research, capability checks, and local validation. The dated
+[cost/effort assessment](docs/model-cost-effort.md) covers every active tier,
+long-context pricing, older GPT alternatives, and the proposed Pareto candidates.
 
 | Agent | Codex model | Effort | Claude model | Effort |
 | --- | --- | --- | --- | --- |
-| `explorer` | `gpt-6-luna` | low | `claude-haiku-4-5-20251001` | n/a |
-| `docs` | `gpt-6-luna` | medium | `claude-haiku-4-5-20251001` | n/a |
-| `implementor` | `gpt-6.1-sol` | medium | `claude-sonnet-5-5` | medium |
-| `ui-engineer` | `gpt-6.1-sol` | medium | `claude-sonnet-5-5` | medium |
+| `explorer` | `gpt-6-luna` | low | `claude-haiku-5-5` | medium |
+| `docs` | `gpt-6-luna` | medium | `claude-haiku-5-5` | medium |
+| `implementor` | `gpt-6.1-sol` | medium | `claude-opus-5-5` | medium |
+| `ui-engineer` | `gpt-6.1-sol` | medium | `claude-opus-5-5` | medium |
 | `developer` | `gpt-6.1-sol` | high | `claude-opus-5-5` | high |
 | `architect` | `gpt-6.1-sol` | high | `claude-opus-5-5` | medium |
-| `refactor-specialist` | `gpt-6.1-sol` | high | `claude-sonnet-5-5` | high |
-| `test-engineer` | `gpt-6.1-sol` | high | `claude-sonnet-5-5` | high |
-| `performance-engineer` | `gpt-6.1-sol` | high | `claude-sonnet-5-5` | high |
+| `refactor-specialist` | `gpt-6.1-sol` | high | `claude-opus-5-5` | high |
+| `test-engineer` | `gpt-6.1-sol` | high | `claude-opus-5-5` | high |
+| `performance-engineer` | `gpt-6.1-sol` | high | `claude-opus-5-5` | high |
 | `pr-reviewer` | `gpt-6.1-sol` | high | `claude-opus-5-5` | medium |
-| `verifier` | `gpt-6.1-sol` | medium | `claude-sonnet-5-5` | medium |
-| `a11y-auditor` | `gpt-6.1-sol` | medium | `claude-sonnet-5-5` | medium |
-| `security-triage` | `gpt-6-luna` | medium | `claude-sonnet-5-5` | medium |
+| `verifier` | `gpt-6.1-sol` | medium | `claude-opus-5-5` | medium |
+| `a11y-auditor` | `gpt-6.1-sol` | medium | `claude-opus-5-5` | medium |
+| `security-triage` | `gpt-6-luna` | medium | `claude-opus-5-5` | medium |
 | `security-auditor` | `gpt-6.1-sol` | high | `claude-opus-5-5` | high |
-| `browser-debugger` | `gpt-6.1-sol` | medium | `claude-sonnet-5-5` | medium |
-| `pr-shepherd` | `gpt-6.1-sol` | medium | `claude-sonnet-5-5` | medium |
+| `browser-debugger` | `gpt-6.1-sol` | medium | `claude-opus-5-5` | medium |
+| `pr-shepherd` | `gpt-6.1-sol` | medium | `claude-opus-5-5` | medium |
 
 `browser-debugger` is a named Codex agent; on Claude the lead drives the browser
-capability with Sonnet 5.5 at medium effort. Haiku 4.5 has no effort setting.
+capability with Opus 5.5 at medium effort. Haiku 5.5 uses medium effort for
+bounded lookup and straightforward docs; longer investigations escalate to Opus.
 Claude model IDs are pinned so provider aliases cannot silently change this policy.
 Runtime provider/availability overrides must be reported with the actual model.
 
 ### Why Sol 6.1 instead of Astra?
 
-As of 2026-10-04, standard API rates per million tokens for inputs up to 272K are:
+As of 2026-10-09, standard API rates per million tokens for inputs up to 272K are:
 
 | Token category | GPT-6.1 Sol | GPT-6 Astra | Astra multiplier |
 | --- | --- | --- | --- |

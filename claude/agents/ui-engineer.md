@@ -1,7 +1,7 @@
 ---
 name: ui-engineer
 description: PROACTIVELY implement user-facing UI against the Keiko Design System (docs/design-system/). React component craft, design-system token conformance, state-matrix coverage, fidelity evidence, accessible by default. Writes component code. Figma MCP only when an issue provides a design source.
-model: claude-sonnet-5-5
+model: claude-opus-5-5
 permissionMode: bypassPermissions
 maxTurns: 80
 effort: medium
