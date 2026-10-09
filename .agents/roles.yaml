@@ -13,7 +13,7 @@ reviewed: 2026-10-09
 # Standing settings; task-specific escalation is documented in docs/model-routing.md.
 lead:
   model: { codex: gpt-6.1-sol, claude: claude-opus-5-5 }
-  effort: { codex: high, claude: medium }
+  effort: { codex: high, claude: high }
 
 escalation:
   model: { codex: gpt-6.1-sol, claude: claude-fable-5-1 }
@@ -36,7 +36,7 @@ roles:
     summary: ADRs, service boundaries, dependency direction, contract decisions.
     posture: docs/adr only
     model: { codex: gpt-6.1-sol, claude: claude-opus-5-5 }
-    effort: { codex: high, claude: medium }
+    effort: { codex: high, claude: high }
 
   security-triage:
     kind: read

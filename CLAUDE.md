@@ -37,7 +37,7 @@ Never run `git push --force`, `git reset --hard`, `--no-verify`, or `rm -rf` on 
 ## Agent routing table
 
 Pinned model IDs and standing effort live in `.agents/roles.yaml` and
-`.claude/agents/`. The lead defaults to Claude Opus 5.5 / medium. See
+`.claude/agents/`. The lead defaults to Claude Opus 5.5 / high. See
 [model routing](docs/model-routing.md) for risk-based escalation and override checks.
 
 | Role | Model | Effort |
@@ -47,7 +47,7 @@ Pinned model IDs and standing effort live in `.agents/roles.yaml` and
 | `implementor` | `claude-opus-5-5` | medium |
 | `ui-engineer` | `claude-opus-5-5` | medium |
 | `developer` | `claude-opus-5-5` | high |
-| `architect` | `claude-opus-5-5` | medium |
+| `architect` | `claude-opus-5-5` | high |
 | `refactor-specialist` | `claude-opus-5-5` | high |
 | `test-engineer` | `claude-opus-5-5` | high |
 | `performance-engineer` | `claude-opus-5-5` | high |

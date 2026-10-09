@@ -180,7 +180,7 @@ Design + tradeoffs: **[docs/workflow-blueprint.md](docs/workflow-blueprint.md)**
 The standing model and effort settings are reviewed as of **2026-10-09**.
 `.agents/roles.yaml` is the canonical routing policy; the Codex and Claude role
 definitions implement it. Run `python scripts/check-routing.py` to detect drift.
-The lead defaults to **GPT-6.1 Sol / high** or **Claude Opus 5.5 / medium**.
+The lead defaults to **GPT-6.1 Sol / high** or **Claude Opus 5.5 / high**.
 
 Use GPT-6 Luna / Claude Haiku 5.5 for bounded lookup and straightforward docs;
 GPT-6.1 Sol / Claude Opus 5.5 for scoped execution; and stronger settings for
@@ -205,7 +205,7 @@ long-context pricing, older GPT alternatives, and the proposed Pareto candidates
 | `implementor` | `gpt-6.1-sol` | medium | `claude-opus-5-5` | medium |
 | `ui-engineer` | `gpt-6.1-sol` | medium | `claude-opus-5-5` | medium |
 | `developer` | `gpt-6.1-sol` | high | `claude-opus-5-5` | high |
-| `architect` | `gpt-6.1-sol` | high | `claude-opus-5-5` | medium |
+| `architect` | `gpt-6.1-sol` | high | `claude-opus-5-5` | high |
 | `refactor-specialist` | `gpt-6.1-sol` | high | `claude-opus-5-5` | high |
 | `test-engineer` | `gpt-6.1-sol` | high | `claude-opus-5-5` | high |
 | `performance-engineer` | `gpt-6.1-sol` | high | `claude-opus-5-5` | high |

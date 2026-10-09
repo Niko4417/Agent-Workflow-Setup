@@ -18,6 +18,8 @@ The measured cost-quality Pareto frontier therefore remains unknown.
   medium or high** for execution/review. Keep Sol / xhigh as targeted escalation.
   Current guidance supports these tiers; there is no task-specific evidence to
   justify reducing every high setting or increasing every role to a flagship.
+- Use **Opus 5.5 / high** for the coordinator and architect, as requested by the
+  operator; this is a quality preference rather than a measured Pareto improvement.
 - Try Opus / high, then / xhigh on a corrected, bounded hard task before Fable /
   high. **Astra remains manual-only**, even when an evaluation suggests benefit.
 
@@ -96,7 +98,7 @@ not change the listed token rate: they change usage, latency, and sometimes retr
 | Haiku 5.5 | medium for explorer/docs; low only for short extraction/classification | high for longer bounded tasks or strict instruction following | Cheap Claude worker candidate; compare high/xhigh with Opus medium before adopting |
 | GPT-6 Luna | low for lookup; medium for docs/mechanical triage | high/xhigh for harder bounded work with a clear verifier | Cheap GPT worker candidate; broad judgment still escalates to Sol |
 | GPT-6.1 Sol | medium for scoped execution; high for complex implementation/review and the lead | xhigh for a specific unresolved problem after fixing context | Default complex-work candidate; keep low as an eval candidate for genuinely tiny edits |
-| Opus 5.5 | medium for lead/scoped execution/review; high for heavy coding/security/performance | high, then xhigh for unresolved difficulty | Required replacement for former Sonnet roles; higher quality must earn higher usage |
+| Opus 5.5 | medium for scoped execution/review; high for coordinator/architect/heavy coding/security/performance | high, then xhigh for unresolved difficulty | Required replacement for former Sonnet roles; higher quality must earn higher usage |
 | Fable 5.1 | high for exceptional escalation | xhigh/max only with measured headroom | Premium long-horizon candidate after higher-effort Opus falls short |
 | GPT-6 Astra | high only when explicitly requested under this workflow | xhigh/max only with measured headroom and authorization | Premium manual candidate; never an automatic fallback |
 

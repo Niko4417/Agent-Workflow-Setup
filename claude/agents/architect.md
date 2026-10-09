@@ -5,7 +5,7 @@ model: claude-opus-5-5
 permissionMode: bypassPermissions
 tools: Read, Write, Edit, Grep, Glob, Bash, WebFetch
 maxTurns: 80
-effort: medium
+effort: high
 color: purple
 memory: project
 isolation: worktree

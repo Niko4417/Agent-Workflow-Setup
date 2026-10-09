@@ -7,7 +7,8 @@ against the README, Claude table, lead defaults, and final Claude quality hook.
 
 ## Standing policy
 
-- Lead: GPT-6.1 Sol / high, or Claude Opus 5.5 / medium.
+- Lead: GPT-6.1 Sol / high, or Claude Opus 5.5 / high.
+- Architect: GPT-6.1 Sol / high, or Claude Opus 5.5 / high.
 - Bounded lookup and straightforward docs: GPT-6 Luna (low/medium by role) or
   Claude Haiku 5.5 / medium. Haiku 5.5 supports effort; use low only for a short,
   explicit extraction/classification task, not a long agent investigation.
