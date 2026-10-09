@@ -27,7 +27,7 @@ separate from the product's own Agentic Coding runtime roles.
 - `docs/planning/agent-planning-baseline.md` — **the repository-owned Fachkonzept
   projection**; the primary restatement source for planning (global requirements +
   per-capability packets). Planning and implementation need **no** private-source
-  access — restate from this baseline. (Arriving via Native PR #7/#8.)
+  access — restate from this baseline.
 - `docs/planning/parity-baseline.md` + `docs/planning/parity-ledger.md` — capability
   inventory + inclusion/disposition (preserve / transform / retire / defer / net-new).
 - `docs/product/source-baseline.md` — private-source identity + provenance only.
@@ -67,8 +67,10 @@ every implementation epic carries a **Quality Envelope**.
 
 ## Verify command
 
+Prepare dependencies with the target's current toolchain (`npm ci --ignore-scripts`);
+`verify.sh` assumes dependency setup already succeeded. Fallback commands:
+
 ```
-npm ci --ignore-scripts
 npm run quality
 npm audit --audit-level=high
 ```
@@ -83,22 +85,20 @@ Node **24.18.x** / npm **11.16.x**; `package-lock.json` is authoritative.
 is allowed; productive code requires declared source roots + target-specific
 build/test/coverage/arch/signing/package/platform gates in the same PR.
 
-> **Phase caveat (desktop):** `npm run quality` is the **complete** green bar only
-> in `bootstrap`. Once the phase is `productive`, the local verify (`verify.sh`) must
-> **also** run the target-specific desktop gates `quality/project.json` declares —
-> native build/test, coverage, packaging, code-signing/notarization, and
-> platform-matrix checks — on their **authoritative platform** (macOS evidence can't
-> stand in for Windows). Until then, `verify.sh` only runs `npm run quality`; treat
-> the extra target gates as required-but-not-yet-wired.
+Read `quality/project.json` and the target's current `package.json` at runtime.
+In productive phases, the selected command must cover every required native gate
+and authoritative platform check; run missing accepted checks explicitly and do
+not claim complete evidence from a control-plane-only or wrong-platform run.
+The target's `quality` aggregate currently includes native gates; this profile
+must not freeze an earlier bootstrap-only command list.
 
 ## PR contract & required checks
 
 The target's `pr-contract.mjs` fixes the PR body sections. Exact-head checks
 `PR contract` and `Issue contract current` (GitHub Actions App ID `15368`) plus the
-full required set in `docs/qa/quality-gates.md` gate delivery. **Activation-pending:**
-until Native PR #6 is merged and the activation probes in `repository-activation.md`
-pass, treat these server-side contexts as not-yet-live — reference them, do not
-assume them.
+full required set in `docs/qa/quality-gates.md` gate delivery. Validate the current activation probes in `repository-activation.md` and exact-head
+GitHub state before relying on these contexts; an old planning PR number is not
+proof that a check is pending or live.
 
 ## Templates (target-owned; never copied here)
 
@@ -136,9 +136,8 @@ and `.github/pull_request_template.md`.
 ### Desktop release-acceptance dimensions (host-neutral)
 
 A desktop app fails in places a web app never does. Every user-facing epic's
-Quality Envelope must name the applicable rows below (the grill pins them). These
-are **host-neutral** — Native has not selected Electron/Tauri, so do not assume a
-host or a specific test runner; the accepted issue chooses the harness.
+Quality Envelope must name the applicable rows below (the grill pins them). Read the current host/runner decision from the target ADRs and accepted issue;
+do not infer it from this workflow or an old planning note.
 
 - **Install / packaging** — verify the shipped **installer / packaged build** on the
   reference install, not a dev build.
@@ -213,13 +212,10 @@ review`. **Reopen always returns to `new`** and requires fresh readiness.
   readiness, mismatched issue identity, unauthorized actor, or missing/unavailable
   contract — stop and surface it; do not guess the transition.
 
-> **Activation boundary (deferred to Agent-Workflow-Setup #13).** The concrete
-> **protected request/observation interface**, the **restricted non-merge agent
-> identity**, and canonical **read-back** land with Native activation (epics
-> [#49](https://github.com/oscharko-dev/Keiko-Native/issues/49) /
-> [#51](https://github.com/oscharko-dev/Keiko-Native/issues/51)). Until those are on
-> `dev`, consume the **current** operational contract and fail closed on the
-> not-yet-live interface — do not invent the request protocol.
+Read the target's **current** protected request/observation interface, restricted
+agent identity, and canonical read-back contract before lifecycle actions. Verify
+its activation evidence; fail closed on an unavailable interface. Do not invent a
+protocol or treat historical activation epic state as current authority.
 
 ## Exclusions (hard)
 

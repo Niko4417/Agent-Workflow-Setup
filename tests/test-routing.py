@@ -51,8 +51,43 @@ class RoutingTests(unittest.TestCase):
         self.assertTrue(any("explorer: README" in error for error in routing.check(self.root)))
 
     def test_catches_quality_hook_drift(self):
-        self.mutate("claude/settings.json", '"model": "claude-sonnet-5-5"', '"model": "claude-sonnet-4-6"')
+        path = self.root / "claude/settings.json"
+        config = json.loads(path.read_text(encoding="utf-8"))
+        config["hooks"]["Stop"][0]["hooks"][0]["model"] = "claude-haiku-5-5"
+        path.write_text(json.dumps(config), encoding="utf-8")
         self.assertIn("Claude quality hook differs from verifier model", routing.check(self.root))
+
+    def replace_everywhere(self, before, after):
+        for path in self.root.rglob("*"):
+            if path.is_file():
+                value = path.read_text(encoding="utf-8")
+                path.write_text(value.replace(before, after), encoding="utf-8")
+
+    def test_rejects_sonnet_even_when_all_routes_agree(self):
+        self.replace_everywhere("claude-opus-5-5", "claude-sonnet-5-5")
+        errors = routing.check(self.root)
+        self.assertIn("implementor: unsupported configured claude model", errors)
+        self.assertIn("lead: unsupported configured claude model", errors)
+        self.assertFalse(any("differs" in error for error in errors))
+
+    def test_rejects_old_haiku_even_when_all_routes_agree(self):
+        self.replace_everywhere("claude-haiku-5-5", "claude-haiku-4-5-20251001")
+        self.assertIn("explorer: unsupported configured claude model", routing.check(self.root))
+
+    def test_haiku_requires_explicit_effort(self):
+        self.mutate(".agents/roles.yaml", "effort: { codex: low, claude: medium }",
+                    "effort: { codex: low, claude: null }")
+        self.assertIn("explorer: unsupported configured claude effort", routing.check(self.root))
+
+    def test_rejects_invalid_claude_effort(self):
+        self.mutate(".agents/roles.yaml", "effort: { codex: low, claude: medium }",
+                    "effort: { codex: low, claude: ultra }")
+        self.assertIn("explorer: unsupported configured claude effort", routing.check(self.root))
+
+    def test_rejects_invalid_escalation_effort(self):
+        self.mutate(".agents/roles.yaml", "effort: { codex: xhigh, claude: high }",
+                    "effort: { codex: ultra, claude: high }")
+        self.assertIn("escalation: unsupported configured codex effort", routing.check(self.root))
 
     def test_catches_missing_quality_hook(self):
         path = self.root / "claude/settings.json"

@@ -1,23 +1,36 @@
 # Model routing
 
 Audience: the lead orchestrator and maintainers of this workflow. Reviewed on
-2026-10-04. `.agents/roles.yaml` owns standing models and effort; the harness role
+2026-10-09. `.agents/roles.yaml` owns standing models and effort; the harness role
 files implement those settings. `python scripts/check-routing.py` checks them
 against the README, Claude table, lead defaults, and final Claude quality hook.
 
 ## Standing policy
 
-- Lead: GPT-6.1 Sol / high, or Claude Opus 5.5 / medium.
-- Bounded lookup and straightforward docs: GPT-6 Luna or Claude Haiku 4.5.
-  Haiku has no effort setting. A mechanical security scan can use Luna, but
+- Lead: GPT-6.1 Sol / high, or Claude Opus 5.5 / high.
+- Architect: GPT-6.1 Sol / high, or Claude Opus 5.5 / high.
+- Bounded lookup and straightforward docs: GPT-6 Luna (low/medium by role) or
+  Claude Haiku 5.5 / medium. Haiku 5.5 supports effort; use low only for a short,
+  explicit extraction/classification task, not a long agent investigation.
+  A mechanical security scan can use Luna, but
   interpretation of auth, permissions, or exploitability belongs to the specialist.
-- Scoped implementation and browser work: GPT-6.1 Sol or Claude Sonnet 5.5 / medium.
+- Scoped implementation and browser work: GPT-6.1 Sol or Claude Opus 5.5 / medium.
 - Complex features, architecture, and review use the stronger standing settings
-  in the role table. Accessibility auditing uses Sol/Sonnet rather than Haiku.
+  in the role table. Accessibility auditing, authoritative verification, and
+  security interpretation use Sol/Opus. Every former Sonnet route uses Opus;
+  the final Claude quality hook also uses Opus.
 - Codex escalation: GPT-6.1 Sol / xhigh for a specific problem that remains
   unresolved after correcting context and scope. GPT-6 Astra / high is manual-only:
   the operator must explicitly request it; never select it automatically.
-- Claude exceptional escalation remains Fable 5.1 / high.
+- Claude escalation: Haiku 5.5 / medium → Opus 5.5 / medium → Opus 5.5 / high
+  → Opus 5.5 / xhigh for a specific unresolved difficulty. Exceptional escalation
+  remains Fable 5.1 / high after higher-effort Opus falls short.
+
+The [cost/effort assessment](model-cost-effort.md) records current prices,
+long-context thresholds, Haiku adoption boundaries, and candidate Pareto settings
+for every active model and relevant older GPT alternatives. Standing GPT routes
+remain unchanged after review; no Keiko task replay proves a cheaper setting
+meets the same quality bar. These are provisional defaults, not a measured frontier.
 
 Claude IDs are pinned; provider aliases and environment overrides can resolve to
 different versions. Check account/provider support before spawning. Availability
@@ -44,6 +57,8 @@ security audit. API prices do not measure subscription quota consumption.
    Require reproducible findings independent of the implementer's summary.
 5. Capture requested and actual model, effort, role, sandbox, escalation reason,
    elapsed time, retry count, and verification outcome in delivery evidence.
+   Include billed uncached input, cache reads/writes, output including reasoning,
+   and tool fees when comparing costs; record subscription usage separately.
    Keep raw transcripts local; exclude credentials, secrets, and private source.
 
 ## Runtime validation
@@ -109,11 +124,14 @@ test is not evidence of a quality advantage or authorization for routine use.
   positions Sol 6.1 for balanced complex coding and Luna for focused workloads.
 - [Claude model overview](https://platform.claude.com/docs/en/models/overview)
   and [effort guidance](https://platform.claude.com/docs/en/build-with-claude/effort)
-  document model IDs and recommend Sonnet 5.5 / medium for well-specified agentic
-  coding. Opus 5.5 defaults to medium. Effort scales differ across models.
-- [Sonnet 5.5 evaluation](https://www.anthropic.com/claude-sonnet-5-5) shows
-  task-dependent rankings. Vendor scores, harnesses, and effort levels differ;
-  they do not establish a same-harness winner against Sol 6.1 for Keiko.
+  document model IDs and effort support. Opus 5.5 and Haiku 5.5 default to medium.
+  Effort scales differ across models; equal labels are not equal compute budgets.
+- [Haiku 5.5 overview](https://platform.claude.com/docs/en/models/haiku-5-5/overview)
+  supports bounded extraction/routing/subagent work and documents the 100K prompt
+  price threshold. Low effort can skip checks in long agent prompts; start at medium.
+- [Opus 5.5 overview](https://platform.claude.com/docs/en/models/opus-5-5/overview)
+  positions it for long-running coding and knowledge work. Vendor scores do not
+  establish a same-harness winner against Sol 6.1 for Keiko.
 - [RouteLLM](https://arxiv.org/abs/2406.18665) supports quality/cost-aware selection,
   but its experiments are not Keiko coding-agent evaluations. Start with rules.
 - [Scaling Agent Systems](https://arxiv.org/abs/2512.08296) finds that coordination

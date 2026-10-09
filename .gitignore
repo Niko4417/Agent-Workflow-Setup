@@ -20,3 +20,6 @@ codex/pre-pr-report.json
 
 # Python validation caches
 __pycache__/
+
+# Isolated maintenance/lint environments
+work/

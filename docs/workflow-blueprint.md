@@ -1,13 +1,10 @@
 # Keiko Agent Workflow — Optimal Setup Blueprint
 
-> **Status:** Draft for review. This is a design spec, not yet implemented.
-> It defines the target state for the Keiko agent workflow, built on the
-> `Downloads/setUp` folder (the running `.claude` + `.codex` platform) as the
-> base, with the strongest ideas from `project.md` folded in and every conflict
-> resolved.
->
-> Nothing in the live `.claude/` or `.codex/` setup changes until this document
-> is approved.
+> **Status: historical design record.** This captures the original plan and its
+> tradeoffs; implementation has since changed. For current behavior, read
+> [AGENTS.md](../AGENTS.md), [the workflow contract](workflow-contract.md), the
+> selected profile, and [routing policy](model-routing.md). Historical role counts,
+> commands, open questions, and work items below are not operating instructions.
 
 ---
 
@@ -37,7 +34,7 @@ survives.
 | 5   | **Tool-neutral memory tree keyed by canonical role**, read+written by both harnesses on the machine. **Local-only (git-ignored, <25 KB per role) — never committed** (user directive); per-issue exploration dumps are ephemeral scratch.                                                                                                                                                                               | Per-machine, not shared across collaborators/CI; must agree one memory format.                                                 |
 | 6   | **GitHub delivery board = single durable status source of truth.** No `.orchestrator/` state store. Activation discipline read off board states.                                                                                                                                                                                                                                                                        | More GitHub API chatter; no separate local state machine.                                                                      |
 | 7   | **Fat harness-native docs** (`CLAUDE.md`, `AGENTS.md`, `RUNBOOK.md` stay self-contained for compaction resilience).                                                                                                                                                                                                                                                                                                     | Policy duplicated ~3×; mitigated by a shared "policy block" + sync checklist.                                                  |
-| 8   | **Keep the automated completion judge (Stop-hook)** but run it on a strong model (Sonnet / gpt-5.4-class, **not** Haiku) with a **hard loop cap** (≤2 re-loops → escalate). Port the same gate to Codex.                                                                                                                                                                                                                | Small judge cost vs. catching weak/incomplete work; cap removes infinite-loop risk.                                            |
+| 8   | **Keep the automated completion judge (Stop-hook)** but run it on a strong model (Opus 5.5 / GPT-6.1 Sol, **not** Haiku) with a **hard loop cap** (≤2 re-loops → escalate). Port the same gate to Codex.                                                                                                                                                                                                                | Small judge cost vs. catching weak/incomplete work; cap removes infinite-loop risk.                                            |
 | 9   | **Full agent access + server-side guardrails.** Keep agents full-access for velocity; make the dangerous outcome impossible at GitHub: protected `dev` (PR-only, green-CI, human review), irreversible-op deny-list, secret-scan pre-commit.                                                                                                                                                                            | Velocity over per-action prompts; safety enforced where it matters (the `dev` boundary), not per-keystroke.                    |
 | 10  | **The lead session is always the orchestrator.** Never spawn a sub-coordinator. Codex's `coordinator.toml` becomes the lead's operating instructions, not a spawnable agent.                                                                                                                                                                                                                                            | The user-facing layer cannot be parallelized.                                                                                  |
 | 11  | **Continuous flush + on-demand deep handoff.** The orchestrator's regular status update writes "current state + next action" to the active issue/PR, so GitHub is always resume-ready; `/handoff` for deliberate switches.                                                                                                                                                                                              | Discipline of flushing state, vs. losing the last slice of in-flight reasoning on abrupt exits.                                |
@@ -323,5 +320,5 @@ Harness-specific names that resolve to a canonical role:
 
 ---
 
-_End of blueprint. Review, mark up, and approve before any change lands in
+_End of historical blueprint. Original review note: approve before any change lands in
 `.claude/` or `.codex/`._

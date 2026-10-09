@@ -3,7 +3,11 @@
 Audience: Claude Code (lead session and every spawned agent).
 Scope: this file loads at session start and after every `/compact`. It is the load-bearing context that survives compaction.
 
-**@AGENTS.md is the binding contract** (imported here, on every surface): delivery gates (`dev` is sacred, Definition-of-Ready), orchestration, escalation, memory, research/tooling, and the delivery/language/artifact standard. Do not restate those rules here — where both files touch a rule, AGENTS.md governs. This file is the **Claude-side layer** on top: the coordinator loop, the model-tiered routing table, team templates, the quality bar, and Claude-specific mechanics not in the shared contract.
+@AGENTS.md
+
+The shared contract above owns quality, delivery, memory, and orchestration rules.
+This file adds Claude's coordinator mechanics and routing. Procedures live in the
+matching skills; load the selected profile and task-relevant references on demand.
 
 ## Coordinator role (lead session)
 
@@ -13,51 +17,45 @@ You are the coordinator and the sole user-facing orchestrator. You do not edit c
 
 0. **Definition-of-Ready + claim** — pass the DoR gate (@AGENTS.md) and claim the issue as your lock (see "Claiming an issue" below) before doing anything else.
 1. Read the task, derive scope, write the spec.
-2. Wait for approval before delegating implementation.
+2. Delegate within the selected issue/spec and existing user authorization. Ask only for unresolved product/scope decisions or actions outside that authority.
 3. Spawn the right teammate (see routing table below).
 4. Verify each teammate's evidence against acceptance criteria before the next wave.
-5. Commit only when the user asks. Target branch is `dev`. Use conventional commits with issue number.
+5. Commit and open the PR within the authorized delivery workflow. The active profile/accepted issue determines the source and target branches; every merge into `dev` remains human-gated.
 
 (Heartbeat, the Definition-of-Ready principle, and `dev`-is-sacred are in @AGENTS.md. The Keiko-specific extensions below are what this file adds on top.)
 
 **Claiming an issue (cross-agent lock):** before starting, confirm it is unassigned or already the operator's (`gh issue view <N> --json assignees`); if it has another assignee, skip and report. To start, claim it: `gh issue edit <N> --add-assignee @me`.
 
-**`dev` is sacred:** the only auto-merge is `issue → epic-branch`, and every merge
-into `dev` requires human review and green CI — in **every** profile. The exact
-auto-merge conditions are **profile-provided** ([`profiles/`](profiles/README.md)).
-_keiko-web_: a completed successful exact-head GitHub `ci` check plus matching
-SHA-bound verify/audit evidence; a user-facing child additionally needs a green
-`ui-verify-receipt` and a posted `keiko:manual-test-plan` comment. _keiko-native_:
-merge only by the target's dedicated automation identity into the epic branch the
-accepted issue names, with all required exact-head gates green and acceptance/audit
-evidence complete.
+For branch, merge, and evidence details, read the [selected profile](profiles/README.md)
+and [workflow contract](docs/workflow-contract.md). Child execution stays AFK under
+that profile's authority; a new approval ceremony is not part of the child loop.
 
 Never run `git push --force`, `git reset --hard`, `--no-verify`, or `rm -rf` on shared paths without explicit confirmation.
 
 ## Agent routing table
 
 Pinned model IDs and standing effort live in `.agents/roles.yaml` and
-`.claude/agents/`. The lead defaults to Claude Opus 5.5 / medium. See
+`.claude/agents/`. The lead defaults to Claude Opus 5.5 / high. See
 [model routing](docs/model-routing.md) for risk-based escalation and override checks.
 
 | Role | Model | Effort |
 | --- | --- | --- |
-| `explorer` | `claude-haiku-4-5-20251001` | n/a |
-| `docs` | `claude-haiku-4-5-20251001` | n/a |
-| `implementor` | `claude-sonnet-5-5` | medium |
-| `ui-engineer` | `claude-sonnet-5-5` | medium |
+| `explorer` | `claude-haiku-5-5` | medium |
+| `docs` | `claude-haiku-5-5` | medium |
+| `implementor` | `claude-opus-5-5` | medium |
+| `ui-engineer` | `claude-opus-5-5` | medium |
 | `developer` | `claude-opus-5-5` | high |
-| `architect` | `claude-opus-5-5` | medium |
-| `refactor-specialist` | `claude-sonnet-5-5` | high |
-| `test-engineer` | `claude-sonnet-5-5` | high |
-| `performance-engineer` | `claude-sonnet-5-5` | high |
+| `architect` | `claude-opus-5-5` | high |
+| `refactor-specialist` | `claude-opus-5-5` | high |
+| `test-engineer` | `claude-opus-5-5` | high |
+| `performance-engineer` | `claude-opus-5-5` | high |
 | `pr-reviewer` | `claude-opus-5-5` | medium |
-| `verifier` | `claude-sonnet-5-5` | medium |
-| `a11y-auditor` | `claude-sonnet-5-5` | medium |
-| `security-triage` | `claude-sonnet-5-5` | medium |
+| `verifier` | `claude-opus-5-5` | medium |
+| `a11y-auditor` | `claude-opus-5-5` | medium |
+| `security-triage` | `claude-opus-5-5` | medium |
 | `security-auditor` | `claude-opus-5-5` | high |
-| `browser-debugger` | `claude-sonnet-5-5` | medium |
-| `pr-shepherd` | `claude-sonnet-5-5` | medium |
+| `browser-debugger` | `claude-opus-5-5` | medium |
+| `pr-shepherd` | `claude-opus-5-5` | medium |
 
 `browser-debugger` is a lead-driven browser capability on Claude, not a named subagent.
 
@@ -67,31 +65,12 @@ When a task spans multiple layers and the workers are independent, use an agent 
 - [feature-team](.claude/teams/feature-team.md) — cross-layer feature delivery (developer + test-engineer + ui-engineer, strict file ownership).
 - [debug-team](.claude/teams/debug-team.md) — adversarial root-cause analysis (3× explorer with competing hypotheses).
 
-## Quality bar (hard rules)
+## Quality, self-review, and memory
 
-- TypeScript strict mode. No `any`. Use `unknown` with narrowing.
-- Cyclomatic complexity ≤ 10 per function. Function ≤ 50 LOC. File ≤ 400 LOC.
-- Edge cases explicit: null, undefined, empty, zero, boundary, concurrent, error path.
-- Error handling at system boundaries only (user input, external API, filesystem). No defensive try/catch in internal code.
-- Tests are mutation-robust: a single-line mutation in the implementation must be caught.
-- React: stable keys, correct hook dependencies, Server Components by default.
-- Next.js: Route Handlers and Server Actions have authz; no secrets in Client Components.
-- User-facing UI evidence follows the **active profile's evidence model** ([`profiles/`](profiles/README.md)). _keiko-web_: conform to the Keiko Design System (`docs/design-system/`) — Tier-2/3/4 semantic/component tokens only (no raw Tier-1 primitives or hex), full `state-matrix.md` coverage, `governance.md` change-rules, and fidelity + a11y evidence under `docs/design-system/evidence/<N>/` (ADR-0049/0050/0051). _keiko-native_: satisfy the issue's **Acceptance Journey** with machine-evaluated automated/a11y/visual/recovery/platform evidence generated anew (no design system yet; see `docs/planning/native-design-baseline.md`).
-- No comments explaining WHAT — only WHY when non-obvious.
-- Conventional commits with issue number: `feat: ... (#123)`.
-
-## Self-critique is mandatory
-
-Every agent runs a 2-pass adversarial self-critique before reporting done. The protocol is in each agent's definition under `.claude/agents/`. Skipping is forbidden.
-
-## Memory protocol
-
-The memory rule (read before / update after, no secrets) is in @AGENTS.md. Claude-side specifics:
-
-- Agent memory `.agents/memory/<role>/MEMORY.md` — keyed by the 16 canonical roles (`.agents/roles.yaml`), curated under 25 KB, shared with Codex.
-- Shared memory `.agents/memory/_shared/` — cross-cutting findings for multiple roles (see [memory/README.md](.agents/memory/README.md) for the eligibility rule).
-- High-signal entries only: codepaths, gotchas, patterns. No session logs, no "I searched the repo".
-- **Read-only teammates don't write memory** — they return a memory candidate to you (the lead); you record durable ones from a write-enabled context.
+Use the imported shared contract's quality and two-pass self-review protocol;
+role definitions add domain checks. Read `.agents/memory/README.md` before recording
+lessons. Read-only teammates return candidates to the lead. Claude auto-memory is
+not enabled per agent: both harnesses use the one local `.agents/memory/` store.
 
 ## Escalate immediately (do not silently work around)
 
@@ -103,11 +82,8 @@ The memory rule (read before / update after, no secrets) is in @AGENTS.md. Claud
 - Scope exceeds estimate by > 2×.
 - A teammate proposes a destructive operation outside the requested scope.
 
-## Anti-patterns (never do)
+## Hook recovery
 
-- Never write feature code as the coordinator. Delegate.
-- Never bypass quality gates (`--no-verify`, `--skip-tests`, force-push).
-- Never commit secrets, customer data, `.env`, or generated caches.
-- Never add features, refactors, or abstractions beyond the approved spec.
-- Never amend a commit when a hook failed — fix root cause, create a new commit.
-- Never mark a task complete without evidence (file:line, command output).
+When a commit hook fails, fix the root cause and create a new commit; do not amend
+a failed commit or bypass the hook. Report unavailable gates rather than treating
+a reminder/Stop prompt as deterministic verification.

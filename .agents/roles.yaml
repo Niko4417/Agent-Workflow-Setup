@@ -8,12 +8,12 @@
 # instructions, never a spawnable agent (single-orchestrator contract).
 
 version: 2
-reviewed: 2026-10-04
+reviewed: 2026-10-09
 
 # Standing settings; task-specific escalation is documented in docs/model-routing.md.
 lead:
   model: { codex: gpt-6.1-sol, claude: claude-opus-5-5 }
-  effort: { codex: high, claude: medium }
+  effort: { codex: high, claude: high }
 
 escalation:
   model: { codex: gpt-6.1-sol, claude: claude-fable-5-1 }
@@ -28,15 +28,15 @@ roles:
     summary: >
       Internal code mapping AND external doc/API/version grounding (Context7/web).
     posture: read-only
-    model: { codex: gpt-6-luna, claude: claude-haiku-4-5-20251001 }
-    effort: { codex: low, claude: null }
+    model: { codex: gpt-6-luna, claude: claude-haiku-5-5 }
+    effort: { codex: low, claude: medium }
 
   architect:
     kind: read
     summary: ADRs, service boundaries, dependency direction, contract decisions.
     posture: docs/adr only
     model: { codex: gpt-6.1-sol, claude: claude-opus-5-5 }
-    effort: { codex: high, claude: medium }
+    effort: { codex: high, claude: high }
 
   security-triage:
     kind: read
@@ -44,7 +44,7 @@ roles:
       Fast first-pass scan: OWASP grep, dangerous primitives, secret leaks,
       missing authz. Escalates to security-auditor.
     posture: read-only
-    model: { codex: gpt-6-luna, claude: claude-sonnet-5-5 }
+    model: { codex: gpt-6-luna, claude: claude-opus-5-5 }
     effort: { codex: medium, claude: medium }
 
   security-auditor:
@@ -60,14 +60,14 @@ roles:
     kind: read
     summary: LCP/INP/CLS, bundle, N+1, hot paths, large-data behavior.
     posture: read-only
-    model: { codex: gpt-6.1-sol, claude: claude-sonnet-5-5 }
+    model: { codex: gpt-6.1-sol, claude: claude-opus-5-5 }
     effort: { codex: high, claude: high }
 
   a11y-auditor:
     kind: read
     summary: WCAG 2.2 AA review.
     posture: read-only
-    model: { codex: gpt-6.1-sol, claude: claude-sonnet-5-5 }
+    model: { codex: gpt-6.1-sol, claude: claude-opus-5-5 }
     effort: { codex: medium, claude: medium }
 
   verifier:
@@ -75,7 +75,7 @@ roles:
     summary: >
       Acceptance-criteria verification + automated evidence capture for the PR.
     posture: read-only
-    model: { codex: gpt-6.1-sol, claude: claude-sonnet-5-5 }
+    model: { codex: gpt-6.1-sol, claude: claude-opus-5-5 }
     effort: { codex: medium, claude: medium }
 
   pr-reviewer:
@@ -92,7 +92,7 @@ roles:
       on Claude it is a capability (lead/agent driving Playwright or Chrome MCP),
       not a named sub-agent.
     posture: reproduction
-    model: { codex: gpt-6.1-sol, claude: claude-sonnet-5-5 }
+    model: { codex: gpt-6.1-sol, claude: claude-opus-5-5 }
     effort: { codex: medium, claude: medium }
 
   # ---- write ----
@@ -109,30 +109,30 @@ roles:
       Scoped minimal-diff worker; precise definition of done; no planning,
       no delegation.
     posture: full
-    model: { codex: gpt-6.1-sol, claude: claude-sonnet-5-5 }
+    model: { codex: gpt-6.1-sol, claude: claude-opus-5-5 }
     effort: { codex: medium, claude: medium }
 
   test-engineer:
     kind: write
     summary: Test coverage, regression harnesses, mutation-robust tests.
     posture: test files only
-    model: { codex: gpt-6.1-sol, claude: claude-sonnet-5-5 }
+    model: { codex: gpt-6.1-sol, claude: claude-opus-5-5 }
     effort: { codex: high, claude: high }
 
   ui-engineer:
     kind: write
     summary: >
-      Figma->code, component build, design-system consistency. Also small/
-      targeted UI fixes.
+      Profile-selected UI implementation, accessibility, and fresh journey evidence.
+      Figma only when an issue supplies a design source.
     posture: full
-    model: { codex: gpt-6.1-sol, claude: claude-sonnet-5-5 }
+    model: { codex: gpt-6.1-sol, claude: claude-opus-5-5 }
     effort: { codex: medium, claude: medium }
 
   refactor-specialist:
     kind: write
     summary: Behavior-preserving cleanup (complexity reduction).
     posture: full
-    model: { codex: gpt-6.1-sol, claude: claude-sonnet-5-5 }
+    model: { codex: gpt-6.1-sol, claude: claude-opus-5-5 }
     effort: { codex: high, claude: high }
 
   docs:
@@ -141,13 +141,13 @@ roles:
       Write AND maintain docs: README, API, ADR, CHANGELOG, migration/
       troubleshooting notes, link-aware maintenance.
     posture: docs only
-    model: { codex: gpt-6-luna, claude: claude-haiku-4-5-20251001 }
-    effort: { codex: medium, claude: null }
+    model: { codex: gpt-6-luna, claude: claude-haiku-5-5 }
+    effort: { codex: medium, claude: medium }
 
   # ---- drive ----
   pr-shepherd:
     kind: drive
-    summary: Drive an open PR to merge-ready; delegates fixes to implementor.
+    summary: Prepare an open PR for review; returns complex fix scopes to the lead.
     posture: full
-    model: { codex: gpt-6.1-sol, claude: claude-sonnet-5-5 }
+    model: { codex: gpt-6.1-sol, claude: claude-opus-5-5 }
     effort: { codex: medium, claude: medium }

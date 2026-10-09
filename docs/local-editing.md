@@ -6,7 +6,10 @@ Installed target repos (Keiko, Keiko Native) reach this repo through **live syml
 on disk. So if you check out a feature branch in the primary checkout, every live
 session immediately reads your **work-in-progress** skills and gates.
 
-Two rules keep live sessions pinned to merged `main`:
+The two rules below apply to a live web integration. Native uses a separate
+immutable checkout; see [pinning](#pinning-an-optional-native-integration).
+
+Two rules keep live sessions on merged `main`:
 
 ## 1. Never edit in the primary checkout — use a worktree
 
@@ -37,3 +40,12 @@ To force it now: `git -C <primary-checkout> pull --ff-only origin main`.
 The symlink model gives instant propagation (edit here, live everywhere) — the trade-off
 is that "here" must always be merged `main`, never a WIP branch. The worktree flow plus
 session-start self-update makes "live = merged `main`" hold automatically.
+
+## Pinning an optional Native integration
+
+Native requires an immutable workflow reference. Install from a separate clean
+checkout at the reviewed commit (`git checkout --detach <reviewed-commit>`), record
+that SHA in the integration reference, and leave it detached. `self-update.sh`
+updates only clean `main`, so this checkout does not auto-update. Review and move
+the pin explicitly when adopting a newer release. The installer does not enforce
+this pin and should not be pointed at a mutable development checkout for Native.

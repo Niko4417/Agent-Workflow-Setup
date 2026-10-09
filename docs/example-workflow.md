@@ -14,8 +14,8 @@ You can drive it two ways — both end up running the same skill:
 
 **You do not need to ask for the audit or the gates.** `keiko-issue` / `keiko-epic`
 invoke `keiko-issue-audit` themselves, and a set of **PreToolUse gates** enforce
-quality on the agent's own `gh` / `git` commands — an agent can't open, ready,
-merge, or repush around them:
+quality on recognized `gh` / `git` commands — the configured hooks check open, ready,
+merge, or repush through the recognized commands without matching evidence:
 
 - **`verify-gate`** blocks a PR unless `verify.sh` (CI mirror) passed **green** at HEAD.
 - **`audit-gate`** blocks a PR unless the audit ran **and is clean** (`findings=0`,
@@ -43,6 +43,10 @@ Use keiko-grill-epic to turn this into a ready epic: <your rough feature idea>.
 
 ---
 
+The examples below use the web profile. Native uses its accepted Execution
+Authority, lifecycle interface, canonical gates, and native Acceptance Journey
+harness; do not copy web branch, board, or Playwright policy into a Native issue.
+
 ## A. Work a single issue
 
 **Prompt:**
@@ -69,12 +73,12 @@ keiko-issue 178
   then `implementor` (small) or `developer` (needs design); adds `security-*`,
   `performance-engineer`, `a11y-auditor`, `test-engineer` only if the changed
   surface warrants it.
-- **Implement.** Branch `issue/178-<short>` off `dev`; quality bars enforced
+- **Implement.** On the claimed `issue/178-<short>` branch off `dev`, apply quality bars
   (no `any`, complexity ≤10, TDD); each agent runs a 2-pass self-critique.
 - **Verify + audit.** `verify.sh` (local CI mirror) must be green; then
   **`keiko-issue-audit 178`** runs the read-first audit wave — mandatory even if
   it finds nothing.
-- **Ship.** `verifier` fills the PR's evidence section; PR opens targeting `dev`;
+- **Ship.** The lead publishes `verifier`'s proposed evidence section; PR opens targeting `dev`;
   `pr-shepherd` drives CI/review to merge-ready.
 - **Hand off.** Sets `Ready for Human Review`. **Stops there** — a human merges to
   `dev`. Nothing auto-merges into `dev`.
@@ -145,7 +149,7 @@ keiko-issue-audit 178      ← invoked directly (not wrapped by keiko-issue)
 - Read-first wave (`explorer` / `architect` / `security` / `pr-reviewer`) audits
   the implementation against the acceptance criteria.
 - Only **evidence-cited** findings become fix slices (`implementor` / `developer`
-  - `test-engineer`); speculative findings never block.
+  + `test-engineer`); speculative findings never block.
 - Ends with `verifier` + a green PR per the sacred-`dev` rule.
 
 ---

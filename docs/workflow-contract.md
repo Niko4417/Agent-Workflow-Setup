@@ -1,206 +1,145 @@
 # Agent Workflow Contract (tool-neutral)
 
-The single, harness-neutral governance contract. The fat harness docs
-(`claude/CLAUDE.md`, `codex/AGENTS.md`, `codex/RUNBOOK.md`) carry the
-compaction-critical essentials inline; this file is the full reference both
-point back to.
+The shared delivery reference for target-product work. [AGENTS.md](../AGENTS.md)
+carries the always-on contract; [CLAUDE.md](../CLAUDE.md) adds Claude mechanics and
+[Codex RUNBOOK](../codex/RUNBOOK.md) adds Codex operation. The five skills contain
+executable procedures. Select [one product profile](../profiles/README.md) before
+product work; target-owned contracts govern requirements, readiness, branches,
+checks, and evidence. Web examples below are not Native policy.
 
-> Target repo: any repo that uses this setup, selected via a **product profile**
-> ([`profiles/`](../profiles/README.md)). The concrete product values in this
-> contract — Definition of Ready, verify command, evidence model, branch/merge
-> authority, templates, labels — are the **keiko-web** profile defaults; the
-> **active profile overrides them**. Select the profile first (skill Step 0) and
-> load only that one file. Default integration branch: **`dev`** (a profile may
-> freeze a different target).
+## Roles and authorization
 
----
+- The human selects work and settles unresolved product/scope/risk decisions.
+- The lead is the sole orchestrator: plan, route, integrate, maintain GitHub state,
+  and gate delivery. Never spawn a sub-coordinator.
+- Workers own bounded tasks with explicit file scopes, evidence, dependencies,
+  and stop conditions. Return findings to the lead; do not expand scope, file
+  issues, contact the human, or recursively delegate.
 
-## Roles
+Use the smallest effective shape: single-agent for tiny work; independent read
+reviews or disjoint writers when they materially help. The accepted issue/spec and
+user instruction authorize in-scope delivery; do not insert repeated approval
+steps into an approved child loop. Missing authority, acceptance, or a material
+scope decision is a blocker to surface immediately.
 
-- **Human operator** — selects one epic / issue / finding, talks **only** to the
-  orchestrator, is interrupted only for true blockers after recovery attempts.
-- **Orchestrator = the lead session** — the sole user-facing agent. Plans,
-  decomposes, routes, delegates, integrates, relays status, files follow-up
-  issues, gates PRs. **Never spawns a sub-coordinator.**
-- **Worktree / role agents** — execute one issue each. Never expand scope, never
-  contact the human, never file issues directly. Report status, completion, and
-  blockers upward. (Canonical roles: see `.agents/roles.yaml`.)
+## Branching and delivery
 
-## Delegation (task-shaped)
+Web: `epic/<name>` off `dev`, children `issue/<id>-<name>` off their epic branch,
+standalone issues off `dev`. Native: source branch and frozen delivery target come
+from the accepted Execution Authority; merge-capable operations belong to the
+profile's dedicated automation identity. Validate isolated worker bases before
+writes, since a temporary worktree may start from the default branch.
 
-Default to the **smallest effective shape**. Single-agent for small/one-file
-work; cluster (explorer -> writer -> verifier, or a team) for multi-module,
-epic, security, or UI work. Route by issue `type`/`area` labels. Read-heavy
-fan-out first; only disjoint write scopes in parallel.
+Every issue ships through a PR. The only autonomous merge is child → its accepted
+epic branch after all applicable evidence is green. Children execute AFK; missing
+proof triggers repair or escalation, not a per-child human-review ceremony. Every
+merge into `dev` (standalone or epic) requires human review and green required CI;
+agents never merge or enable auto-merge into `dev`.
 
-## Branching & delivery
-
-- Branch names are **tool-neutral**: `issue/<id>-<name>`, `epic/<name>`, base `dev`.
-  (Both harnesses continue the _same_ branch for one issue; git author metadata
-  gives provenance.)
-- **Every issue gets a PR.** The merge gate depends on the PR's **target branch**
-  and whether the issue is **user-facing** (touches user-facing UI / needs
-  design-system evidence):
-  - **-> `dev`** (any issue): green GitHub CI **+ human review** — always, no
-    exceptions (sacred `dev`).
-  - **-> `epic/*`, non-user-facing**: completed successful GitHub `ci` on the exact
-    PR head plus a matching clean `keiko-issue-audit` is required — **auto-merge**,
-    no human. The orchestrator drives the audit
-    clean — fix findings and re-audit in a loop until `findings=0`, bounded by the
-    3-attempt escalation rule (else escalate, do not merge).
-  - **-> `epic/*`, user-facing**: drive the audit clean the same way (loop to
-    `findings=0`, bounded), then **Playwright-verify** the change: write a
-    Playwright-reviewable test plan (`do X → expect Y`), post it as a **PR comment**
-    marked `<!-- keiko:manual-test-plan sha=<HEAD> -->` (SHA-bound documentation,
-    gate-checked; repost on any fix), and run
-    it via `ui-verify-receipt.sh` (which stamps a receipt **only on a real green
-    Playwright exit** — not self-reported). **Green ui-verify receipt + comment →
-    auto-merge (AFK).** **Children run AFK — no per-child human review.** A hard
-    failure after the bounded 3 attempts → **stop and escalate** to the operator (an
-    exception, not a per-child human merge). Anything the automated journey **cannot
-    assert** (subjective visual / screen-reader judgment) auto-merges on the
-    machine-green evidence and is **carried into the epic->`dev` human review**, not
-    reviewed per child.
-- **`dev` is sacred**: every merge into `dev` (epic or standalone) requires a
-  **human reviewer + green CI**.
-- Epic model: long-lived `epic/<name>` off `dev`; child `issue/...` off the epic
-  branch; final epic PR -> `dev` is the human-gated handoff (full CI + human).
-  Every child→epic merge requires both server-side exact-head GitHub `ci` and the
-  matching local verify/audit receipts. \*\*The epic->`dev` PR only
-  opens after `dev` is rebased into the epic and the integrated surface passes,
-  at HEAD, the full local set — green verify, audit `findings=0`, and (user-facing)
-  a green ui-verify Playwright run (`audit-gate` enforces a clean audit: findings=0
-  - ui-verify; `verify-gate` enforces verify). Then GitHub CI must go green before
-    human review.\*\*
+Before the final epic PR, integrate the latest accepted base and verify the whole
+production composition and accepted journeys at that new HEAD. If HEAD changes,
+refresh the evidence. After human merge, inspect the new integration baseline and
+record post-merge results before claiming closure.
 
 ## Issue lifecycle
 
-1. **Intake (Definition-of-Ready gate).** The issue must have acceptance criteria
-   - a verification command. If missing -> triage first, do not start. Acceptance
-     criteria + verification together cover the relevant **test dimensions**:
-     happy path, important negative paths, accessibility + design-system fidelity,
-     security / governance, and integration behavior.
-     **Collision check:** do not pick an issue that already has a GitHub assignee
-     other than the operator — it is being worked. Skip it and report.
-2. **Route.** Pick execution shape by labels.
-3. **Branch + claim.** Claiming is mandatory before implementation:
-   `gh issue edit <N> --add-assignee @me` (assign the operator), set the board
-   `status: in progress`, owner, and branch. No assignee = not claimed.
-4. **Implement.** Measurable bars: complexity <=10, function <=50 LOC,
-   file <=400 LOC, no `any`, TDD. Mandatory 2-pass self-critique before "done".
-   **User-facing components** additionally conform to the Keiko Design System
-   (`docs/design-system/`): semantic/component tokens only (no raw Tier-1
-   primitives or hex literals), full `state-matrix.md` coverage, `governance.md`
-   change-rules.
-5. **Verify (pre-PR-ready gate).** `npm run verify` (full CI mirror) must be green
-   locally. Before an issue can be considered PR-ready / `Ready for Human Review`,
-   run the `keiko-issue-audit` skill as a final issue-scoped audit pass. Verifier
-   auto-fills the PR template with evidence. **A user-facing-component change is
-   not verified until its design-system fidelity + a11y evidence is captured under
-   `docs/design-system/evidence/<N>/` (ADR-0049/0050/0051).**
-6. **PR.** `issue -> epic` requires exact-head GitHub `ci` plus matching SHA-bound
-   local verify/audit evidence (UI adds its Playwright receipt and plan comment);
-   any `-> dev` waits for a human + green CI.
-7. **Completion judge.** Strong-model gate vs acceptance criteria; <=2 re-loops
-   then escalate.
-8. **Flush + report.** Orchestrator writes current state + next action to the
-   issue/PR (continuous-flush) so any harness can resume. On completion, record
-   **closure evidence** on the issue/PR: acceptance status, verification results,
-   audit outcome, reuse / extension / generalization notes, known limitations,
-   PR link / branch, and follow-up items.
+1. **Intake:** load the accepted issue and selected profile's readiness contract.
+   Web requires acceptance criteria plus a verification command. Native requires
+   current machine-validated readiness and its Execution Authority / Quality Plan;
+   a ready label or board field alone is insufficient. Respect another assignee.
+2. **Claim and branch:** assign the operator before implementation; use the
+   target-owned lifecycle interface. Native derived labels/board fields are
+   projections, never manually granted execution authority.
+3. **Implement:** keep accepted scope and shared quality bars. For bugs, execute
+   the reported symptom before fixing and rerun it afterward. Map accepted
+   behaviors to public test seams and their catches/misses in the existing plan.
+4. **Verify and audit:** commit fixes, run the canonical verify command and the
+   issue-scoped `keiko-issue-audit`, then record exact-head receipts. Separate
+   accepted-requirement gaps from repository-standard violations; only confirmed,
+   cited defects block. Required UI/platform evidence must actually run.
+5. **PR and handoff:** fill the target template with actual evidence. User-facing
+   PRs open draft, receive the current SHA-bound journey-plan comment, then become
+   ready. Child PRs continue to machine-gated integration; `dev` PRs hand off for
+   human review after required CI is green.
+6. **Report and close:** flush current state + next action to the issue/PR at each
+   milestone. Close only after merge and the target's completion predicates hold;
+   readiness for human review alone is not completion. Record acceptance results,
+   commands/checks, audit, limitations, PR/commit, and follow-ups.
 
-## Out-of-scope blockers
+Use [keiko-issue](../claude/skills/keiko-issue/SKILL.md) for the full single-issue
+procedure and [keiko-epic](../claude/skills/keiko-epic/SKILL.md) for child ordering,
+integration, and final handoff.
 
-- Worktree agent reports the blocker upward with a proposed title/scope —
-  **never** expands scope or files directly.
-- Orchestrator dedups against open issues -> files via the issue template ->
-  labels `status: new` -> links to the current issue.
-- Classify: **hard blocker** (mark current issue `status: blocked`, file the
-  dependency, prioritize or escalate per the 3-attempt rule) vs **finding**
-  (file, continue in-scope).
+## Verification and gate stack
 
-## Escalation
+`verify-receipt.sh <N>` invokes `verify.sh`: prefer the target's `agent:pre-pr`
+exactly once; otherwise Native `quality` + audit, web `codex:pre-pr`, or the legacy
+CI-mirror fallback. Follow the target's current toolchain, dependency setup, and
+required platform runners. A `--fast` smoke is not a full verify receipt.
 
-A blocker becomes human-visible only after **3 materially distinct recovery
-attempts** on the same issue. Re-scoping/splitting counts toward the threshold;
-it does not reset it. Escalation summarizes: what was attempted, why each
-failed, why further autonomous recovery is unlikely.
+| Gate | Evidence checked / scope |
+| --- | --- |
+| `verify-gate.sh` | Green verify receipt at HEAD for PR create/ready on `issue/*` / `epic/*` |
+| `audit-gate.sh` | Audit at HEAD with known `findings=0`, known UI applicability, and green UI receipt when required |
+| `ready-gate.sh` | Current `<!-- keiko:manual-test-plan sha=<HEAD> -->` comment before readying user-facing `dev` PRs |
+| `push-gate.sh` | Fresh verify/audit/UI receipts and current plan comment for fix repushes to open `dev` PRs |
+| `epic-merge-gate.sh` | Exact PR-head completed successful GitHub `ci`, matching verify/clean-audit/UI evidence, current plan; rejects protected-base agent merges |
 
-## Quality gate stack
+Receipt writers are explicit workflow steps; hooks check them, they do not create
+proof. After any fix commit, reverify/re-audit, rerun applicable UI journeys,
+repost the SHA-bound plan on an existing PR, and push. One verifier owns a SHA;
+cancel superseded runs instead of accepting stale output.
 
-1. lint-staged pre-commit (changed files: prettier + eslint + tsc) — instant.
-2. Mandatory 2-pass adversarial self-critique — per agent.
-3. **Proof-of-verify gate** — `verify-receipt.sh` runs `verify.sh` (the full CI
-   mirror) and writes a SHA-bound receipt **only when green**; a PreToolUse hook
-   blocks `gh pr create`/`gh pr ready` on `issue/*`/`epic/*` unless a green verify
-   receipt exists at HEAD. Loop verify→fix until green before the PR.
-4. **Proof-of-clean-audit gate** — `keiko-issue-audit` writes a SHA-bound receipt
-   (`.git/keiko-audit/<branch>.json`); `audit-gate.sh` (PreToolUse on
-   `gh pr create`/`ready`, `issue/*`/`epic/*`) blocks **any** PR unless, at HEAD,
-   the audit **ran and is clean**: `findings=0` **and** — when user-facing — a green
-   ui-verify receipt (the Playwright plan actually ran green via
-   `ui-verify-receipt.sh`, not self-reported). Uniform for every PR, any target;
-   with `verify-gate`, no PR opens unless verify + audit + (UI) Playwright are all
-   clean at HEAD.
-   The **epic-merge gate** (`epic-merge-gate.sh`, PreToolUse on `gh pr merge`)
-   requires a unique completed successful GitHub `ci` check, re-checks the local
-   evidence at the PR head, and accepts only `gh pr merge <N> --auto --squash
---match-head-commit <audited-sha>` (optionally `--delete-branch`) so the merge
-   API rejects a concurrent head change. It also adds the **SHA-bound** test-plan
-   comment `<!-- keiko:manual-test-plan sha=<commit> -->` (gh-checked, must name the
-   audited commit) for a user-facing auto-merge; it **always blocks** an agent merge
-   into `dev`/`main`/`release` (human-only, via the GitHub UI — the human-review
-   path). For a user-facing PR that a human merges (`-> dev`, both standalone issue
-   and epic), the same comment is enforced at the **`gh pr ready` handoff** by
-   `ready-gate.sh` (open the PR `--draft`, post the test-plan comment, then
-   `gh pr ready`), and on any fix repush by `push-gate.sh`. Because the marker is
-   SHA-bound, a fix that changes HEAD forces a **repost** — the documented plan
-   always names the exact commit. So **every** user-facing PR is documented with a
-   current Playwright plan before hand-off. Fail-closed throughout.
-   4c. **Push gate** — `push-gate.sh` (PreToolUse on `git push`) re-requires the
-   QA when a fix is pushed onto an **open PR that targets `dev`** (the CI-repair /
-   external-review-fix loop): it delegates to `verify-gate` + `audit-gate` at the
-   new HEAD, so a repush must carry fresh verify + clean-audit (+ ui-verify)
-   receipts. GitHub CI re-runs verify on each push but not the keiko audit or the
-   ui-verify plan, so this re-qualifies those. Pre-PR pushes and non-`dev` PRs
-   (e.g. child -> epic) pass through.
-5. Strong-model completion judge (Stop-hook, loop-capped <=2).
-6. CI on protected `dev` — unbypassable server-side backstop _(requires repo
-   admin to configure; see README "Server-side prerequisites")_.
+The web epic merge command is exactly `gh pr merge <N> --auto --squash
+--match-head-commit <audited-sha>` (optional `--delete-branch`). The gate rejects
+repository/content overrides, shell chaining, missing/stale evidence, and admin
+bypass. Native's accepted contract and dedicated automation remain authoritative;
+the web command is not a grant of Native merge authority.
 
-## Status & memory
+Local pre-commit hooks are target-owned (see [template snippets](../templates/README.md));
+do not assume every target installed lint-staged or a secret scan. Every agent
+performs two-pass self-review. Claude's prompt Stop judge allows one blocking
+continuation (`stop_hook_active` ends repeated blocking); it is a heuristic check,
+not a test runner. Codex's Stop hook currently logs lifecycle metadata, not an
+independent completion judge. Server-side required checks/reviews must be
+configured and verified by the target maintainer.
 
-- **GitHub delivery board** is the single durable status source of truth.
-  No local state store. Activation discipline (don't start `blocked` work) is
-  read off board states.
-- **Memory** lives at `.agents/memory/<role>/MEMORY.md`, keyed by canonical role,
-  read+written by both harnesses on the machine. It is **local-only (git-ignored,
-  <25 KB per file), never committed** — user directive; see `.gitignore` /
-  `AGENTS.md`. Audit trail = GitHub (PRs/comments/evidence); memory = learnings only.
+## Blockers and recovery
 
-## Observability
+Workers return out-of-scope blockers with evidence and a proposed follow-up scope.
+The lead deduplicates against open issues and uses the target's current template
+and lifecycle interface for any authorized follow-up. Do not expand the current
+issue to fix unrelated findings.
 
-- A live activity feed renders the harness hook logs into a per-agent stream.
-- The orchestrator posts a one-line heartbeat at each wave/milestone.
-- Desktop notifications fire on attention / done.
+Stop immediately for missing authority/acceptance, unresolved security or product
+risk, conflicting ownership, or a required secret. For a recoverable verify/audit/CI
+failure, allow at most three materially distinct attempts on the same problem,
+then escalate with attempts, failure evidence, and the next required decision.
+Re-splitting does not reset that budget. More specific role budgets may stop sooner.
 
-## Git transport
+## Status, memory, and observability
 
-SSH-first. On SSH failure, attempt local repair (agent identities, SSH config,
-key registration) before falling back to HTTPS. Do not silently normalize to
-HTTPS.
+GitHub issue/PR state is the durable delivery record; board fields are projections
+where the target lifecycle says so. No parallel local task-status store. Post a
+heartbeat at each wave/milestone and flush enough state to resume across harnesses.
 
-## Safety posture
+Memory is local-only at `.agents/memory/<role>/MEMORY.md`, under 25 KB/file. Follow
+[the memory contract](../.agents/memory/README.md): only durable lessons, no minimum
+quota, no secrets/private-source dumps/session logs. Read-only roles return
+candidates to the lead. Retros propose workflow repairs; they do not implicitly
+edit target authority. Hook logs contain lifecycle metadata, not raw tool output
+or assistant/source content.
 
-Agents run with full local access for velocity; the dangerous outcome is made
-impossible **server-side** (protected `dev`: PR-only, green CI, human review for
-`-> dev`). Local guardrails: deny-list for irreversible ops (force-push, history
-rewrite, `rm -rf` on shared paths) + secret-scan pre-commit.
+## Transport and safety
 
-## Product integrity
+Prefer SSH; inspect local agent/config/key registration on failure before a
+reported HTTPS fallback. Never expose credentials during diagnosis.
 
-- **Fail closed for trust-sensitive flows.** Never present unverifiable evidence
-  as verified; degrade to an explicit error or recovery state instead of a
-  false-confident result.
-- **Native, frictionless desktop behavior.** Desktop-facing features must behave
-  natively and without friction on both Windows and macOS.
+Agents may have full local access. Prompt rules and command hooks reduce mistakes
+but are not a filesystem/security boundary: Bash can write, and hooks cover only
+recognized paths/commands and configured events. Verify actual runtime sandboxes.
+Protected branches, required checks, and human reviews protect repository merges
+when configured; they do not make all local destructive actions impossible.
+Never bypass gates or perform destructive shared operations without explicit
+authorization. Never present missing evidence as verified; use an explicit error
+or recovery state for trust-sensitive product flows.

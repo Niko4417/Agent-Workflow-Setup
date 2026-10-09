@@ -6,11 +6,13 @@
 
 | Teammate | Subagent type | Model | Focus |
 |----------|---------------|-------|-------|
-| `sec` | `security-triage` | Sonnet | OWASP grep, secrets, dep advisories. Escalates to `security-auditor` (Opus, on-demand) only if critical/high findings. |
-| `perf` | `performance-engineer` | Sonnet | Bundle size, Core Web Vitals, N+1 queries, React re-renders |
-| `a11y` | `a11y-auditor` | Haiku | WCAG 2.2 AA checklist on changed UI |
+| `sec` | `security-triage` | Opus 5.5 | OWASP grep, secrets, dep advisories. Escalates to `security-auditor` (Opus 5.5 / high, on-demand) only if critical/high findings. |
+| `perf` | `performance-engineer` | Opus 5.5 | Bundle size, Core Web Vitals, N+1 queries, React re-renders |
+| `a11y` | `a11y-auditor` | Opus 5.5 | WCAG 2.2 AA checklist on changed UI |
 
-**Cost**: ~1× Haiku + 2× Sonnet for the parallel pass. If `sec` escalates, add one Opus deep-audit pass.
+**Cost**: 3× Opus 5.5 (security triage/a11y at medium, performance at high).
+If `sec` escalates, add an Opus 5.5 / high deep-audit pass. Skip irrelevant
+lenses; do not substitute Haiku for authoritative security or accessibility review.
 
 ## Spawn prompt
 

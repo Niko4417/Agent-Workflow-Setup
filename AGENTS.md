@@ -22,7 +22,6 @@ the ownership split.
 
 ## Delivery standard
 
-- Build production-ready, state-of-the-art solutions.
 - Keep implementations simple, maintainable, and focused on the issue scope.
 - Be creative and innovative where it improves product quality, but avoid unnecessary special cases, speculative
   abstractions, and process overhead.
@@ -43,12 +42,29 @@ the ownership split.
 - Treat `dev` as the integration target and require a green `ci` check before merge.
 - Never mark work complete without evidence (`file:line`, command output).
 
+## Quality and completion
+
+Use the active profile and target's accepted Quality Plan as the authority. For
+TypeScript code, use strict types and `unknown` with narrowing, never `any`.
+Shared defaults: complexity ≤10, functions ≤50 LOC, files ≤400 LOC; target-owned
+standards take precedence. Handle relevant boundary/error/concurrency cases.
+Keep error handling at system boundaries and comments focused on non-obvious reasons.
+Use failing behavioral tests for new behavior and bug regressions; assert public
+contracts with independent expectations rather than copying implementation logic.
+Apply React/Next.js guidance only where that stack exists; UI evidence comes from
+the selected profile, not an assumed browser harness or design system.
+
+Before reporting done, every agent performs two passes: challenge its result for
+defects, omissions, and false positives; then fix confirmed gaps or report explicit
+limitations. Role definitions add domain-specific checks. Evidence must describe
+the inspected commit and actual commands/results, including unavailable checks.
+
 ## Orchestration
 
 - The lead session is the **sole orchestrator**. Never spawn a sub-coordinator.
 - Use the smallest effective execution shape. Stay single-agent for tiny questions, narrow one-file edits, or when the
-  user explicitly asks to avoid delegation. Use the agent team for GitHub issues, PR-ready implementation, refactoring
-  sprints, audits, CI repair, release gates, or any task where parallel review materially improves quality.
+  user explicitly asks to avoid delegation. Use a team when independent execution or review materially improves
+  quality, with the profile's required audit and evidence steps preserved.
 - Start a delegated run with a short coordination plan assigning ownership, file scopes, dependencies, and stop
   conditions.
 - Prefer read-heavy fan-out first (`explorer`, `architect`, `security-auditor`, `performance-engineer`). Use write

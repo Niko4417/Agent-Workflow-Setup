@@ -18,16 +18,16 @@ is usually deleted and this may be a fresh session).
 
 ## 0. Select the product profile (before gathering)
 
-Select the product profile against the target checkout and **state it on your first
-output line**. Per [`profiles/README.md`](../../../profiles/README.md): Native
-markers (`CONTEXT.md` + `docs/planning/decision-addendum.md` + `quality/project.json`)
-→ `keiko-native`; `docs/design-system/` with Native markers absent → `keiko-web`;
-ambiguous → **stop and ask**. **Load only the selected profile.** A retro may
-**propose** workflow/harness changes but **must not implicitly edit product
-authority** — never modify a target's `AGENTS.md`, `CONTEXT.md`, ADRs, templates, or
-gates; surface those as proposals for the human. In **keiko-native**, never store,
-quote, or copy the private Fachkonzept or raw private-source content into memory or
-the report — counts, summaries, and redacted learnings only.
+Select against the target checkout using [profile selection](../../../profiles/README.md).
+State the profile on the first output line; explicit operator selection wins.
+Load only the selected profile and its task-relevant authority docs, including the
+target's `AGENTS.md` and `CONTEXT.md` when present. Take readiness, verification,
+templates, evidence, exclusions, and merge authority from it; ambiguity requires
+clarification. The accepted target contract governs product requirements.
+
+Propose workflow changes without implicitly editing target authority (`AGENTS.md`,
+`CONTEXT.md`, ADRs, templates, or gates). In Native, never copy/request the private
+Fachkonzept or raw private-source content; report summaries/redacted learnings only.
 
 ## Mode: post-merge (default) vs interrupted / pre-merge
 
@@ -64,6 +64,14 @@ Weight the reflection toward what closure evidence and per-agent memory **cannot
 Do **not** write "built X, tests passed" — that is already on the PR. Capture only what
 would change how the next epic runs.
 
+Before proposing a new guardrail, inspect existing lint rules, tests, hooks, and
+CI gates: is the needed check absent, broken, or present but unwired? For recurring
+**mechanical** failures, propose the smallest deterministic check or repair with a
+concrete failing example and its enforcement point. For **judgment** failures,
+propose concise guidance with a trigger and rationale. Prefer repairing an existing
+check over duplicating it. Record evidence, expected benefit, and false-positive
+risk; keep workflow/target-authority changes as proposals until authorized.
+
 ## 3. Distill → memory (durable, sharp, budgeted)
 
 - **Process/workflow learnings** (cross-role) → `.agents/memory/_shared/` — one tight
@@ -91,6 +99,4 @@ Reconcile what is safe (keep the current claim, drop the stale one, fix index/li
 ## Final report
 
 Epic/issue reflected · sources gathered (counts) · human-fix delta summary · durable
-learnings written (+ where) · proposed harness changes (for the human) · lint findings
-
-- reconciliations · residual questions.
+learnings written (+ where) · proposed harness changes (for the human) · lint findings + reconciliations · residual questions.

@@ -12,6 +12,11 @@ import tomllib
 
 ROOT = Path(__file__).resolve().parents[1]
 FIELDS = re.compile(r"^\s+(model|effort): \{ codex: ([\w.\-]+), claude: ([\w.\-]+) \}$", re.M)
+MODELS = {
+    "codex": {"gpt-6-luna", "gpt-6.1-sol", "gpt-6-astra"},
+    "claude": {"claude-haiku-5-5", "claude-opus-5-5", "claude-fable-5-1"},
+}
+EFFORTS = {"low", "medium", "high", "xhigh", "max"}
 
 
 def text(path):
@@ -39,9 +44,21 @@ def policy(root):
     return settings(sections["lead"]), settings(sections["escalation"]), dict(pairs)
 
 
+def route_errors(name, route):
+    errors = []
+    for harness in MODELS:
+        if route["model"][harness] not in MODELS[harness]:
+            errors.append(f"{name}: unsupported configured {harness} model")
+        if route["effort"][harness] not in EFFORTS:
+            errors.append(f"{name}: unsupported configured {harness} effort")
+    return errors
+
+
 def check(root=ROOT):
     errors = []
     lead, escalation, roles = policy(root)
+    errors.extend(route_errors("lead", lead))
+    errors.extend(route_errors("escalation", escalation))
     expected_codex = {name + ".toml" for name in roles}
     expected_claude = {name + ".md" for name in roles if name != "browser-debugger"}
     for folder, expected in [("codex/agents", expected_codex), ("claude/agents", expected_claude)]:
@@ -51,6 +68,7 @@ def check(root=ROOT):
     readme, claude_doc = text(root / "README.md"), text(root / "CLAUDE.md")
     for name, block in roles.items():
         route = settings(block)
+        errors.extend(route_errors(name, route))
         codex = tomllib.loads(text(root / "codex/agents" / (name + ".toml")))
         for field, setting in [("model", "model"), ("model_reasoning_effort", "effort")]:
             if codex.get(field) != route[setting]["codex"]:
@@ -68,10 +86,6 @@ def check(root=ROOT):
             errors.append(f"{name}: README routing row differs from policy")
         if f"| `{name}` | `{cm}` | {ce or 'n/a'} |" not in claude_doc:
             errors.append(f"{name}: CLAUDE routing row differs from policy")
-        if route["effort"]["codex"] not in {"low", "medium", "high", "xhigh", "max"}:
-            errors.append(f"{name}: unsupported configured Codex effort")
-        if ("haiku" in cm) != (ce is None):
-            errors.append(f"{name}: Haiku must omit effort; other Claude models must specify it")
     config = tomllib.loads(text(root / "codex/config.toml"))
     claude = json.loads(text(root / "claude/settings.json"))
     if (config.get("model"), config.get("model_reasoning_effort")) != (lead["model"]["codex"], lead["effort"]["codex"]):
