@@ -11,17 +11,14 @@ Turn a rough Keiko feature idea into an implementation-ready parent epic plus sc
 
 ## 0. Select the product profile (before anything else)
 
-Select the product profile against the target checkout and **state it on your first
-output line** (e.g. `Profile: keiko-native (detected)`). Per
-[`profiles/README.md`](../../../profiles/README.md): Native markers (`CONTEXT.md` +
-`docs/planning/decision-addendum.md` + `quality/project.json`) → `keiko-native`;
-`docs/design-system/` with Native markers absent → `keiko-web`; ambiguous → **stop
-and ask**. **Load only the selected profile** and take the Definition of Ready,
-templates, evidence model, platform matrix, labels, and exclusions from it. Explicit
-operator selection overrides detection.
+Select against the target checkout using [profile selection](../../../profiles/README.md).
+State the profile on the first output line; explicit operator selection wins.
+Load only the selected profile and its task-relevant authority docs, including the
+target's `AGENTS.md` and `CONTEXT.md` when present. Take readiness, verification,
+templates, evidence, exclusions, and merge authority from it; ambiguity requires
+clarification. The accepted target contract governs product requirements.
 
-In **`keiko-native`** this becomes a **contract/schema-driven grill** — see
-[Native mode](#native-mode-keiko-native--contractschema-driven-grill) below.
+In `keiko-native`, also read [Native planning](references/native-planning.md).
 
 ## Core rule
 
@@ -48,62 +45,24 @@ Sync first: ensure the local checkout reflects the latest `origin/dev` (fetch/sy
 
 Apply `grill-me` principles inside Keiko guardrails:
 
-- One question at a time; include a recommended answer and why the decision matters.
+- Ask small rounds of independent unresolved decisions (usually 2–3), each with a
+  recommended answer and its consequence. Ask prerequisites first; dependent
+  questions wait for their answers. A single decision can stand alone. When the
+  user accepts a recommendation, record it and continue without reconfirming it.
 - Walk the decision tree to shared understanding.
 - Never ask what inspection can answer; never ask confirmations the contract/ADRs already imply.
-- **Be relentlessly wary of scope.** Treat scope creep as the **default failure mode**, present in every answer. Before any capability enters v1, ask "does this have to ship _now_, or is it a follow-up epic?" Every "yes, include it" must earn its place against user value + implementation risk; when in doubt, **cut it to a preserved follow-up**. Push back on the user's own additions too — a bigger epic is a worse epic.
+- Resolve scope tradeoffs against user value, risk, and the selected delivery unit. Respect explicit user decisions; preserve deferred ideas as follow-ups.
 
 Good: "Should v1 include text selection/copy, given governance implications?" · "Should a recoverable citation failure open an in-viewer recovery state, or only an inline chat error?" · "Is this follow-up part of v1, or a later epic?"
 
 Bad: "Should the API accept `chatId + assistantMessageId + marker`?" · "Should we reuse the window config sanitizer?" · "Should the issue use the current template?" → inspect and encode the answer into the epic or child issue.
 
-## Native mode (`keiko-native`) — contract/schema-driven grill
-
-When the profile is `keiko-native`, the readiness bar is a **machine validator**
-(`quality/issue-contract.mjs` via the target's `issue-readiness` workflow), so the
-grill is driven by the contract, not a free decision tree:
-
-- **Spine = the machine schema.** Walk the exact required sections for the issue's
-  `type:*` (epic / task / decision / defect) as the checklist; each must reach a
-  resolved, **placeholder-free** state, with a `Planning contract` version. Read the
-  authoritative section list from `quality/issue-contract.mjs` in the target repo —
-  do not restate it.
-- **Answers = the authority docs.** Restate requirements from
-  **`docs/planning/agent-planning-baseline.md`** (the repository-owned Fachkonzept
-  projection — global requirements + the affected capability packets) and resolve
-  every `inspect` question from the docs the profile names (`decision-addendum.md`,
-  `code-quality-standard.md`, `CONTEXT.md`, accepted ADRs, Parity Ledger) **before**
-  asking the user. Native raises the `inspect : ask user` ratio sharply — most
-  technical unknowns are already decided by a doc.
-- **Capability selection.** Every epic identifies its **Parity Ledger row** _or_ an
-  **approved net-new capability** — development continues past parity, so net-new and
-  mandatory-delta epics are first-class, not out of scope. Bind the outcome to one or
-  more **acceptance journeys** and flag unresolved **decision gates** before any
-  technology/architecture is assumed.
-- **`grill-me` = residual only.** Use its interview technique solely for the genuine
-  product / UX / policy / risk / scope / rollout decisions the docs cannot answer.
-- **Restate, never expose the source.** The Planning Contract must restate every
-  relevant requirement so an implementer needs no source access. **Never store,
-  quote, log, or request the private Fachkonzept** or its location; a missing
-  requirement is resolved with the product owner or the authorized planner, not by
-  reaching for the source.
-- **Native semantics** the grill must settle (from the addendum): greenfield rewrite
-  (no shared runtime/source dep on Existing Keiko; every reuse candidate gets a
-  recorded Reuse Assessment), Codex-App-Server runtime behind a governed adapter, no
-  OpenCode work, platforms **Windows + macOS only (Linux deferred)**, local inference
-  deferred.
-- **Desktop journey (user-facing epics).** Keiko Native is a **desktop app**, so pin
-  the desktop-specific acceptance rows the profile names — install/packaging, code
-  signing + notarization (per platform, authoritative runner), auto-update/upgrade
-  flow, first-run + OS permissions, offline/local-first behavior, crash/recovery, and
-  the Win+macOS matrix cadence. These are where a desktop app fails and a web app
-  never would; stay **host-neutral** (Native has not chosen Electron/Tauri — do not
-  assume a host or test runner). See `profiles/keiko-native.md` → _Desktop
-  release-acceptance dimensions_.
-
 ## Scope control
 
-Scope is the thing to worry about **constantly** — from the first question through the last slice. Define the smallest useful, shippable v1 — not a platform rewrite. Your default answer to "should we also…" is **no, follow-up epic** until proven otherwise. Challenge every expansion against user value, implementation risk, ADR alignment, governance, and whether it should be a follow-up epic; make the case for _cutting_ before the case for keeping. Preserve out-of-scope ideas on the parent epic so they are not lost — cutting is not losing. If the idea needs multiple epics, say so and split it. A v1 that ships beats a v2 that stalls.
+Define the smallest useful shippable unit, its non-goals, and the tradeoffs for any
+expansion. If the accepted idea needs multiple epics, explain the dependency and
+split it with the user's scope decision preserved. Do not reopen a settled choice
+unless new evidence changes its consequences.
 
 ## User journey & platform surface (user-facing / cross-platform epics)
 
@@ -133,7 +92,13 @@ If the batches can't stay green alone, keep the sequence but let them share an *
 
 Author every issue with the **active profile's templates** (keiko-web: `epic.md` for the parent, `feature_task.md` for children; **keiko-native:** the typed templates `epic.md` / `feature_task.md` / `decision_evaluation.md` / `defect_finding.md`, exactly one `type:*` label each, and every implementation issue carrying its **Execution Authority** + **Quality Plan**). `to-tickets`' minimal body is _not_ compliant — it omits the reuse gate, board workflow, verification gates, stop conditions, and epic linking. One parent epic + child issues; declare dependencies; prefer one PR per child; children target the epic branch, not `dev` (see contract).
 
-> Requires the `to-tickets` skill (personal skill store; formerly `to-issues`). If unavailable, apply the same vertical-slice method inline.
+> `to-tickets` is optional. The method above is self-contained; no personal skill-store dependency is required.
+
+For each child's test / Quality Plan, map requirements to public verification
+seams. State what each **catches** and **misses** (one line each), and cover missing
+wiring, recovery, and platform claims in the integrated gate. Do not copy the
+implementation's calculation as the test's oracle or introduce another approval
+ceremony for routine test structure.
 
 ## Release / enterprise-acceptance QA gate (mandatory, every epic)
 

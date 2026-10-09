@@ -18,95 +18,26 @@ rather than improvising the procedure:
 The skills carry the executable procedure; this runbook and the contract carry
 the always-on rules they follow. The sections below are the rules.
 
-## Intake Gate (Definition of Ready)
+## Intake, lifecycle, and delivery
 
-Before any agent starts an issue, the lead confirms it is READY:
+Select [one product profile](../profiles/README.md) before product work and load
+its target-owned authority docs. Web readiness is acceptance + verification;
+Native readiness is current machine-validated contract and execution authority.
+A board field or lingering ready label cannot grant Native readiness. Check the
+assignee before claiming; do not take another operator's work.
 
-- it has explicit acceptance criteria, and
-- it names (or the lead can derive) a concrete verification command, and
-- it is **unassigned** (or already assigned to the operator).
+Use `keiko-issue` / `keiko-epic` for claim, source branch, dependency ordering,
+implementation, verification, audit receipts, UI journeys, and closure. Preserve
+Native's frozen target and automation identity; web board/Playwright examples are
+not Native policy. Every issue gets a PR. Child→epic execution stays AFK after
+exact-head evidence; missing proof requires repair or escalation. Every `dev`
+merge requires green required CI and a human. Hand off at `Ready for Human Review`;
+close only after merge and the target's completion predicates hold.
 
-If acceptance criteria or a verification command is missing, do not start: triage
-first — comment the gap on the issue, set `status: new`/`needs triage`, and either
-fill the criteria with maintainer input or escalate.
-
-**Collision check:** if the issue already has a GitHub assignee other than the
-operator, do not pick it — it is being worked by someone else. Skip it and report.
-Starting an under-specified or already-claimed issue wastes work.
-
-## Status Cadence (Heartbeat)
-
-The lead posts a one-line heartbeat at every wave/milestone so the human is never
-left guessing whether work is happening: which agent is doing what, and the next
-action. Flush "current state + next action" to the active issue/PR so either
-harness (Codex or Claude) can resume from GitHub alone.
-
-## Default Lifecycle
-
-1. Start from a GitHub issue ID.
-2. Fetch the issue, linked PRs, comments, labels, and current CI state.
-3. Add the issue to the public `Keiko Product Delivery` project if it is not
-   already present.
-4. Claim the issue before implementation: set the issue label to
-   `status: in progress`, project `Status` to `In Progress`, project
-   `Workflow State` to `In Progress`, `Owner / Agent` to the active agent, and
-   **assign the operator on GitHub** (`gh issue edit <ID> --add-assignee @me`) —
-   the assignee is the cross-agent lock, so confirm it is empty or already yours
-   before claiming. Set `Human Review Required` to `Yes` for any PR that will
-   target `dev` (epic or standalone); only `issue -> epic-branch` PRs may
-   auto-merge, and that merge requires **green exact-head GitHub `ci` plus a
-   SHA-bound clean audit** (non-user-facing child: auto-merge after both gates;
-   user-facing child: auto-merge only
-   when its Playwright plan actually ran green — a `ui-verify-receipt` + a posted
-   `keiko:manual-test-plan` comment — else human review/merge).
-5. Choose the execution mode from the issue template.
-6. Load coordinator memory and relevant role memory.
-7. Create a short coordination plan with file ownership, agent roles, stop
-   conditions, and verification gates.
-8. Run read-only discovery before write work when the scope touches multiple
-   modules, architecture, security, UI behavior, release gates, or CI.
-9. Assign write agents only to disjoint scopes.
-10. Integrate work in the coordinator thread.
-11. Run the narrowest meaningful checks locally, then verify GitHub `ci`.
-12. Before an issue can be considered PR-ready / `Ready for Human Review`, run
-    the `keiko-issue-audit` skill as the final issue-scoped audit pass. It may
-    confirm zero findings, but the pass is mandatory.
-13. When implementation work uses a PR, fill project `Branch` and
-    `Pull Request`, then set `Workflow State` to `PR Open`.
-14. When a `-> dev` PR has passed `keiko-issue-audit`, has green required
-    checks, and is ready for maintainer review, set `Workflow State` to
-    `Ready for Human Review` and the issue label to
-    `status: ready for human review`.
-15. Update durable memory. Do not store secrets, customer data, raw source dumps,
-    or token-bearing logs.
-
-## Delivery Board Rules
-
-- Project: `Keiko Product Delivery`.
-- Board states: `New`, `Triaged`, `In Progress`, `PR Open`,
-  `Ready for Human Review`, `Blocked`, `Waiting for User`, `Done`.
-- Never start implementation on an issue without first setting it to
-  `In Progress` and filling `Owner / Agent`.
-- Keep `Branch` and `Pull Request` current so other agents can see ownership.
-- `dev` is sacred: every PR that targets `dev` (epic OR standalone) sets
-  `Human Review Required` to `Yes` and waits for a human reviewer + green CI.
-- The only auto-merge in the system is `issue -> epic-branch`, and it is gated by
-  current-head GitHub `ci` plus a matching SHA-bound audit: a non-user-facing
-  child auto-merges only after both are green;
-  a user-facing child auto-merges only when its Playwright test plan passes
-  (a green `ui-verify-receipt` + a posted `keiko:manual-test-plan` comment), else human review +
-  merge. Local verification and audit remain mandatory evidence, never a
-  substitute for server-side CI.
-- Child merge commands use only `gh pr merge <N> --auto --squash
-  --match-head-commit <audited-sha>` (optionally `--delete-branch`) so GitHub
-  rejects a concurrent head update. Repository/content overrides, shell chaining,
-  and admin bypasses are never permitted.
-- Every issue ships as a PR; nothing lands on `dev` without a PR.
-- No issue becomes `Ready for Human Review` until `keiko-issue-audit` has run.
-- Any `-> dev` PR hands off at `Ready for Human Review` only after that audit
-  pass and green required checks.
-- Do not merge any PR into `dev`, enable auto-merge into `dev`, close the issue,
-  or mark `Done` unless the human maintainer explicitly authorizes that action.
+Post one-line heartbeats at wave/milestones and flush current state + next action
+to the issue/PR. GitHub is the durable delivery record. Record only reusable memory
+lessons; read-only workers return candidates. Read the [workflow contract](../docs/workflow-contract.md)
+for detailed gate scope and recovery budgets, not a duplicated lifecycle here.
 
 ## Agent Routing by Issue Signal
 
@@ -241,50 +172,17 @@ Stop and report instead of improvising when:
   implementation.
 - Web search only for unstable external facts; prefer primary sources.
 
-## Quality Bar (hard rules)
+## Quality and self-review
 
-Applies to every write agent. Mirrors the Claude side so both harnesses ship at
-the same bar.
-
-- TypeScript strict mode. No `any`; use `unknown` with narrowing.
-- Cyclomatic complexity <= 10 per function. Function <= 50 LOC. File <= 400 LOC.
-- Edge cases explicit: null, undefined, empty, zero, boundary, concurrent,
-  error path.
-- Error handling at system boundaries only (user input, external API,
-  filesystem). No defensive try/catch in internal code.
-- Tests are mutation-robust: a single-line mutation in the implementation must be
-  caught by a test.
-- React: stable keys, correct hook dependencies, Server Components by default.
-- Next.js: Route Handlers and Server Actions have authz; no secrets in Client
-  Components.
-- Design-system conformance (user-facing UI): changes to user-facing components
-  conform to the Keiko Design System (`docs/design-system/`) — Tier-2/3/4
-  semantic/component tokens in `globals.css`, never raw Tier-1 primitives or hex
-  literals; full `state-matrix.md` coverage; `governance.md` change-rules. Capture
-  the fidelity + a11y evidence under `docs/design-system/evidence/<N>/` that
-  ADR-0049/0050/0051 require.
-- No comments explaining WHAT — only WHY when non-obvious.
-- New behavior is test-driven: write the failing test before the implementation.
-- Conventional commits with issue number: `feat: ... (#123)`.
-
-## Self-Critique (mandatory)
-
-Every write agent runs a 2-pass adversarial self-critique before reporting done.
-Skipping is forbidden.
-
-- **Pass 1 — adversarial review.** Read your own diff as a hostile senior
-  reviewer: which edge case did I skip (null, empty, boundary, concurrent,
-  network fail)? Which error path is untested? Which assumption is unstated? Is
-  there a simpler implementation? Did I introduce refactoring debt? Is every new
-  branch covered by a test? Are types as strict as possible? Any security
-  implication I did not flag? Does this break an existing public API?
-- **Pass 2 — refinement.** For every weakness found, either fix it in the diff,
-  add a test, or document it explicitly as a known limitation. Never silently
-  leave a weakness.
+Use the shared [AGENTS contract](../AGENTS.md#quality-and-completion) and the target's
+accepted Quality Plan. Apply stack-specific checks only to that stack. UI evidence
+comes from the selected profile (web design system or Native Acceptance Journey).
+Every agent performs the two-pass self-review; role definitions add domain checks.
 
 ## Completion Gate
 
 A task is done only when, for each acceptance criterion, there is concrete
 evidence (file:line, test name, command output, or observed behavior). "Implemented"
-or "appears fixed" is not sufficient. Run `npm run verify` (the CI mirror) green
-locally before opening the PR; CI is confirmation, not discovery.
+or "appears fixed" is not sufficient. Run `.keiko-scripts/verify-receipt.sh <N>` green at the committed HEAD before
+opening the PR; `verify.sh` selects the target-owned canonical command before
+profile fallbacks. CI confirms required server/platform checks.

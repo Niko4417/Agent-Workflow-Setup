@@ -53,7 +53,7 @@ ADRs, contribution contract, templates, quality control plane, and Agentic Codin
 domain model. This repository must not overwrite or become a mandatory build-time
 or runtime dependency of those assets.
 
-A future Keiko Native workflow profile must:
+The [Keiko Native profile](../profiles/keiko-native.md) and its integration must:
 
 - augment rather than replace the Native repository's `AGENTS.md` and controls;
 - be optional so a contributor can build and verify Native without this private
@@ -67,8 +67,11 @@ A future Keiko Native workflow profile must:
 - keep development-agent roles separate from the roles, authority, lifecycle, and
   runtime abstractions implemented by the Native product.
 
-Until such a profile exists and is verified, do not run the current installer
-against Keiko Native.
+The installer now detects Native and preserves its root `AGENTS.md` / `CLAUDE.md`
+while linking optional harness files. It does not enforce immutable version pinning:
+install Native from a separate checkout at the chosen commit and disable automatic
+updates there. Do not treat a mutable live checkout as a pinned integration.
+See [local editing](local-editing.md) for the supported pinning procedure.
 
 ## Private and shared use
 

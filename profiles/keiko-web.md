@@ -22,9 +22,10 @@ accessibility + design-system fidelity, security/governance, integration).
 
 ## Verify command
 
-`npm run verify` (the full CI mirror: typecheck, version-consistency, lint,
-architecture checks, supply-chain check, tests). Where the target defines
-`npm run codex:pre-pr`, prefer it as the canonical pre-PR script.
+Use `.keiko-scripts/verify.sh` from the target root. It runs the target-owned
+`agent:pre-pr` exactly once when present, otherwise `codex:pre-pr`, otherwise the
+legacy inline CI mirror. The target's current `package.json` owns the gate list;
+do not cache a separate list or assume an obsolete `npm run verify` alias.
 
 ## Templates (target-owned)
 

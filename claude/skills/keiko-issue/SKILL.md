@@ -6,7 +6,7 @@ description: Drive a single GitHub issue (task / feature / bug / user-finding) e
 # keiko-issue
 
 Canonical, parameterized single-issue workflow for both harnesses. Replaces the
-old `codex-task-prompt.md` / `claude-issue-prompt.md` run-cards. **Composes the 15
+old `codex-task-prompt.md` / `claude-issue-prompt.md` run-cards. **Composes the 16
 canonical roles** (`.agents/roles.yaml`), **defers to** `docs/workflow-contract.md`
 for branching, gates, and the sacred-`dev` rule — follow them, do not restate.
 
@@ -19,14 +19,12 @@ You are the lead session — the sole orchestrator. Do not edit code yourself.
 
 ## 0. Select the product profile (before intake)
 
-Select the product profile against the target checkout and **state it on your first
-output line**. Per [`profiles/README.md`](../../../profiles/README.md): Native
-markers (`CONTEXT.md` + `docs/planning/decision-addendum.md` + `quality/project.json`)
-→ `keiko-native`; `docs/design-system/` with Native markers absent → `keiko-web`;
-ambiguous → **stop and ask**. **Load only the selected profile** and take the
-Definition of Ready, verify command, templates, evidence model, branch/merge
-authority, labels, and exclusions from it. Explicit operator selection overrides
-detection.
+Select against the target checkout using [profile selection](../../../profiles/README.md).
+State the profile on the first output line; explicit operator selection wins.
+Load only the selected profile and its task-relevant authority docs, including the
+target's `AGENTS.md` and `CONTEXT.md` when present. Take readiness, verification,
+templates, evidence, exclusions, and merge authority from it; ambiguity requires
+clarification. The accepted target contract governs product requirements.
 
 ## 1. Intake (Definition-of-Ready gate)
 
@@ -62,11 +60,17 @@ progress` label** — it is a reconciled effect the target owns; board / project
   are **one-way projections**, never authority. In both: `Owner / Agent` = active agent;
   `Human Review Required` = `Yes` for any PR targeting `dev`; fill `Branch` once created.
 
+Create the source branch before implementation: web `issue/<N>-<short>` from
+`dev` (epic children from their epic branch); Native a runner-managed branch
+including the issue number, from its frozen accepted delivery target. Record the
+branch on the board. For isolated workers, verify their actual base includes the
+required parent commits before they write; a default-branch worktree is not enough.
+
 ## 3. Route (task-shaped)
 
 Smallest effective shape:
 
-- `fix` with unclear root cause → debug fan-out (competing hypotheses) before any fix; reproduce first when steps exist.
+- `fix` with unclear root cause → execute the reproduction below, then debug fan-out with competing hypotheses before any fix.
 - `fix` known/scoped → `implementor` (minimal diff).
 - `feature` single-scope → `developer` (spec-first, TDD); cross-layer → feature team with strict, disjoint file ownership.
 - **User-facing component** change → `ui-engineer` builds against the active profile's UI standard (keiko-web: Keiko Design System `docs/design-system/`; **keiko-native:** `docs/planning/native-design-baseline.md`, evidence generated anew); `a11y-auditor` reviews **WCAG 2.2 AA** plus that standard's fidelity and the issue's **Acceptance Journey** checkpoints.
@@ -75,8 +79,7 @@ Smallest effective shape:
 
 ## 4. Implement
 
-Quality bars (per contract): complexity ≤10, function ≤50 LOC, file ≤400 LOC,
-no `any`, TDD for new behavior, mandatory 2-pass self-critique. Issue-scoped only;
+Apply the shared quality bar and the target's accepted Quality Plan. Issue-scoped only;
 no unrelated refactors, TODOs, or placeholders. **User-facing components** conform
 to the active profile's UI standard (keiko-web: Keiko Design System — semantic/
 component tokens only, full `state-matrix.md` coverage, governance change-rules;
@@ -86,12 +89,35 @@ scope, delivery target, prohibitions) and **never** store/quote/request the priv
 Fachkonzept. Out-of-scope blockers → report up, the lead files a linked issue
 (`status: new`); never expand scope.
 
+**Bug reproduction (fix mode).** Before editing, run a command/test that asserts
+the reported symptom on the current code; record expected vs actual behavior and
+the command's result. A build failure or guessed explanation is not a reproduction
+of a behavioral bug. Minimize the input while preserving the failure, then trace
+the failing path. If the symptom cannot be reproduced, report the missing evidence
+and continue bounded investigation; do not claim a proven fix. After the change,
+rerun the original reproduction and relevant regressions. If using a temporary
+mutation to prove a test detects the defect, inspect its diff against the pristine
+version and prove it landed and caused the intended assertion failure; restore it
+before continuing. Never manufacture a red result through a syntax/import error.
+
+**Behavioral test plan.** In the existing test plan / Quality Plan, map accepted
+requirements to observable public boundaries (API, adapter, component, CLI, or
+production composition). For each seam state one line of what it **catches** and
+**misses**, so a green unit test is not mistaken for wiring/platform evidence.
+Implement one meaningful red → green slice at a time. Derive expected values from
+the requirement or an independent oracle, not the same computation as production.
+Use the accepted plan's authority; seek clarification only for unresolved scope
+or product decisions, not routine test placement.
+
+Commit the scoped implementation before SHA-bound receipt generation, using a
+Conventional Commit referencing `#N`. Audit fixes or generated evidence may require
+another commit; refresh all affected proof at that new HEAD.
+
 ## 5. Verify, audit, ship (per contract — sacred-`dev`)
 
 1. **Verify-green loop.** Run `.keiko-scripts/verify-receipt.sh #N` — it runs the
-   **active profile's verify command** (keiko-web: `verify.sh`, the CI mirror;
-   **keiko-native:** `npm ci --ignore-scripts && npm run quality && npm audit
---audit-level=high` on Node 24.18.x) and writes the verify receipt **only if
+   **target-owned canonical gate** through `verify.sh` (`agent:pre-pr` first;
+   otherwise the selected profile's fallback) and writes the verify receipt **only if
    green**. If red, fix and re-run, **looping until green** (bounded by 3 distinct
    attempts → escalate). The PR-create **verify-gate** blocks `gh pr create`/`gh pr
 ready` until a green verify receipt exists at HEAD.
@@ -106,15 +132,13 @@ ready` until a green verify receipt exists at HEAD.
 2. **Audit-clean loop.** Run `keiko-issue-audit` `#N` — mandatory. If it reports
    confirmed findings, fix them and re-audit, **looping until `findings=0`**
    (bounded by 3 attempts → escalate). The audit re-verifies and writes the audit
-   receipt at HEAD as its last step. **User-facing issue:** also write a runnable
-   Playwright plan, run it via `.keiko-scripts/ui-verify-receipt.sh #N -- <playwright cmd>`
-   (it stamps the ui-verify receipt only on green), and post the PR comment marked
-   **`<!-- keiko:manual-test-plan sha=<HEAD> -->`** (SHA-bound: name the exact
-   commit; repost it whenever HEAD changes).
-3. Branch off the base the profile names (keiko-web: `issue/<N>-<short>` off `dev`;
-   **keiko-native:** a runner-prefixed source branch unique to the issue and
-   **including its number**, off the frozen target the accepted issue names — never
-   change that target); Conventional Commit referencing `#N`; `verifier` fills the
+   receipt at HEAD as its final verification step. **User-facing web issue:** write a runnable
+   Playwright plan and run it via `.keiko-scripts/ui-verify-receipt.sh #N -- <playwright cmd>`
+   (it stamps the ui-verify receipt only on green). Publish the SHA-bound plan
+   comment after opening the draft PR (step 5); repost on every HEAD change.
+   In Native, use the Acceptance Journey's native harness through the same receipt
+   wrapper; do not assume Playwright can test the desktop host.
+3. The lead uses `verifier`'s proposed evidence in the
    PR "Verification evidence" section. For a user-facing change, capture the
    profile's evidence (keiko-web: design-system evidence under
    `docs/design-system/evidence/<N>/` — theme screenshots + `*-fidelity-proof.json` +

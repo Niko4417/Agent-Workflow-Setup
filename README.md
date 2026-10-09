@@ -1,26 +1,17 @@
 # Agent Workflow Setup
 
-_A disciplined delivery line for AI coding agents — so they ship real, reviewed work instead of plausible-looking guesses._
+Reusable delivery workflows for Codex and Claude Code: plan accepted work, delegate
+bounded tasks, verify exact-head evidence, and hand off a PR for human review.
+Local hooks provide early checks; the target's protected branches and required
+checks remain the authoritative merge controls.
 
-Point an AI coding agent at a codebase and it will happily write code, open a pull
-request, and tell you it's done. The hard part was never generating code — it's
-**trusting** it. This project is the process layer that makes that trust _earned_: you
-tell it what to build, and it takes a rough idea all the way to a green, human-reviewed
-pull request through the same repeatable steps every time — and it **won't let an agent
-skip the checks.** The proof has to exist before the next step is even allowed.
-
-You set it up on a project once, then just say what you want:
-
-> "Run epic #532." · "Resolve issue #178."
-
-…and it plans the work, breaks it into small pieces, builds and tests each one, and
-hands you a reviewed PR at the end.
+After installation, select work with `Run epic #532` or `Resolve issue #178`.
 
 ### Why it exists
 
 - **Trust, not vibes.** Agents are fast but forgetful. Instead of _hoping_ an agent ran
-  the tests, this makes passing them a **requirement** — a PR literally can't open on a
-  broken build or unchecked code.
+  the tests, the configured command hooks require SHA-bound verify/audit evidence
+  before opening work-branch PRs.
 - **One process, either assistant.** Works the same whether you drive it with **Codex**
   or **Claude Code** — same roles, same steps, same memory.
 - **Stays out of your project's way.** All the machinery lives _here_ and is linked in;
@@ -52,7 +43,7 @@ product has a thin **profile** — a short file that _points_ the shared skills 
 gates at that product's own rules. The actual policy lives in each product's repo;
 the profile never copies it.
 
-**You don't choose the profile — it's auto-detected** from the checkout you're in,
+**The profile is auto-detected** from the checkout, with an explicit operator override,
 and each skill prints which one it picked on its first line. A Keiko-Native session
 never loads Keiko-Web's rules, and vice versa, so nothing bleeds across.
 
@@ -60,14 +51,14 @@ never loads Keiko-Web's rules, and vice versa, so nothing bleeds across.
 | ---------------------- | -------------------------------------- | ----------------------------------------------------------------------------------------- |
 | Detected by            | `docs/design-system/` present          | `CONTEXT.md` + `docs/planning/decision-addendum.md` + `quality/project.json`              |
 | "Ready to build" (DoR) | acceptance criteria + a verify command | machine-validated contract — `status: ready` granted by the repo's own readiness workflow |
-| Verify command         | `npm run verify` (CI mirror)           | `npm run quality` + `npm audit` (Node 24.18.x)                                            |
+| Verify command         | `verify.sh` → target-owned gate           | `verify.sh` → target-owned gate / Native fallback                                            |
 | UI evidence            | Design-System fidelity + a11y proofs   | **Acceptance Journey** (native desktop harness, not browser Playwright)                   |
 | Platforms              | web                                    | Windows + macOS (Linux deferred)                                                          |
 | Merge into `dev`       | human-only                             | human-only                                                                                |
 | Private source         | —                                      | **never touched** — planners restate from the repo-owned planning baseline                |
 
-Default is **keiko-web**; **keiko-native** is chosen only when _all_ its markers are
-present, so Native behavior is never an accidental default. The installer, the
+Scripts default to **keiko-web**; skills ask when product context is ambiguous.
+Automatic **keiko-native** selection requires _all_ its markers, so Native behavior is never an accidental default. The installer, the
 verify command, the skills' first step, and the gates all read the active profile.
 Full detail: **[`profiles/README.md`](profiles/README.md)** ·
 per-product pointers: [`profiles/keiko-web.md`](profiles/keiko-web.md) ·
@@ -81,11 +72,13 @@ per-product pointers: [`profiles/keiko-web.md`](profiles/keiko-web.md) ·
 git clone git@github.com:Niko4417/Agent-Workflow-Setup.git
 cd Agent-Workflow-Setup
 ./scripts/install.sh /path/to/Keiko          # web app
-./scripts/install.sh /path/to/Keiko-Native   # desktop app — auto-detected, installs in augment mode
+# Native: run this from a separate checkout detached at the reviewed commit
+./scripts/install.sh /path/to/Keiko-Native   # detected augment mode; root product docs preserved
 ```
 
-The installer symlinks the harness into the target (**live** — edit here, active
-immediately) and keeps the target git-clean:
+The installer links an optional local harness and keeps generated integration files
+out of target commits. Web can follow a live merged checkout; Native must use a
+separate immutable checkout (see [pinning](docs/local-editing.md#pinning-an-optional-native-integration)):
 
 - `<target>/.codex`, `.claude`, `.agents`, `.mcp.json`, `.keiko-scripts` → this repo
 - **keiko-web:** `AGENTS.md` and `CLAUDE.md` are also symlinked in (overlay).
@@ -132,17 +125,48 @@ Work flows through four stages — plan → deliver → verify → learn:
 
 ---
 
+## Skill maintenance and setup checks
+
+The five skills adapt selected principles from [Matt Pocock's skills](https://github.com/mattpocock/skills),
+reviewed on 2026-10-09: executed bug reproduction, public test seams with explicit
+catches/misses, separate requirements/standards review, small independent decision
+rounds, and deterministic retro guardrail proposals. These fit the existing Keiko
+profiles and delivery gates; the upstream bundle is not installed wholesale.
+See [maintenance notes](docs/setup-maintenance.md) for provenance and verification.
+
+Shared `AGENTS.md` stays focused on durable working rules; `CLAUDE.md` adds harness
+mechanics. Product `CONTEXT.md`, ADRs, templates, and acceptance policy remain
+owned by the target. Skills and conditional references carry detailed procedures;
+web-only UI checklists load only for web work. Both harnesses use the same local
+memory store; read-only agents return candidates to the lead.
+
+```bash
+python3 -m venv work/lint-env
+work/lint-env/bin/python -m pip install -r requirements-dev.txt
+work/lint-env/bin/python scripts/check-setup.py
+python3 scripts/check-routing.py
+work/lint-env/bin/python tests/test-setup.py
+python3 tests/test-lifecycle-logger.py
+python3 tests/test-routing.py
+for test in tests/*.sh; do bash "$test" || exit 1; done
+```
+
+These checks validate structure, syntax, metadata, local links, routing, and the
+covered gate behavior. They do not replace named-role runtime smoke tests,
+representative model-quality evaluation, or target platform acceptance runs.
+
+---
+
 ## The safety net — why you can trust what it ships
 
-This is the heart of it. Six automatic **checkpoints** watch the agent's own commands.
-They don't run your tests _for_ you — they **refuse to let the agent open, merge, or
-push until the proof already exists**: a passing build, a real UI test run, a posted
-test plan. The agent can't talk its way around them, and each one adapts to the product
-you're in (see the profile table above). Here's what each guards:
+Five local command gates check evidence before recognized PR/push/merge operations.
+They check receipts and GitHub state; workflow steps run the actual tests and audits.
+Hooks are scoped guardrails, not a security boundary: they cannot cover arbitrary
+shell/API calls or replace server-side required checks.
 
 | Moment                     | Gate              | Blocks unless…                                                                                                           |
 | -------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| open / ready a PR          | `verify-gate`     | the profile's verify command (`verify.sh` on web · `npm run quality` on Native) passed **green** at HEAD                 |
+| open / ready a PR          | `verify-gate`     | the target's canonical command selected by `verify.sh` passed **green** at HEAD                 |
 | open / ready a PR          | `audit-gate`      | the audit **ran and is clean** — `findings=0`, plus a green **ui-verify** receipt (real UI-journey run) when user-facing |
 | ready a user-facing PR     | `ready-gate`      | a **SHA-bound test-plan comment** for the current commit is posted                                                       |
 | repush a fix to a `dev` PR | `push-gate`       | the fix re-passes verify + clean-audit (+ ui-verify + reposted plan)                                                     |
@@ -160,7 +184,7 @@ protected `dev` is the authoritative backstop.
 
 - **One orchestrator.** The lead session is the only agent the human talks to — it
   plans, delegates, integrates, reports. It never spawns a sub-coordinator.
-- **15 canonical roles** (plus the non-spawnable coordinator). Work routes to roles in `.agents/roles.yaml` at the
+- **16 canonical roles** (16 Codex agents; 15 Claude agents plus browser capability), with the lead as the non-spawnable coordinator. Work routes to roles in `.agents/roles.yaml` at the
   smallest effective shape: solo for a one-file fix, a cluster (explorer → writer →
   verifier) for epic / security / UI work. Both harnesses share one role vocabulary.
 - **Resumable by design.** State lives on the GitHub delivery board, not in a chat —
@@ -171,7 +195,7 @@ protected `dev` is the authoritative backstop.
   `consolidate-memory` and the `keiko-retro` lint pass.
 
 Rules: **[docs/workflow-contract.md](docs/workflow-contract.md)** ·
-Design + tradeoffs: **[docs/workflow-blueprint.md](docs/workflow-blueprint.md)**
+Historical design + tradeoffs: **[docs/workflow-blueprint.md](docs/workflow-blueprint.md)**
 
 ---
 
@@ -260,10 +284,9 @@ must stay on merged `main`. Edit in a worktree (`edit-worktree.sh`); the primary
 self-updates on SessionStart (`self-update.sh`). See
 [docs/local-editing.md](docs/local-editing.md).
 
-The gate scripts (`verify-gate`, `audit-gate`, `ready-gate`, `push-gate`,
-`epic-merge-gate`) and receipt writers (`verify-receipt`, `audit-receipt`,
-`ui-verify-receipt`) run automatically via the harness hooks — you rarely call them
-by hand. Each has a test in `tests/`.
+The command hooks invoke gate scripts; the skills explicitly run receipt writers
+(`verify-receipt`, `audit-receipt`, `ui-verify-receipt`) after checks. Hooks do not
+automatically generate verification proof. Each gate/writer has a test in `tests/`.
 
 ---
 
@@ -284,8 +307,9 @@ templates/   target-side gate snippets (husky / lint-staged / PR evidence)
 
 ## Server-side prerequisite (repo admin)
 
-The full-local-access posture is safe **because `dev` is protected** — which needs
-`admin` on the target repo. On [`oscharko-dev/Keiko`](https://github.com/oscharko-dev/Keiko),
+Configure protected branches and required checks/reviews before relying on the
+merge backstop; this needs `admin` on the target repo. Full local access still
+permits filesystem changes, regardless of branch protection. On [`oscharko-dev/Keiko`](https://github.com/oscharko-dev/Keiko),
 protect `dev`: require a PR, the green `ci` check, and human review. Until then the local gates are fast feedback but
 the _authoritative_ backstop is absent — treat agent merges toward `dev` with care.
 The airtight form of proof-of-audit lives here too: emit PR-visible evidence and make

@@ -9,13 +9,15 @@ echo "Checking Codex project readiness..."
 python3 - <<'PY'
 from __future__ import annotations
 
+import re
 import shutil
 import sys
 import tomllib
 from pathlib import Path
 
 root = Path.cwd()
-config_path = root / ".codex" / "config.toml"
+harness = root / ".codex" if (root / ".codex").is_dir() else root / "codex"
+config_path = harness / "config.toml"
 config = tomllib.loads(config_path.read_text(encoding="utf-8"))
 servers = config.get("mcp_servers", {})
 
@@ -41,15 +43,27 @@ for name, server in sorted(servers.items()):
     if not command and not url:
         warnings.append(f"enabled MCP server {name!r} has neither command nor url")
 
-for rel in [
-    ".agents/memory/coordinator/MEMORY.md",
-    ".codex/agents/coordinator.toml",
-    ".codex/codex-task-prompt.md",
-    ".codex/codex-audit-prompt.md",
-    ".codex/RUNBOOK.md",
-]:
-    if not (root / rel).exists():
-        errors.append(f"missing required Codex file: {rel}")
+# Memory is optional local state; the coordinator is the lead, not an agent.
+roles_path = root / ".agents" / "roles.yaml"
+if roles_path.is_file():
+    role_section = roles_path.read_text().split("\nroles:\n", 1)[-1]
+    names = re.findall(r"^  ([a-z][\w-]+):$", role_section, re.M)
+    if not names:
+        errors.append("canonical role map has no roles")
+    for name in names:
+        path = harness / "agents" / f"{name}.toml"
+        if not path.is_file():
+            errors.append(f"missing agent definition: {path}")
+        else:
+            try:
+                tomllib.loads(path.read_text())
+            except tomllib.TOMLDecodeError:
+                errors.append(f"invalid agent definition: {path}")
+else:
+    errors.append(f"missing required workflow file: {roles_path}")
+if not (harness / "RUNBOOK.md").is_file():
+    errors.append(f"missing required workflow file: {harness / 'RUNBOOK.md'}")
+
 
 if warnings:
     print("Warnings:")

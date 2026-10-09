@@ -19,6 +19,15 @@ tokens where possible to avoid Haiku's higher pricing tier.
 
 Sequential investigation suffers from **anchoring**: once an explorer finds a plausible explanation, subsequent steps bias toward it. With three independent investigators actively trying to disprove each other's theories, the theory that survives is much more likely to be the actual root cause (per [Claude Code agent-teams docs](https://code.claude.com/docs/en/agent-teams)).
 
+## Reproduction evidence
+
+Execute a symptom-specific assertion before investigation, recording the command,
+expected behavior, and observed failure. Minimize input while preserving the bug;
+rerun the original assertion after a fix. A build error or guessed diagnosis does
+not prove the symptom. If using a temporary mutation to test sensitivity, inspect
+its diff against the pristine code, prove the intended assertion fails, and restore
+it. The lead assigns any reproduction/test writes; explorers stay read-only.
+
 ## Spawn prompt
 
 ```text

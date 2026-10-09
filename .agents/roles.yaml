@@ -122,8 +122,8 @@ roles:
   ui-engineer:
     kind: write
     summary: >
-      Figma->code, component build, design-system consistency. Also small/
-      targeted UI fixes.
+      Profile-selected UI implementation, accessibility, and fresh journey evidence.
+      Figma only when an issue supplies a design source.
     posture: full
     model: { codex: gpt-6.1-sol, claude: claude-opus-5-5 }
     effort: { codex: medium, claude: medium }
@@ -147,7 +147,7 @@ roles:
   # ---- drive ----
   pr-shepherd:
     kind: drive
-    summary: Drive an open PR to merge-ready; delegates fixes to implementor.
+    summary: Prepare an open PR for review; returns complex fix scopes to the lead.
     posture: full
     model: { codex: gpt-6.1-sol, claude: claude-opus-5-5 }
     effort: { codex: medium, claude: medium }

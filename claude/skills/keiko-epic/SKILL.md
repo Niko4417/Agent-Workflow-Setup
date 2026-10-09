@@ -19,18 +19,16 @@ Do not edit code yourself; delegate child execution to `keiko-issue`.
 
 ## 0. Select the product profile (before planning)
 
-Select the product profile against the target checkout and **state it on your first
-output line**. Per [`profiles/README.md`](../../../profiles/README.md): Native
-markers (`CONTEXT.md` + `docs/planning/decision-addendum.md` + `quality/project.json`)
-→ `keiko-native`; `docs/design-system/` with Native markers absent → `keiko-web`;
-ambiguous → **stop and ask**. **Load only the selected profile.** The child-loop and
-final-PR mechanics below are written for **keiko-web**; take from the profile any
-divergence for **keiko-native** — the verify command (`npm run quality`), the
-platform matrix (**Windows + macOS only, no Linux**), the user-facing evidence
-model (**Acceptance Journey**, not design-system), the **frozen target branch** +
-runner-prefixed source branches, and child→`epic/**` auto-merge only by the target's
-**dedicated automation identity** under its readiness-bound gates. In keiko-native,
-**never** store/quote/request the private Fachkonzept.
+Select against the target checkout using [profile selection](../../../profiles/README.md).
+State the profile on the first output line; explicit operator selection wins.
+Load only the selected profile and its task-relevant authority docs, including the
+target's `AGENTS.md` and `CONTEXT.md` when present. Take readiness, verification,
+templates, evidence, exclusions, and merge authority from it; ambiguity requires
+clarification. The accepted target contract governs product requirements.
+
+Child-loop examples below use web branches and Playwright. Native uses its frozen
+delivery target, runner-managed source branches, dedicated automation identity, and
+Acceptance Journey harness; never assume a browser host or private-source access.
 
 ## 1. Read & plan
 
