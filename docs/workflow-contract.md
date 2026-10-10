@@ -127,7 +127,9 @@ Use ordinary Git/GitHub commands in the deliberately chosen target workdir.
 Before merge require the full exact-head target matrix and settled review
 findings. The optional read-only `required-checks-gate.py <PR-number> <base-branch>
 <head-sha>` checks Web App-bound CI and review settlement. Native remains governed
-by its accepted authority and quality control plane. Authorized Web auto-merge
+by its accepted authority and quality control plane. The helper also verifies that
+the head includes the live target commit and rejects observed target or PR movement
+during its reads; these snapshots are not an atomic lock on GitHub. Authorized Web auto-merge
 uses `gh pr merge <N> --auto --squash --match-head-commit <exact-head-sha>`.
 Never bypass gates, force-push or push directly to `dev`; honor explicit final
 review holds without per-child approvals.
