@@ -112,6 +112,17 @@ a comment. After fixes rerun affected verification, audit and journeys and updat
 that evidence. Cancel superseded verifier runs instead of accepting stale output.
 Use the existing GitHub evidence record for delivery.
 
+When the operator selects comment-based independent review, authorize the reviewer
+to publish findings on the PR (the owning issue before a PR exists), while remaining
+read-only for source and delivery. Findings identify the inspected head, a stable
+finding ID and concrete evidence. The lead reads those comments, delegates scoped
+repairs to a separate author, and returns the repaired head to the reviewer.
+The reviewer posts the recheck and settles each ID with a fix reference or evidenced
+refutation. Repeat within the existing recovery budget until no actionable findings
+remain. The lead must harvest both comments and review conversations before arming
+auto-merge: the check helper cannot settle findings in ordinary comments. Full
+current-head checks and any final human-review hold still apply.
+
 Use ordinary Git/GitHub commands in the deliberately chosen target workdir.
 Before merge require the full exact-head target matrix and settled review
 findings. The optional read-only `required-checks-gate.py <PR-number> <base-branch>

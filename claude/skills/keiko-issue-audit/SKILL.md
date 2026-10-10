@@ -115,7 +115,10 @@ accepted target). Embedded audits keep fixes on their parent's branch.
    platform evidence on the authoritative runners named by the accepted plan.
 2. The independent reviewer confirms every accepted checklist item with evidence
    and returns the proposed PR "Verification evidence" section to the lead for
-   publication. The same reviewer may perform this confirmation without another
+   publication. If the operator selects comment-based review, use the
+   [reviewer publication and repair loop](../../../docs/workflow-contract.md#verification-and-delivery):
+   the reviewer posts findings and rechecks directly, and the lead harvests them
+   before delivery. The same reviewer may perform this confirmation without another
    mandatory handoff. For a **user-facing** change, the
    audit is not complete until the profile's evidence is captured (keiko-web:
    design-system fidelity + `docs/design-system/evidence/<N>/` — theme screenshots +
@@ -132,7 +135,8 @@ After scoped fixes are committed, rerun the affected target checks and accepted
 journeys, then independently confirm the corrected requirements at that head.
 The lead publishes the inspected commit, actual commands/results, confirmed
 findings and their fixes, remaining limitations, and required UI/platform results
-in the PR body or a PR comment. A clean audit means no unresolved confirmed
+in the PR body or a PR comment, linking the reviewer's own comments when the
+comment-based loop is selected. A clean audit means no unresolved confirmed
 findings; do not substitute an assertion of completion for executed evidence.
 A changed head requires refreshed affected verification and audit evidence.
 
