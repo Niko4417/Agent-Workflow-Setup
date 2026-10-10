@@ -22,7 +22,7 @@ expect() { # description expected-exit
 mkv() { # verified_sha
   local b slug; b="$(git symbolic-ref --short HEAD)"; slug="$(printf '%s' "$b" | tr '/' '_')"
   mkdir -p .git/keiko-verify
-  printf '{"branch":"%s","verified_sha":"%s","ts":"t"}\n' "$b" "$1" > ".git/keiko-verify/$slug.json"
+  printf '{"branch":"%s","mode":"full","verified_sha":"%s","ts":"t"}\n' "$b" "$1" > ".git/keiko-verify/$slug.json"
 }
 
 git checkout -q -b feature-x

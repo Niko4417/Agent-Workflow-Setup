@@ -21,7 +21,7 @@ mkreceipt() {
 }
 mkverify() {
   mkdir -p .git/keiko-verify
-  [ -n "${1:-}" ] && printf '{"verified_sha":"%s"}\n' "$1" > .git/keiko-verify/issue_999-demo.json || rm -f .git/keiko-verify/issue_999-demo.json
+  [ -n "${1:-}" ] && printf '{"mode":"full","verified_sha":"%s"}\n' "$1" > .git/keiko-verify/issue_999-demo.json || rm -f .git/keiko-verify/issue_999-demo.json
 }
 mkuiverify() {
   mkdir -p .git/keiko-ui-verify
@@ -32,7 +32,7 @@ stubgh() { # lookup-status base ci-state comment [head]
   [ "$comment" = present ] && body="<!-- keiko:manual-test-plan sha=$SHA -->"
   [ "$comment" = stale ] && body="<!-- keiko:manual-test-plan sha=$OLD -->"
   case "$ci" in
-    success) checks='[{"__typename":"CheckRun","name":"ci","workflowName":"CI","status":"COMPLETED","conclusion":"SUCCESS"}]' ;;
+    success|other-required-missing) checks='[{"__typename":"CheckRun","name":"ci","workflowName":"CI","status":"COMPLETED","conclusion":"SUCCESS"}]' ;;
     missing) checks='[{"__typename":"CheckRun","name":"Gitar","workflowName":"","status":"COMPLETED","conclusion":"SUCCESS"}]' ;;
     pending) checks='[{"__typename":"CheckRun","name":"ci","workflowName":"CI","status":"IN_PROGRESS","conclusion":""}]' ;;
     failure) checks='[{"__typename":"CheckRun","name":"ci","workflowName":"CI","status":"COMPLETED","conclusion":"FAILURE"}]' ;;
@@ -43,9 +43,22 @@ stubgh() { # lookup-status base ci-state comment [head]
     status-context) checks='[{"__typename":"StatusContext","context":"ci","state":"SUCCESS"}]' ;;
     *) checks='null' ;;
   esac
+  api_checks="$(printf '%s' "$checks" | python3 -c 'import json,sys; v=json.load(sys.stdin); print(json.dumps({"check_runs":[{"id":i+1,"name":x.get("name"),"app":{"id":15368 if x.get("workflowName")=="CI" else 999},"head_sha":sys.argv[1],"status":str(x.get("status", "")).lower(),"conclusion":str(x.get("conclusion", "")).lower()} for i,x in enumerate(v or [])]}))' "$SHA")"
+  protected='{"protected":true,"protection":{"required_status_checks":{"contexts":["ci"],"checks":[{"context":"ci","app_id":15368}]}}}'
+  [ "$ci" = other-required-missing ] && protected='{"protected":true,"protection":{"required_status_checks":{"contexts":["ci","ui"],"checks":[{"context":"ci","app_id":15368},{"context":"ui","app_id":15368}]}}}'
+  threads='[]'
+  [ "$comment" = unresolved ] && threads='[{"isResolved":false}]'
   cat > bin/gh <<EOF
 #!/usr/bin/env bash
 case " \$* " in
+  *' headRefName '*) printf '%s\\n' '{"headRefName":"$head"}'; exit 0 ;;
+  *' api repos/owner/repo/issues/'*) printf '%s\\n' '{"body":"accepted-scope"}'; exit 0 ;;
+  *' repo view '*) printf '%s\\n' '{"nameWithOwner":"owner/repo"}'; exit 0 ;;
+  *' api repos/owner/repo/branches/'*) printf '%s\\n' '$protected'; exit 0 ;;
+  *'/check-runs?'*) printf '%s\\n' '$api_checks'; exit 0 ;;
+  *'parent{number}'*) printf '%s\\n' '{"data":{"repository":{"issue":{"parent":{"number":3914}}}}}'; exit 0 ;;
+  *' api graphql '*) printf '%s\\n' '{"data":{"repository":{"pullRequest":{"headRefOid":"$SHA","reviewThreads":{"nodes":$threads,"pageInfo":{"hasNextPage":false,"endCursor":null}}}}}}'; exit 0 ;;
+  *' headRefOid,baseRefName,state,isDraft '*) printf '%s\\n' '{"headRefOid":"$SHA","baseRefName":"$base","state":"OPEN","isDraft":false}'; exit 0 ;;
   *' comments '*) [ '$comment' = lookup-fail ] && exit 1; printf '%s\\n' '$body'; exit 0 ;;
 esac
 [ '$lookup' = fail ] && exit 1
@@ -107,6 +120,8 @@ stubgh ok epic/demo success absent; rm -f .git/keiko-audit/*.json; mkverify "$SH
 stubgh ok epic/demo success absent; mkreceipt "$SHA" 0 false; mkverify ''; mkuiverify "$SHA"; expect 'missing verify receipt blocks' 1
 stubgh ok epic/demo success absent; mkreceipt "$SHA" 2 false; mkverify "$SHA"; mkuiverify "$SHA"; expect 'audit findings block' 1
 stubgh ok epic/demo success absent; mkreceipt "$SHA" 0 unknown; mkverify "$SHA"; mkuiverify "$SHA"; expect 'invalid user-facing classification blocks' 1
+stubgh ok epic/demo other-required-missing absent; ready_non_ui; expect 'another required check missing blocks despite green ci' 1
+stubgh ok epic/demo success unresolved; ready_non_ui; expect 'unresolved review thread blocks a non-UI child' 1
 stubgh ok epic/demo success absent; ready_non_ui; expect 'happy non-user-facing child allows' 0
 stubgh ok epic/demo duplicate absent; ready_non_ui; expect 'successful ci rerun among rollup entries allows' 0
 stubgh ok epic/demo success absent; ready_non_ui; expect 'equals-form merge-time head guard allows' 0 equals-match
@@ -116,6 +131,23 @@ stubgh ok epic/demo success lookup-fail; ready_ui; expect 'user-facing comment l
 stubgh ok epic/demo success stale; ready_ui; expect 'user-facing stale comment blocks' 1
 stubgh ok epic/demo success present; mkreceipt "$SHA" 0 true; mkverify "$SHA"; mkuiverify ''; expect 'user-facing missing UI receipt blocks' 1
 stubgh ok epic/demo success present; mkreceipt "$SHA" 0 true; mkverify "$SHA"; mkuiverify "$OLD"; expect 'user-facing stale UI receipt blocks' 1
+
+stubgh ok codex/epic-quality success absent codex/issue-999-demo; ready_non_ui
+cp .git/keiko-audit/issue_999-demo.json .git/keiko-audit/codex_issue-999-demo.json
+cp .git/keiko-verify/issue_999-demo.json .git/keiko-verify/codex_issue-999-demo.json
+expect 'codex child and epic branches enforce the same full merge gate' 0
+
+# Target-owned ADR-0135 routes accepted issue work, without authority receipts.
+mkdir -p docs/adr
+touch docs/adr/ADR-0135-deterministic-dev-delivery-and-keiko-for-quality.md
+stubgh ok dev success absent; ready_non_ui; expect 'ADR without AGENTS reference does not alter generic dev policy' 1
+printf '%s\n' 'Accepted repository delivery follows ADR-0135.' > AGENTS.md
+stubgh ok dev success absent; ready_non_ui; expect 'accepted checked issue bootstrap can target dev without extra receipts' 0
+stubgh ok dev other-required-missing absent; ready_non_ui; expect 'bootstrap still needs every required check' 1
+stubgh ok dev success absent codex/epic-anti-slop-quality; ready_non_ui
+cp .git/keiko-audit/issue_999-demo.json .git/keiko-audit/codex_epic-anti-slop-quality.json
+cp .git/keiko-verify/issue_999-demo.json .git/keiko-verify/codex_epic-anti-slop-quality.json
+expect 'target-authorized checked epic delivery has no invented global hold' 0
 
 echo '---'
 echo "passed=$pass failed=$fail"

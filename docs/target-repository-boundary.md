@@ -24,7 +24,18 @@ governed while allowing an operator to use richer local orchestration.
 
 The target's CI and repository controls remain authoritative. Local workflow gates
 provide earlier feedback but cannot replace protected branches, required checks,
-or human review.
+or review requirements that the target actually requires.
+
+Target `AGENTS.md`, scoped instructions, ADRs, and explicit user choices override
+generic workflow defaults. For Keiko, ADR-0135 authorizes accepted, checked
+`dev` delivery through native auto-merge; ADR-0145 retires `agent:pre-pr`.
+An explicit final epic review hold remains in force for that run and adds no
+per-child approval. Otherwise retain the generic final human-review default
+where the target and user have not authorized another path.
+
+Server-side branch controls are target-owned. Optional stronger epic protection
+must not become a workflow-only blocker or a new administrative prerequisite;
+required quality evidence and review settlement still apply.
 
 ## Target document roles
 

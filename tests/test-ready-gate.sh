@@ -22,11 +22,20 @@ mkrcpt() { # user_facing
 stubgh() { # sha  (""=no plan comment); embeds a SHA-bound marker
   local body='(no plan)'
   [ -n "${1:-}" ] && body="<!-- keiko:manual-test-plan sha=$1 -->"
-  printf '#!/usr/bin/env bash\nprintf "%%s\\n" "%s"\n' "$body" > bin/gh
+  cat > bin/gh <<'SH'
+#!/usr/bin/env bash
+[ "${GH_LOOKUP_FAIL:-false}" = false ] || exit 1
+if [[ "$*" == *headRefName,headRefOid* ]]; then
+  [ "${GH_MALFORMED:-false}" = false ] || { echo '{}'; exit 0; }
+  printf '{"headRefName":"%s","headRefOid":"%s"}\n' "${GH_BRANCH:-$(git symbolic-ref --short HEAD)}" "${GH_HEAD:-$(git rev-parse HEAD)}"
+  exit 0
+fi
+SH
+  printf 'printf "%%s\\n" "%s"\n' "$body" >> bin/gh
   chmod +x bin/gh
 }
 expect() { # description expected-exit
-  PATH="$T/bin:$PATH" bash "$GATE" "gh pr ready" >/dev/null 2>&1
+  PATH="$T/bin:$PATH" bash "$GATE" "${READY_COMMAND:-gh pr ready 99}" >/dev/null 2>&1
   local g=$?
   if [ "$g" -eq "$2" ]; then pass=$((pass+1)); echo "ok   - $1"
   else fail=$((fail+1)); echo "FAIL - $1 (expected $2, got $g)"; fi
@@ -38,8 +47,15 @@ expect "non-work branch -> pass through" 0
 git checkout -q -b issue/3-x
 H="$(git rev-parse HEAD)"
 rm -rf .git/keiko-audit
+stubgh ""
 expect "no audit receipt -> pass through" 0
 mkrcpt false; stubgh "$H";  expect "non-user-facing -> pass through" 0
+GH_BRANCH=issue/999-other expect "non-user-facing wrong PR branch -> block" 1
+GH_HEAD=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa expect "non-user-facing stale remote head -> block" 1
+GH_LOOKUP_FAIL=true expect "PR lookup failure -> block" 1
+GH_MALFORMED=true expect "malformed PR lookup -> block" 1
+READY_COMMAND='gh pr ready 99 --repo other/repo' expect "repository override -> block" 1
+READY_COMMAND='gh pr ready' expect "missing selector -> block" 1
 mkrcpt true;  stubgh "$H";  expect "user-facing + comment@HEAD -> allow" 0
 mkrcpt true;  stubgh "";    expect "user-facing, no comment -> block" 1
 mkrcpt true;  stubgh deadbeef; expect "user-facing, stale comment sha -> block" 1

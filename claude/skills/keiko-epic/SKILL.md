@@ -1,6 +1,6 @@
 ---
 name: keiko-epic
-description: Drive a multi-issue GitHub epic end-to-end — plan and order child issues, run them on an epic integration branch, and hand off one green epic PR to dev for human review. Use when the operator selects an epic to work on. Composes keiko-issue per child. Takes an epic number.
+description: Drive a multi-issue GitHub epic end-to-end — plan and order child issues, run them on an epic integration branch, and deliver one green epic PR to dev under target authority and explicit run review choices. Use when the operator selects an epic to work on. Composes keiko-issue per child. Takes an epic number.
 ---
 
 # keiko-epic
@@ -25,6 +25,13 @@ Load only the selected profile and its task-relevant authority docs, including t
 target's `AGENTS.md` and `CONTEXT.md` when present. Take readiness, verification,
 templates, evidence, exclusions, and merge authority from it; ambiguity requires
 clarification. The accepted target contract governs product requirements.
+
+Target `AGENTS.md`, scoped instructions, ADRs, and explicit user choices override
+generic workflow defaults. For Keiko, ADR-0135 authorizes accepted, checked
+`dev` delivery through native auto-merge; ADR-0145 retires `agent:pre-pr`.
+An explicit final epic review hold is a procedural instruction for that run,
+not a universal helper-enforced restriction, and adds no per-child approval. Otherwise retain the generic final human-review default
+where the target and user have not authorized another path.
 
 Child-loop examples below use web branches and Playwright. Native uses its frozen
 delivery target, runner-managed source branches, dedicated automation identity, and
@@ -52,26 +59,29 @@ you sink days into an epic branched off it. Building a multi-issue epic on a red
 failure and can't close out clean. If `dev` is red, surface it and resolve or wait
 before starting.
 
-Create one long-lived `epic/<name>` off the latest `dev`. Record it on the board
-and an epic comment before implementation starts. Child branches `issue/<id>-<short>`
-are cut **off the epic branch**, not off `dev`.
+Create one long-lived `epic/<name>` or `codex/epic-<name>` off the latest `dev`.
+Record it on the board and an epic comment before implementation starts. Child
+branches `issue/<id>-<short>` or `codex/issue-<id>-<short>` are cut **off the epic
+branch**, not off `dev`.
 
 ## 3. Child loop (per `ready` child)
 
 **Children run AFK (no human-in-the-loop per child).** A child integrates into the
 epic branch **autonomously** — there is no per-child human review or sign-off. The
-human's single review point is the **epic → `dev`** PR (the full feature). A child
+final review hold, when requested, applies to the **epic → `dev`** PR (the full
+feature). A child
 either **auto-merges on green machine evidence**, or it **escalates as an exception**
 (something went wrong); it never pauses to wait for a human to approve that one child.
 
 1. Run **`keiko-issue` `#child`** on its branch off the epic branch (it runs
    `verify.sh` + `keiko-issue-audit` as part of its flow).
 2. The child PR targets the **epic branch**. Auto-merge requires a completed,
-   successful GitHub `ci` check on the exact PR head **and** matching SHA-bound
-   local verify/audit evidence:
+   successful full target required-check matrix on the exact PR head, settled
+   review findings, **and** matching SHA-bound local verify/audit evidence:
    - **Non-user-facing child (no UI):** run `keiko-issue-audit`; when it reports
      confirmed findings, **fix them and re-audit, looping until the audit is clean**
-     (`findings=0`), wait for exact-head GitHub `ci`, then **auto-merge** into the
+     (`findings=0`), wait for the full exact-head target check matrix and settled
+     reviews, then **auto-merge** into the
      epic branch, no human. Each loop
      fixes the findings (scoped `implementor`/`developer`/`test-engineer`),
      re-runs the audit (which re-runs `verify.sh` and re-writes the SHA-bound
@@ -85,8 +95,9 @@ either **auto-merges on green machine evidence**, or it **escalates as an except
         `do X → expect Y` steps Playwright can assert (visible text/DOM,
         navigation, computed styles, focus order, ARIA, responsive viewports,
         visual snapshots), covering the acceptance criteria. Keep it automatable —
-        subjective visual / screen-reader judgment is **deferred to the epic→`dev`
-        human review**, not the child plan.
+        optional subjective visual / screen-reader follow-ups go into final epic
+        evidence and any requested human review. Required UI proof still runs
+        before child integration.
      2. Post the plan as a **PR comment** marked
         `<!-- keiko:manual-test-plan sha=<HEAD> -->` (SHA-bound; the merge gate
         requires a comment naming the audited commit, so repost on any fix).
@@ -99,15 +110,14 @@ either **auto-merges on green machine evidence**, or it **escalates as an except
        human merge).
      - A result the automated journey **cannot assert** (subjective visual /
        screen-reader judgment) → **auto-merge on the machine-green evidence** and
-       **carry the deferred items into the epic→`dev` human review** (recorded on the
-       epic). No per-child human sign-off.
+       **carry the optional follow-ups into final epic evidence and any requested
+       human review** (recorded on the epic). No per-child human sign-off.
 
-   Auto-merge is the only place merges happen without a human, and it is
-   **enforced** by `epic-merge-gate.sh` (a PreToolUse hook on `gh pr merge`): it
-   **always blocks** an agent merge into `dev`/`main`/`release` (human-only via the
-   UI); into a canonical `epic/*` branch it allows the merge only when exact-head
-   GitHub `ci`, a matching green verify receipt, and (`findings=0`) hold **and**
-   either `user_facing=false`, or
+   `epic-merge-gate.sh` checks child integration evidence; target/user authority
+   governs final delivery. Into an accepted epic branch it allows the merge
+   only when the full exact-head target check matrix, settled review findings, a
+   matching green verify receipt, and (`findings=0`) hold **and** either
+   `user_facing=false`, or
    `user_facing=true` with a **green ui-verify receipt at the audited commit** (the
    Playwright plan actually ran green) **and** the marked test-plan comment present.
    Invoke exactly `gh pr merge <N> --auto --squash --match-head-commit
@@ -137,7 +147,7 @@ either **auto-merges on green machine evidence**, or it **escalates as an except
    `blocked`. Never start `blocked` work. Parallelize children only when section 1's
    safety conditions all hold.
 
-## 4. Final epic PR (human-gated)
+## 4. Final epic PR (target authority and run review hold)
 
 When all required children are integrated on the epic branch:
 
@@ -162,15 +172,17 @@ When all required children are integrated on the epic branch:
    matrix, summary by capability, verification evidence, known limitations/follow-ups.
 4. **Watch the real GitHub CI and drive it green** (`pr-shepherd`) — bounded repair,
    stop after 3 distinct failed attempts and escalate. **Each CI-repair repush
-   re-runs the QA:** the **push-gate** blocks a `git push` to this open `-> dev` PR
+   re-runs the QA:** the **push-gate** blocks a `git push` to any open work-branch PR, including children,
    unless fresh verify + clean-audit (+ ui-verify) receipts exist at the new HEAD —
    and, for a user-facing epic, the `keiko:manual-test-plan sha=<HEAD>` comment
    reposted for the new commit — so fix → re-run the loops → repost the comment → push.
-5. **Only once CI is green**, set the epic and remaining children to `Ready for
-Human Review`. **Sacred-`dev`: human review + green CI required.** Do **not**
-   merge the epic PR or close the epic without explicit maintainer authorization.
-6. **Closure evidence — capture the post-merge baseline.** After the human merges the
-   epic into `dev`, the epic is only truly closed out when `dev` is green **at the new
+5. **Only once the full current-head target matrix is green and reviews are
+   settled**, honor the requested final epic review hold: set `Ready for Human
+   Review` and do not arm final auto-merge until that hold is lifted. When no hold
+   applies, follow target-authorized delivery (Keiko ADR-0135 native auto-merge);
+   otherwise retain the generic final human-review default.
+6. **Closure evidence — capture the post-merge baseline.** After the authorized
+   merge of the epic into `dev`, the epic is only truly closed out when `dev` is green **at the new
    HEAD**: record the **post-merge branch analysis** (e.g. the `dev` Sonar branch run
    and any other required post-merge check) as closure evidence on the epic. A merged
    epic whose post-merge `dev` run is red is **merged but not closed out** — track the
@@ -184,7 +196,7 @@ distinct attempts; security-auditor critical/high; public-API or data migration.
 
 ## Final report
 
-Terminal state (`ready-for-human-review` / `escalated`) · child matrix (issue,
+Terminal state (`ready-for-human-review` / `completed` / `escalated`) · child matrix (issue,
 status, branch, PR, merge commit, verification) · epic branch + final PR + base +
 latest `dev` sync · parallelism used + why safe · files by area · verification ·
 board state · residual risks/follow-ups.

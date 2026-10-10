@@ -16,6 +16,8 @@ Use for issue-scoped implementation work.
 9. Use `verifier` or `pr-reviewer` before final delivery.
 10. Before the issue is considered PR-ready / `Ready for Human Review`, run the
     `keiko-issue-audit` skill as a final issue-scoped audit pass.
-11. Every issue uses a PR; any `-> dev` PR requires green `ci` and human review.
+11. Every issue uses a PR. Delivery follows target authority and explicit run
+    review holds, with the full current-head required-check matrix and settled
+    reviews; default to final human review where no other path is authorized.
 
 Do not add product scope that is not in the issue.

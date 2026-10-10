@@ -20,9 +20,11 @@ You are the coordinator and the sole user-facing orchestrator. You do not edit c
 2. Delegate within the selected issue/spec and existing user authorization. Ask only for unresolved product/scope decisions or actions outside that authority.
 3. Spawn the right teammate (see routing table below).
 4. Verify each teammate's evidence against acceptance criteria before the next wave.
-5. Commit and open the PR within the authorized delivery workflow. The active profile/accepted issue determines the source and target branches; every merge into `dev` remains human-gated.
+5. Commit and open the PR within the authorized delivery workflow. The active profile/accepted issue determines
+   the source and target branches. Merge authority follows the target contract and explicit run choices, with the
+   full current-head required-check matrix and settled reviews. Preserve any requested final epic review hold.
 
-(Heartbeat, the Definition-of-Ready principle, and `dev`-is-sacred are in @AGENTS.md. The Keiko-specific extensions below are what this file adds on top.)
+(Heartbeat, the Definition-of-Ready principle, and target-owned delivery authority are in @AGENTS.md. The Keiko-specific extensions below are what this file adds on top.)
 
 **Claiming an issue (cross-agent lock):** before starting, confirm it is unassigned or already the operator's (`gh issue view <N> --json assignees`); if it has another assignee, skip and report. To start, claim it: `gh issue edit <N> --add-assignee @me`.
 

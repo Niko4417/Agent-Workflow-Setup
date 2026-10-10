@@ -27,6 +27,13 @@ target's `AGENTS.md` and `CONTEXT.md` when present. Take readiness, verification
 templates, evidence, exclusions, and merge authority from it; ambiguity requires
 clarification. The accepted target contract governs product requirements.
 
+Target `AGENTS.md`, scoped instructions, ADRs, and explicit user choices override
+generic workflow defaults. For Keiko, ADR-0135 authorizes accepted, checked
+`dev` delivery through native auto-merge; ADR-0145 retires `agent:pre-pr`.
+An explicit final epic review hold is a procedural instruction for that run,
+not a universal helper-enforced restriction, and adds no per-child approval. Otherwise retain the generic final human-review default
+where the target and user have not authorized another path.
+
 ## Source of truth
 
 1. Fetch issue `#N`: body, labels, comments, linked PRs/commits, child issues.
@@ -83,7 +90,7 @@ findings are not blockers.
 ## Fix wave (scoped)
 
 In standalone mode, create the profile's source branch **before fixes** (web:
-`issue/<N>-audit` from `dev`; Native: runner-managed issue branch from the frozen
+`issue/<N>-audit` or `codex/issue-<N>-audit` from `dev`; Native: runner-managed issue branch from the frozen
 accepted target). Embedded audits keep fixes on their parent's branch.
 
 1. Assign **disjoint** file ownership to `implementor` (small) or `developer`
@@ -96,7 +103,8 @@ accepted target). Embedded audits keep fixes on their parent's branch.
 ## Verify and record evidence
 
 1. Run `.keiko-scripts/verify.sh` green locally; it selects the target's
-   `agent:pre-pr` first, otherwise the active profile's fallback. Verify required
+   current required commands first (ADR-0145 individual commands); older accepted
+   wrappers remain compatibility paths. Verify required
    platform evidence on the authoritative runners named by the accepted plan.
 2. `verifier` confirms every accepted checklist item with evidence and **returns the
    proposed PR "Verification evidence" section to the lead for publication**. For a **user-facing** change, the
@@ -130,9 +138,10 @@ audited commit):
 Always provide known `--findings` and `--user-facing` values when claiming a clean
 audit, including standalone mode. Their `unknown` defaults cannot pass the PR
 gate. They also feed the **epic auto-merge** decision
-(`.keiko-scripts/epic-merge-gate.sh`): a canonical `issue/*` child PR into a
-canonical `epic/*` branch may auto-merge **only** when GitHub `ci` completed
-successfully on the exact PR head, the merge command carries
+(`.keiko-scripts/epic-merge-gate.sh`): an `issue/*` or `codex/issue-*` child PR into an
+accepted `epic/*` or `codex/epic-*` branch may auto-merge **only** when the full target required-check
+matrix is green on the exact PR head and review findings are settled, the merge
+command carries
 `--match-head-commit <audited-sha>`, a matching green verify receipt and
 `findings=0` hold, **and** either `user_facing=false`, or
 `user_facing=true` with a **green ui-verify receipt at this commit** (the Playwright
@@ -153,7 +162,8 @@ commit again after this, re-run the audit (the receipt goes stale by design).
 After proof is current, the lead publishes the proposed evidence in the target's
 PR template. In embedded mode, return to the parent delivery skill; it opens or
 updates the PR. In standalone mode, follow `keiko-issue`'s profile-aware PR gates,
-draft → current SHA-bound plan → ready flow for UI, and human-gated `dev` handoff.
+draft → current SHA-bound plan → ready flow for UI, and target-authorized `dev`
+delivery or an explicit final review hold.
 Use `pr-shepherd` for required exact-head CI and actionable feedback; stop after
 three materially distinct failed repair attempts. Any new fix commit invalidates
 these receipts and requires refreshed audit/verification before publication/push.

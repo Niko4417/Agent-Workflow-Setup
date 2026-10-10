@@ -29,16 +29,16 @@ survives.
 | --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | 1   | **Codex-primary, Claude = second-opinion / token-overflow backup.** Invest depth in `.codex`; keep `.claude` lean but fully functional.                                                                                                                                                                                                                                                                                 | Maintain a second stack instead of consolidating to one.                                                                       |
 | 2   | **Task-shaped graduated delegation.** Default to the smallest effective shape; cluster only when parallel review materially helps. Trigger = the RUNBOOK's issue `type`/`area` label routing.                                                                                                                                                                                                                           | Coordinator must judge per-issue; not "always delegate", not "always solo".                                                    |
-| 3   | **`dev` is sacred.** Every issue gets a PR. The _only_ auto-merge is `issue → epic-branch`, after exact-head GitHub `ci` plus matching SHA-bound verify/audit evidence; a user-facing child additionally needs a green ui-verify Playwright run + test-plan comment. **Every merge into `dev` (epic or standalone) requires a human + green CI.**                                                                       | Slower throughput into `dev` in exchange for a human gate on every `dev` entry and a PR-backed evidence trail on every change. |
+| 3 | **Target-owned delivery authority.** Every issue gets a PR; accepted delivery requires the full current-head target matrix, settled reviews, matching verify/audit proof, and applicable UI journey/comment. Follow target AGENTS/ADRs and explicit run review holds; retain generic final human review where no other path is authorized. | PR-backed evidence without inventing repeated approvals or conflicting merge rules. |
 | 4   | **Canonical role vocabulary + alias map.** One source-of-truth role set; harness-specific names alias to it; harness-only specialists map to a canonical capability.                                                                                                                                                                                                                                                    | Upfront normalization; flattens a few harness-specific specialists into capabilities.                                          |
 | 5   | **Tool-neutral memory tree keyed by canonical role**, read+written by both harnesses on the machine. **Local-only (git-ignored, <25 KB per role) — never committed** (user directive); per-issue exploration dumps are ephemeral scratch.                                                                                                                                                                               | Per-machine, not shared across collaborators/CI; must agree one memory format.                                                 |
 | 6   | **GitHub delivery board = single durable status source of truth.** No `.orchestrator/` state store. Activation discipline read off board states.                                                                                                                                                                                                                                                                        | More GitHub API chatter; no separate local state machine.                                                                      |
 | 7   | **Fat harness-native docs** (`CLAUDE.md`, `AGENTS.md`, `RUNBOOK.md` stay self-contained for compaction resilience).                                                                                                                                                                                                                                                                                                     | Policy duplicated ~3×; mitigated by a shared "policy block" + sync checklist.                                                  |
 | 8   | **Keep the automated completion judge (Stop-hook)** but run it on a strong model (Opus 5.5 / GPT-6.1 Sol, **not** Haiku) with a **hard loop cap** (≤2 re-loops → escalate). Port the same gate to Codex.                                                                                                                                                                                                                | Small judge cost vs. catching weak/incomplete work; cap removes infinite-loop risk.                                            |
-| 9   | **Full agent access + server-side guardrails.** Keep agents full-access for velocity; make the dangerous outcome impossible at GitHub: protected `dev` (PR-only, green-CI, human review), irreversible-op deny-list, secret-scan pre-commit.                                                                                                                                                                            | Velocity over per-action prompts; safety enforced where it matters (the `dev` boundary), not per-keystroke.                    |
+| 9 | **Full agent access + target-owned server-side guardrails.** Follow the target's configured branch controls, required checks/reviews, irreversible-operation rules, and secret handling. Stronger epic protection is optional unless target-required. | Local hooks provide earlier feedback; target controls govern integration. |
 | 10  | **The lead session is always the orchestrator.** Never spawn a sub-coordinator. Codex's `coordinator.toml` becomes the lead's operating instructions, not a spawnable agent.                                                                                                                                                                                                                                            | The user-facing layer cannot be parallelized.                                                                                  |
 | 11  | **Continuous flush + on-demand deep handoff.** The orchestrator's regular status update writes "current state + next action" to the active issue/PR, so GitHub is always resume-ready; `/handoff` for deliberate switches.                                                                                                                                                                                              | Discipline of flushing state, vs. losing the last slice of in-flight reasoning on abrupt exits.                                |
-| 12  | **Tiered pre-PR verification.** lint-staged pre-commit (changed files) + `verify.sh` (full CI mirror). This grew into the **gate chain**: `verify-receipt`/`audit-receipt`/`ui-verify-receipt` stamp SHA-bound proof, and PreToolUse gates (`verify-gate`, `audit-gate`, `ready-gate`, `push-gate`, `epic-merge-gate`) block the PR/merge unless verify is green and the audit is clean. See the contract's gate stack. | ~90% of CI caught locally; clean-install smoke, CodeQL, dependency-review, actionlint, pinned-SHA remain CI-only.              |
+| 12  | **Tiered pre-PR verification.** lint-staged pre-commit (changed files) + `verify.sh` (current target-required commands). This grew into the **gate chain**: `verify-receipt`/`audit-receipt`/`ui-verify-receipt` stamp SHA-bound proof, and PreToolUse gates (`verify-gate`, `audit-gate`, `ready-gate`, `push-gate`, `epic-merge-gate`) block the PR/merge unless verify is green and the audit is clean. See the contract's gate stack. | ~90% of CI caught locally; clean-install smoke, CodeQL, dependency-review, actionlint, pinned-SHA remain CI-only.              |
 | 13  | **Out-of-scope blockers → orchestrator-filed issues.** Worktree agents never expand scope or file directly; they report up. Orchestrator dedups, files via template, marks `needs-triage`, links to the current issue, classifies blocker vs. finding.                                                                                                                                                                  | A hop through the orchestrator (slightly slower) vs. issue spam + broken chain of command.                                     |
 | 14  | **Live observability layer.** Build `keiko-watch` over the JSONL hook logs (both harnesses) + enforced orchestrator heartbeat + desktop notifications.                                                                                                                                                                                                                                                                  | Modest build cost vs. "am I just sitting here" silence during long sub-agent runs.                                             |
 
@@ -63,7 +63,7 @@ other. Each is now resolved.
 | ------------------------- | ----------------------------------------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Integration branch**    | `dev`                                           | `.codex/config.toml`: `origin/main`                               | **`dev`** everywhere. Fix the `config.toml` line — it's an outright bug (repo default is `dev`).                                                                                                               |
 | **Branch naming**         | `issue/<id>-<name>`, `epic/<name>`              | `claude/issue-{id}-...`                                           | **Tool-neutral** `issue/<id>-<name>`, `epic/<name>`. Required so both harnesses continue the _same_ branch for one issue instead of forking `codex/123` vs `claude/123`. Git author metadata gives provenance. |
-| **Completion**            | PR for every issue                              | RUNBOOK: ordinary issues land directly on `dev`                   | **PR for every issue; `dev` is human-gated on every merge.**                                                                                                                                                   |
+| **Completion** | PR for every issue | RUNBOOK: ordinary issues land directly on `dev` | **PR for every issue; delivery follows target authority, full current-head checks, settled reviews, and explicit run holds.** |
 | **Status store**          | `.orchestrator/*.json` (repo) / GitHub (pasted) | GitHub delivery board                                             | **GitHub board only.** Drop `.orchestrator/`.                                                                                                                                                                  |
 | **Delegation default**    | Always delegate                                 | `.codex`: single-agent by default                                 | **Task-shaped graduated** (smallest effective shape).                                                                                                                                                          |
 | **Memory commit policy**  | `.orchestrator/` not merge-worthy               | early design committed curated memory; operator later chose local | **Local-only role memory** — the `.agents/memory/*/` dirs are git-ignored by user directive (`AGENTS.md` agrees); curated but per-machine, not pushed. Ephemeral dumps stay out.                               |
@@ -97,7 +97,7 @@ repo/
 │  └─ workflow-contract.md        # tool-neutral governance contract (the good half of project.md)
 ├─ .github/
 │  ├─ workflows/                  # CI (unchanged; the backstop)
-│  └─ branch-protection notes     # dev = PR-only, green-CI, human review
+│  └─ branch-protection notes     # target-owned branch controls and required checks/reviews
 ├─ .agents/                       # NEW: tool-neutral shared layer
 │  ├─ roles.yaml                  # canonical role set + capability specs
 │  ├─ aliases.yaml                # harness-name → canonical-role map
@@ -155,17 +155,19 @@ repo/
    (epic child). Claim on the GitHub board (`In Progress`, owner, branch).
 4. **Implement.** Measurable bars enforced (complexity ≤10, file ≤400 LOC, no
    `any`, TDD). Mandatory 2-pass self-critique before "done".
-5. **Verify + audit (pre-PR gates).** `verify-receipt` runs `verify.sh` (full CI
-   mirror) and stamps a receipt only when green; `keiko-issue-audit` loops to
-   `findings=0`; a user-facing change also runs a real Playwright plan (`ui-verify`).
+5. **Verify + audit (pre-PR gates).** `verify-receipt` runs `verify.sh` (current
+   target-required commands) and stamps a receipt only when green;
+   `keiko-issue-audit` loops to `findings=0`; a user-facing change also runs a real Playwright plan (`ui-verify`).
    Two PreToolUse gates (`verify-gate` + `audit-gate`) **block `gh pr create`**
    unless verify is green and the audit is clean at HEAD. Verifier fills the PR
    template with evidence.
-6. **PR.** Open the PR. `issue → epic-branch` auto-merges only after exact-head
-   GitHub `ci` plus matching verify/audit evidence — enforced by
-   `epic-merge-gate` and `gh pr merge --match-head-commit <audited-sha>`; a
-   user-facing child additionally needs ui-verify + a test-plan comment. Any merge into `dev` waits for a
-   human + green CI; `push-gate` re-runs the QA on any fix repushed to a `dev` PR.
+6. **PR.** Open the PR. `issue → epic-branch` auto-merges only after the full
+   exact-head target matrix and settled reviews plus matching verify/audit evidence,
+   enforced by `epic-merge-gate` and `gh pr merge --match-head-commit <audited-sha>`.
+   A user-facing child additionally needs ui-verify + a test-plan comment. Final
+   delivery follows target authority and explicit run review holds.
+   `push-gate` requires refreshed QA on fixes repushed to any open work PR,
+   including children.
 7. **Completion judge.** Strong-model Stop-hook reviews against acceptance
    criteria; ≤2 re-loops then escalate.
 8. **Flush + report.** Orchestrator writes current state + next action to the
@@ -235,18 +237,17 @@ Dogfoods the workflow it builds. Child issues, in dependency order:
 9. **`issue/contract-doc`** — `docs/workflow-contract.md` + the shared "policy
    block" + sync checklist embedded in the fat docs. _(Last; references all.)_
 
-Server-side, out-of-band (human action, not an agent issue):
+Server-side controls remain target-owned:
 
-- Configure **branch protection on `dev`**: require PR, require green CI, require
-  human review for epic merges.
+- Follow the target's existing branch protection and required-check/review contract.
+  Optional stronger epic protection adds no workflow blocker or new admin step.
 
 ---
 
 ## 6. Open items needing a human decision
 
-- **Branch protection specifics** — exact required CI checks list and whether
-  standalone-issue PRs into `dev` require 1 or 2 human approvals. (The contract
-  says human-gated; the _count_ is yours.)
+- **Branch protection changes** — require an explicit target decision if needed;
+  current target rules already own the required matrix and merge authority.
 - **`keiko-watch` surface** — terminal TUI only, or also write a tail-able file
   the desktop app / a browser tab can render? (Default: terminal + tail-able
   file.)

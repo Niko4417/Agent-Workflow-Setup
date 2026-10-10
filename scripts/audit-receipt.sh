@@ -31,6 +31,9 @@ while [ $# -gt 0 ]; do
   esac
 done
 
+here="$(cd "$(dirname "$0")" && pwd -P)"
+bash "$here/proof-worktree.sh" || exit 1
+
 gd="$(git rev-parse --git-dir)"
 branch="$(git symbolic-ref --quiet --short HEAD || echo detached)"
 slug="$(printf '%s' "$branch" | tr '/' '_')"

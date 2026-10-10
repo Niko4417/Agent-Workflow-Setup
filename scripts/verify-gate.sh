@@ -3,7 +3,7 @@
 # verify-gate.sh — deterministic proof-of-verify check before a PR.
 #
 # Passes (exit 0) only when a verify receipt exists for the current branch AND it
-# was taken against the current HEAD. Enforced on issue/* and epic/* branches;
+# was taken against the current HEAD. Enforced on issue/*, epic/*, and codex/* branches;
 # other branches pass through. Used by the PR PreToolUse hook (gh pr create/ready)
 # and runnable by hand from the target repo root.
 #
@@ -13,9 +13,12 @@ set -uo pipefail
 
 branch="$(git symbolic-ref --quiet --short HEAD 2>/dev/null || echo)"
 case "$branch" in
-  issue/*|epic/*) ;;
+  issue/*|epic/*|codex/*) ;;
   *) exit 0 ;;
 esac
+
+here="$(cd "$(dirname "$0")" && pwd -P)"
+bash "$here/proof-worktree.sh" || exit 1
 
 gd="$(git rev-parse --git-dir 2>/dev/null)"
 slug="$(printf '%s' "$branch" | tr '/' '_')"
@@ -24,6 +27,11 @@ head="$(git rev-parse HEAD 2>/dev/null)"
 
 if [ ! -f "$receipt" ]; then
   printf '[verify-gate] BLOCKED: verify.sh has not passed green for %s.\n  Run .keiko-scripts/verify-receipt.sh (loop until green) before this PR.\n' "$branch" >&2
+  exit 1
+fi
+
+if ! jq -e '.mode == "full"' "$receipt" >/dev/null 2>&1; then
+  printf '[verify-gate] BLOCKED: receipt does not prove full delivery verification.\n' >&2
   exit 1
 fi
 

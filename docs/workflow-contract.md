@@ -7,6 +7,13 @@ executable procedures. Select [one product profile](../profiles/README.md) befor
 product work; target-owned contracts govern requirements, readiness, branches,
 checks, and evidence. Web examples below are not Native policy.
 
+Target `AGENTS.md`, scoped instructions, ADRs, and explicit user choices override
+generic workflow defaults. For Keiko, ADR-0135 authorizes accepted, checked
+`dev` delivery through native auto-merge; ADR-0145 retires `agent:pre-pr`.
+An explicit final epic review hold is a procedural instruction for that run,
+not a universal helper-enforced restriction, and adds no per-child approval. Otherwise retain the generic final human-review default
+where the target and user have not authorized another path.
+
 ## Roles and authorization
 
 - The human selects work and settles unresolved product/scope/risk decisions.
@@ -24,22 +31,23 @@ scope decision is a blocker to surface immediately.
 
 ## Branching and delivery
 
-Web: `epic/<name>` off `dev`, children `issue/<id>-<name>` off their epic branch,
+Web: `epic/<name>` (or `codex/epic-<name>`) off `dev`, children
+`issue/<id>-<name>` (or `codex/issue-<id>-<name>`) off their epic branch,
 standalone issues off `dev`. Native: source branch and frozen delivery target come
 from the accepted Execution Authority; merge-capable operations belong to the
 profile's dedicated automation identity. Validate isolated worker bases before
 writes, since a temporary worktree may start from the default branch.
 
-Every issue ships through a PR. The only autonomous merge is child → its accepted
-epic branch after all applicable evidence is green. Children execute AFK; missing
-proof triggers repair or escalation, not a per-child human-review ceremony. Every
-merge into `dev` (standalone or epic) requires human review and green required CI;
-agents never merge or enable auto-merge into `dev`.
+Every issue ships through a PR. Children integrate into their accepted epic branch
+after all applicable current-head evidence and the full target required-check
+matrix are green and review findings are settled. Children execute AFK; missing
+proof triggers repair or escalation, not a per-child human-review ceremony. Final
+`dev` delivery follows the target and explicit run authority above.
 
 Before the final epic PR, integrate the latest accepted base and verify the whole
 production composition and accepted journeys at that new HEAD. If HEAD changes,
-refresh the evidence. After human merge, inspect the new integration baseline and
-record post-merge results before claiming closure.
+refresh the evidence. After authorized merge, inspect the new integration baseline
+and record post-merge results before claiming closure.
 
 ## Issue lifecycle
 
@@ -59,8 +67,9 @@ record post-merge results before claiming closure.
    cited defects block. Required UI/platform evidence must actually run.
 5. **PR and handoff:** fill the target template with actual evidence. User-facing
    PRs open draft, receive the current SHA-bound journey-plan comment, then become
-   ready. Child PRs continue to machine-gated integration; `dev` PRs hand off for
-   human review after required CI is green.
+   ready. Child PRs continue to machine-gated integration; `dev` PRs follow the
+   target's delivery authority or an explicit final review hold after required CI
+   is green.
 6. **Report and close:** flush current state + next action to the issue/PR at each
    milestone. Close only after merge and the target's completion predicates hold;
    readiness for human review alone is not completion. Record acceptance results,
@@ -72,18 +81,24 @@ integration, and final handoff.
 
 ## Verification and gate stack
 
-`verify-receipt.sh <N>` invokes `verify.sh`: prefer the target's `agent:pre-pr`
-exactly once; otherwise Native `quality` + audit, web `codex:pre-pr`, or the legacy
-CI-mirror fallback. Follow the target's current toolchain, dependency setup, and
-required platform runners. A `--fast` smoke is not a full verify receipt.
+`verify-receipt.sh <N>` invokes `verify.sh`: follow current target instructions
+first. Keiko ADR-0145 uses individual minimum-loop and touched-area commands,
+including mandatory local Sonar, without reviving a retired wrapper. Older targets
+may use `agent:pre-pr`, Native `quality` + audit, web `codex:pre-pr`, or the legacy
+CI-mirror fallback only where their current contract still accepts that path.
+Follow the target's current toolchain, dependency setup, and
+required platform runners. Select additional touched-area gates from that contract
+and the accepted plan using repeatable `--also <current npm checking script>` on
+`verify.sh` or `verify-receipt.sh <N>`. The receipt runs and records selected
+commands itself; a `--fast` smoke is not a full verify receipt.
 
 | Gate | Evidence checked / scope |
 | --- | --- |
-| `verify-gate.sh` | Green verify receipt at HEAD for PR create/ready on `issue/*` / `epic/*` |
+| `verify-gate.sh` | Green verify receipt at HEAD for PR create/ready on `issue/*`, `epic/*`, or `codex/*` work branches |
 | `audit-gate.sh` | Audit at HEAD with known `findings=0`, known UI applicability, and green UI receipt when required |
-| `ready-gate.sh` | Current `<!-- keiko:manual-test-plan sha=<HEAD> -->` comment before readying user-facing `dev` PRs |
-| `push-gate.sh` | Fresh verify/audit/UI receipts and current plan comment for fix repushes to open `dev` PRs |
-| `epic-merge-gate.sh` | Exact PR-head completed successful GitHub `ci`, matching verify/clean-audit/UI evidence, current plan; rejects protected-base agent merges |
+| `ready-gate.sh` | Current `<!-- keiko:manual-test-plan sha=<HEAD> -->` comment before readying user-facing work-branch PRs, including children |
+| `push-gate.sh` | Fresh verify/audit/UI receipts and current plan comment for fix repushes to all open work-branch PRs, including children |
+| `epic-merge-gate.sh` | Full current-head target required-check matrix, settled review findings, matching verify/clean-audit/UI evidence and current plan; target/user merge authority |
 
 Receipt writers are explicit workflow steps; hooks check them, they do not create
 proof. After any fix commit, reverify/re-audit, rerun applicable UI journeys,
@@ -101,8 +116,11 @@ do not assume every target installed lint-staged or a secret scan. Every agent
 performs two-pass self-review. Claude's prompt Stop judge allows one blocking
 continuation (`stop_hook_active` ends repeated blocking); it is a heuristic check,
 not a test runner. Codex's Stop hook currently logs lifecycle metadata, not an
-independent completion judge. Server-side required checks/reviews must be
-configured and verified by the target maintainer.
+independent completion judge. Server-side controls follow the target's contract.
+Stronger epic-branch protection is an optional recommendation unless that
+contract requires it; absence alone is not a workflow blocker. Do not demand `dev` protection parity or new maintainer
+configuration before every epic. Required current-head checks and review
+settlement remain mandatory.
 
 ## Blockers and recovery
 

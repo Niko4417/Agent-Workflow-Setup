@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #
 # epic-merge-gate.sh — allow agent/CLI merges only from an issue PR into a
-# canonical epic/* base after GitHub CI and SHA-bound local audit evidence pass.
-# A human merges every other target through the GitHub UI.
+# epic base, or accepted target-owned dev delivery, after exact-head checks and
+# SHA-bound local audit evidence pass. Operator review holds remain procedural.
 
 set -uo pipefail
 
@@ -69,6 +69,9 @@ fi
 IFS=$'\t' read -r prnum match_sha <<<"$parsed_command"
 ghpr() { gh pr view "$prnum" "$@"; }
 
+here="$(cd "$(dirname "$0")" && pwd -P)"
+bash "$here/proof-worktree.sh" || block 'tracked worktree is not clean.'
+
 # Query all merge-critical GitHub facts in one snapshot. A lookup or parse error
 # is not evidence that a merge is safe.
 if ! info="$(ghpr --json baseRefName,headRefName,headRefOid,statusCheckRollup 2>/dev/null)"; then
@@ -87,28 +90,26 @@ is_sha "$head_sha" || block 'pull-request head SHA is malformed; refusing to aut
   block "--match-head-commit ($match_sha) must match PR head SHA ($head_sha)."
 
 case "$base" in
-  epic/*) [ -n "${base#epic/}" ] || block "base '$base' is not a canonical epic branch." ;;
-  dev|main|master|release/*) block "never auto-merge into $base. A human must review and merge via the GitHub UI." ;;
+  epic/*|codex/epic-*) [ -n "${base#epic/}" ] || block "base '$base' is not a canonical epic branch." ;;
+  dev)
+    # The target owns checked dev-delivery authority; no workflow permission receipt.
+    [ -f docs/adr/ADR-0135-deterministic-dev-delivery-and-keiko-for-quality.md ] || block 'target has no accepted checked dev-delivery authority.'
+    grep -Fq 'ADR-0135' AGENTS.md || block 'target has no accepted checked dev-delivery authority.' ;;
+
+  main|master|release/*) block "never auto-merge into $base. A human must review and merge via the GitHub UI." ;;
   *) block "base '$base' is not a canonical epic branch." ;;
 esac
-case "$head" in
-  issue/*) [ -n "${head#issue/}" ] || block "head '$head' is not a canonical issue branch." ;;
+case "$base:$head" in
+  dev:epic/*|dev:codex/epic-*) ;;
+  *:issue/*|*:codex/issue-*) [ -n "${head#issue/}" ] || block "head '$head' is not a canonical issue branch." ;;
   *) block "head '$head' is not a canonical issue branch." ;;
 esac
 
-# GitHub is authoritative for CI. A local receipt is supplementary evidence,
-# never a substitute for a completed successful direct ci check.
-if ! printf '%s' "$info" | jq -e '
-  (.statusCheckRollup | arrays) as $checks
-  | any($checks[];
-      .__typename == "CheckRun"
-      and .name == "ci"
-      and .workflowName == "CI"
-      and .status == "COMPLETED"
-      and .conclusion == "SUCCESS")
-' >/dev/null 2>&1; then
-  block "GitHub check 'ci' is not completed successfully for $head_sha."
-fi
+# The full live App-bound matrix and every review thread must be green. Missing
+# check evidence is a blocker; target protection adds requirements when configured.
+here="$(cd "$(dirname "$0")" && pwd -P)"
+python3 "$here/required-checks-gate.py" "$prnum" "$base" "$head_sha" ||
+  block 'full required-check/review settlement failed.'
 
 gd="$(git rev-parse --git-dir 2>/dev/null)" || block 'not inside a Git repository.'
 slug="$(printf '%s' "$head" | tr '/' '_')"
@@ -123,6 +124,8 @@ if ! findings="$(json_string "$receipt" '.findings')" ||
    ! verified="$(json_string "$vreceipt" '.verified_sha')"; then
   block 'audit or verify receipt is malformed; refusing to auto-merge.'
 fi
+
+jq -e '.mode == "full"' "$vreceipt" >/dev/null 2>&1 || block 'verify receipt does not prove full delivery verification.'
 
 [ "$findings" = '0' ] || block "audit findings=$findings for $head (need 0)."
 is_sha "$audited" && is_sha "$verified" || block 'audit or verify receipt SHA is malformed.'

@@ -48,23 +48,23 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cmd=$(jq -r '.tool_input.command // empty'); printf '%s' \"$cmd\" | grep -qiE 'gh pr (create|ready)' || exit 0; [ -x .keiko-scripts/audit-gate.sh ] || exit 0; .keiko-scripts/audit-gate.sh >&2 || { echo '[audit-gate] PR blocked — run keiko-issue-audit first (proof of audit required before PR-ready).' >&2; exit 2; }; exit 0"
+            "command": "python3 \"$(git rev-parse --show-toplevel)/.keiko-scripts/delivery-hook.py\" audit-gate"
           },
           {
             "type": "command",
-            "command": "cmd=$(jq -r '.tool_input.command // empty'); printf '%s' \"$cmd\" | grep -qiE 'gh pr (create|ready)' || exit 0; [ -x .keiko-scripts/verify-gate.sh ] || exit 0; .keiko-scripts/verify-gate.sh >&2 || { echo '[verify-gate] PR blocked — verify.sh must pass green (run verify-receipt.sh, loop until green) before PR.' >&2; exit 2; }; exit 0"
+            "command": "python3 \"$(git rev-parse --show-toplevel)/.keiko-scripts/delivery-hook.py\" verify-gate"
           },
           {
             "type": "command",
-            "command": "cmd=$(jq -r '.tool_input.command // empty'); printf '%s' \"$cmd\" | grep -qiE 'gh pr merge' || exit 0; [ -x .keiko-scripts/epic-merge-gate.sh ] || exit 0; .keiko-scripts/epic-merge-gate.sh \"$cmd\" >&2 || exit 2; exit 0"
+            "command": "python3 \"$(git rev-parse --show-toplevel)/.keiko-scripts/delivery-hook.py\" epic-merge-gate"
           },
           {
             "type": "command",
-            "command": "cmd=$(jq -r '.tool_input.command // empty'); printf '%s' \"$cmd\" | grep -qiE 'gh pr ready' || exit 0; [ -x .keiko-scripts/ready-gate.sh ] || exit 0; .keiko-scripts/ready-gate.sh \"$cmd\" >&2 || { echo '[ready-gate] ready blocked — user-facing PR needs its manual-test-plan comment first.' >&2; exit 2; }; exit 0"
+            "command": "python3 \"$(git rev-parse --show-toplevel)/.keiko-scripts/delivery-hook.py\" ready-gate"
           },
           {
             "type": "command",
-            "command": "cmd=$(jq -r '.tool_input.command // empty'); printf '%s' \"$cmd\" | grep -qE 'git +push' || exit 0; [ -x .keiko-scripts/push-gate.sh ] || exit 0; .keiko-scripts/push-gate.sh >&2 || { echo '[push-gate] repush to ->dev PR blocked — re-run verify + audit (+ui-verify) at HEAD first.' >&2; exit 2; }; exit 0"
+            "command": "python3 \"$(git rev-parse --show-toplevel)/.keiko-scripts/delivery-hook.py\" push-gate"
           }
         ]
       },
@@ -84,7 +84,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo 'Context rehydrated. Follow AGENTS.md and CLAUDE.md; execute the authorized issue/spec under the selected profile, preserve exact-head evidence and human-only dev merges.'"
+            "command": "echo 'Context rehydrated. Follow AGENTS.md and CLAUDE.md; execute the authorized issue/spec under the selected profile, preserve exact-head evidence, target-authorized delivery, and explicit run review holds.'"
           }
         ]
       },

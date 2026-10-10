@@ -30,9 +30,10 @@ Use `keiko-issue` / `keiko-epic` for claim, source branch, dependency ordering,
 implementation, verification, audit receipts, UI journeys, and closure. Preserve
 Native's frozen target and automation identity; web board/Playwright examples are
 not Native policy. Every issue gets a PR. Child→epic execution stays AFK after
-exact-head evidence; missing proof requires repair or escalation. Every `dev`
-merge requires green required CI and a human. Hand off at `Ready for Human Review`;
-close only after merge and the target's completion predicates hold.
+exact-head evidence; missing proof requires repair or escalation. Delivery follows
+the target's authority, full current-head required-check matrix, settled reviews,
+and explicit run review holds. Hand off at `Ready for Human Review` when a hold
+applies; close only after merge and the target's completion predicates hold.
 
 Post one-line heartbeats at wave/milestones and flush current state + next action
 to the issue/PR. GitHub is the durable delivery record. Record only reusable memory
@@ -119,7 +120,8 @@ bound; after 3 attempts, stop and report rather than narrowing indefinitely.
 
 ## Verification Routing
 
-- Always required before merge: GitHub check `ci`.
+- Always required before merge: the target's full current-head required-check
+  matrix and settled review findings.
 - Always required before `Ready for Human Review`: `keiko-issue-audit`.
 - Studio UI or BFF browser behavior: Studio browser quality gate.
 - Monaco/editor performance, rendering, large-file behavior: Studio perf/memory.

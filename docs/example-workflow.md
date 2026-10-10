@@ -23,7 +23,7 @@ merge, or repush through the recognized commands without matching evidence:
 - **`ready-gate`** blocks marking a user-facing PR ready until its SHA-bound
   test-plan comment is posted.
 - **`epic-merge-gate` / `push-gate`** re-check the same at child→epic auto-merge and
-  on any fix repushed to a `dev` PR.
+  on any fix repushed to an open work-branch PR, including children.
 
 All receipts are SHA-bound: commit after auditing and they go stale — you must
 re-run. Invoke `keiko-issue-audit` directly only for a standalone audit (Example C).
@@ -75,13 +75,15 @@ keiko-issue 178
   surface warrants it.
 - **Implement.** On the claimed `issue/178-<short>` branch off `dev`, apply quality bars
   (no `any`, complexity ≤10, TDD); each agent runs a 2-pass self-critique.
-- **Verify + audit.** `verify.sh` (local CI mirror) must be green; then
+- **Verify + audit.** `verify.sh` (current target-required commands) must be green; then
   **`keiko-issue-audit 178`** runs the read-first audit wave — mandatory even if
   it finds nothing.
 - **Ship.** The lead publishes `verifier`'s proposed evidence section; PR opens targeting `dev`;
   `pr-shepherd` drives CI/review to merge-ready.
-- **Hand off.** Sets `Ready for Human Review`. **Stops there** — a human merges to
-  `dev`. Nothing auto-merges into `dev`.
+- **Deliver.** Follow target authority: Keiko ADR-0135 permits checked native
+  auto-merge after the full current-head target matrix is green and reviews are
+  settled. Set `Ready for Human Review` and stop when a target or explicit run
+  hold requires it; retain that default where no other path is authorized.
 
 ---
 
@@ -114,17 +116,18 @@ keiko-epic 532
 - **Child loop.** For each ready child, runs **`keiko-issue <child>`** (which runs
   its own **`keiko-issue-audit <child>`**) on a branch off the epic branch. Each
   child PR targets the **epic branch**. The child→epic gate requires exact-head
-  GitHub `ci` plus matching SHA-bound verify/audit evidence: a _non-user-facing_
-  child **auto-merges** only after both are green (the system's only auto-merge —
-  no human per child); a _user-facing_ child additionally needs a green
+  full target required-check matrix and settled reviews plus matching SHA-bound
+  verify/audit evidence: a _non-user-facing_ child **auto-merges** only after all
+  are green (no human per child); a _user-facing_ child additionally needs a green
   **ui-verify** Playwright run + a test-plan comment. Re-syncs `dev` regularly.
 - **Heartbeat.** Posts a one-line status at each child/milestone and flushes state
   to GitHub so either harness can resume.
 - **Final PR.** Once children are integrated, runs **`keiko-issue-audit`** on the
   integrated surface, then opens one epic PR `epic/<name> → dev` with a child
   matrix + evidence.
-- **Hand off.** Sets the epic `Ready for Human Review`. **Stops** — the human
-  merges the epic PR into `dev`.
+- **Final delivery.** Honor a requested final epic review hold by setting
+  `Ready for Human Review` and stopping. Otherwise use target-authorized checked
+  delivery; default to human final review where no other path is authorized.
 
 ---
 
@@ -150,14 +153,14 @@ keiko-issue-audit 178      ← invoked directly (not wrapped by keiko-issue)
   the implementation against the acceptance criteria.
 - Only **evidence-cited** findings become fix slices (`implementor` / `developer`
   + `test-engineer`); speculative findings never block.
-- Ends with `verifier` + a green PR per the sacred-`dev` rule.
+- Ends with `verifier` + a green PR under target-owned delivery authority.
 
 ---
 
 ## Reflect: after it merges
 
-Once the epic (or a notable issue) has merged into `dev` — post human review and any
-hand-fixes — run **`keiko-retro`** to compound the learning:
+Once the epic (or a notable issue) has merged into `dev` — after authorized delivery and any
+review fixes — run **`keiko-retro`** to compound the learning:
 
 ```text
 Run keiko-retro on <epic link / #>.

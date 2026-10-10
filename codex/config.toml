@@ -4,11 +4,12 @@ model_reasoning_effort = "high"
 approval_policy = "never"
 check_for_update_on_startup = true
 developer_instructions = """
-The project contract in AGENTS.md is binding: delivery gates (`dev` is sacred,
-Definition-of-Ready), orchestration (sole orchestrator, smallest effective
+The project contract in AGENTS.md is binding: delivery gates (target-owned merge
+authority, Definition-of-Ready), orchestration (sole orchestrator, smallest effective
 execution shape), escalation, memory, and the Codex custom-agent spawn rules.
-Read it and follow it. It is the single source of truth -- do not rely on a copy
-of these rules living anywhere else.
+Read it and follow it. Target AGENTS.md, ADRs, and explicit user choices override
+generic workflow defaults. Require the full current-head target check matrix and
+settled reviews; preserve explicit final epic review holds without child approvals.
 """
 model_reasoning_summary = "auto"
 personality = "pragmatic"
