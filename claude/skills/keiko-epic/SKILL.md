@@ -107,6 +107,14 @@ from a trigger/allowlist is not ready for child integration. Missing checks neve
 qualify as green. Follow current target rules if these consumers change; do not
 weaken protections or require optional branch protection merely to register CI.
 
+Keep Web setup changes in a setup/child PR to the epic branch, with that candidate
+carrying the required registration. Qualify its actual full target matrix before
+integration. Do not open a bootstrap PR to `dev`: the single epic PR is opened
+last, after all accepted work, base synchronization, integrated verification and
+independent audit are complete (§4). If the target cannot run the full setup
+matrix without a prior `dev` change, report that concrete delivery blocker; do
+not create an early `dev` PR or accept missing checks.
+
 ## 3. Child loop (per executable child)
 
 **Children run AFK (no human-in-the-loop per child).** A child integrates into the

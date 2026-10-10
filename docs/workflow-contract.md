@@ -52,6 +52,15 @@ matrix are green and review findings are settled. Children execute AFK; missing
 proof triggers repair or escalation, not a per-child human-review ceremony. Final
 `dev` delivery follows the target and explicit run authority above.
 
+For Web epics, keep CI registration and other epic setup in setup/child PRs to the
+epic branch. Open the single epic PR to `dev` last, after the complete accepted
+scope is integrated, synchronized, verified and independently audited. Do not
+open an early setup PR to `dev`. Qualify the setup candidate's actual full target
+matrix before merging it into the epic; if the target cannot emit that matrix
+without a prior `dev` change, report the concrete blocker instead of silently
+changing the delivery order. The final PR still runs its complete current-head
+checks and review settlement after opening.
+
 Before the final epic PR, integrate the latest accepted base and verify the whole
 production composition and accepted journeys at that new HEAD. If HEAD changes,
 refresh the evidence. After authorized merge, inspect the new integration baseline
