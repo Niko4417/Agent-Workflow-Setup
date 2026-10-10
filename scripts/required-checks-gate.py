@@ -93,6 +93,34 @@ def settled(repository, number, sha):
     raise ValueError('review-thread pagination exceeded bound')
 
 
+def branch_sha(branch):
+    commit = branch.get('commit') if isinstance(branch, dict) else None
+    sha = commit.get('sha') if isinstance(commit, dict) else None
+    if not isinstance(sha, str) or not re.fullmatch(r'[0-9a-f]{40}', sha):
+        raise ValueError('live merge target commit unavailable')
+    return sha
+
+
+def includes_live_base(repository, base_sha, head_sha):
+    comparison = gh('api', f'repos/{repository}/compare/{base_sha}...{head_sha}')
+    if not isinstance(comparison, dict):
+        raise ValueError('malformed target comparison')
+    base = comparison.get('base_commit')
+    merge_base = comparison.get('merge_base_commit')
+    if not isinstance(base, dict) or not isinstance(merge_base, dict):
+        raise ValueError('target comparison identities unavailable')
+    behind, ahead = comparison.get('behind_by'), comparison.get('ahead_by')
+    if type(behind) is not int or behind != 0 or type(ahead) is not int:
+        raise ValueError('head does not include live target')
+    if base.get('sha') != base_sha or merge_base.get('sha') != base_sha:
+        raise ValueError('head does not include live target')
+    status = comparison.get('status')
+    coherent = (status == 'ahead' and ahead > 0 and head_sha != base_sha) or (
+        status == 'identical' and ahead == 0 and head_sha == base_sha)
+    if not coherent:
+        raise ValueError('incoherent target comparison')
+
+
 def main(number, base, sha):
     if not re.fullmatch(r'[0-9a-f]{40}', sha) or not number.isdigit():
         raise ValueError('invalid PR identity')
@@ -100,14 +128,22 @@ def main(number, base, sha):
     if not re.fullmatch(r'[\w.-]+/[\w.-]+', repository):
         raise ValueError('invalid repository identity')
     # Every child proves dev's current matrix; target protection may add checks.
-    expected = required_checks(gh('api', f'repos/{repository}/branches/dev'))
+    dev = gh('api', f'repos/{repository}/branches/dev')
+    expected = required_checks(dev)
+    target = dev
+    target_endpoint = f'repos/{repository}/branches/{quote(base, safe="")}'
     actual = {}
     if base != 'dev':
-        actual = required_checks(gh('api', f'repos/{repository}/branches/{quote(base, safe="")}'), required=False)
+        target = gh('api', target_endpoint)
+        actual = required_checks(target, required=False)
+    base_sha = branch_sha(target)
+    includes_live_base(repository, base_sha, sha)
     runs = all_checks(repository, sha)
     evaluate(expected, runs, sha)
     evaluate(actual, runs, sha)
     settled(repository, number, sha)
+    if branch_sha(gh('api', target_endpoint)) != base_sha:
+        raise ValueError('merge target moved during settlement read')
     current = gh('pr', 'view', number, '--json', 'headRefOid,baseRefName,state,isDraft')
     if current != {'headRefOid':sha,'baseRefName':base,'state':'OPEN','isDraft':False}:
         raise ValueError('PR moved, changed base, closed, or is draft')
