@@ -16,17 +16,24 @@ The receipt runs every selected command itself and records the full command list
 for the audit to compare with the target requirements. Preview modern selection
 with `verify-web-policy.py --plan --also <script>` from the target root.
 Generator and `--fix` commands belong to implementation. Delivery receipts require
-an unchanged, clean tracked HEAD and `mode: full`; old or fast receipts cannot
-satisfy the gate. Untracked working notes and PR bodies do not invalidate HEAD
-proof, and cannot stand in for committed implementation files.
+an unchanged committed HEAD, with no tracked edits or non-ignored untracked inputs,
+and `mode: full`; old or fast receipts cannot satisfy the gate. Ignored working
+notes, PR bodies and generated outputs do not invalidate HEAD
+proof; keep scratch artifacts in ignored locations. Source, tests and configuration
+must be committed rather than hidden as working notes. Package-surface assembly
+runs last because it prunes the live dependency tree.
 
-Audit/UI writers and every proof consumer reject tracked dirty bytes, and UI
-journeys cannot change HEAD, branch, or tracked files while minting proof.
+Audit/UI writers and every proof consumer reject tracked dirty bytes and
+non-ignored untracked inputs, and UI journeys cannot change HEAD, branch, or delivery inputs while minting proof.
 
 PR creation, readiness and open-PR fix pushes check `issue/*`, `epic/*` and
-`codex/*` branches. A missing helper blocks the matching delivery command. An
-explicit successful empty PR inventory permits a pre-PR WIP push; a lookup error
-does not. Child fix pushes require the same local evidence as dev fix pushes.
+`codex/*` branches. A missing helper blocks the matching delivery command. A
+successful empty PR inventory on ADR-0145 Web targets requires current verify
+proof before implementation pushes, without requiring an early audit. Only an
+exact existing origin/dev or canonical origin epic base commit with clean inputs
+may bootstrap an unchanged branch without that proof. Older/Native targets retain
+their own pre-PR policy. A lookup error never qualifies a push. Child fix pushes
+require the same local evidence as dev fix pushes.
 
 A child merge requires the live `dev` App-bound matrix and every requirement on
 its epic target when protection is configured. `/branches/<name>` supplies the producer bindings

@@ -25,7 +25,7 @@ while [ "$#" -gt 0 ]; do
   }
   shift 2
 done
-set -- "${args[@]}"
+set -- ${args[@]+"${args[@]}"}
 
 here="$(cd "$(dirname "$0")" && pwd -P)"
 commands='[]'
@@ -37,19 +37,18 @@ elif [ "$#" -gt 0 ]; then
 fi
 start_sha="$(git rev-parse HEAD)" || exit 1
 start_branch="$(git symbolic-ref --quiet --short HEAD)" || exit 1
-if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
-  printf '[verify-receipt] commit tracked changes before verifying the delivery SHA.\n' >&2
-  exit 1
-fi
+bash "$here/proof-worktree.sh" || exit 1
 if ! bash "$here/verify.sh" "$@"; then
   printf '[verify-receipt] verify.sh FAILED — no receipt written. Fix and re-run until green.\n' >&2
   exit 1
 fi
 
-if [ "$(git rev-parse HEAD)" != "$start_sha" ] || [ "$(git symbolic-ref --quiet --short HEAD)" != "$start_branch" ] || [ -n "$(git status --porcelain --untracked-files=no)" ]; then
+if [ "$(git rev-parse HEAD)" != "$start_sha" ] || [ "$(git symbolic-ref --quiet --short HEAD)" != "$start_branch" ]; then
   printf '[verify-receipt] HEAD/worktree changed during verification; no receipt written.\n' >&2
   exit 1
 fi
+
+bash "$here/proof-worktree.sh" || exit 1
 
 gd="$(git rev-parse --git-dir)"
 branch="$(git symbolic-ref --quiet --short HEAD || echo detached)"

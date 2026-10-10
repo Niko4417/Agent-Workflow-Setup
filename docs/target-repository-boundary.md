@@ -16,7 +16,7 @@ governed while allowing an operator to use richer local orchestration.
 | --------------------------------------------------------- | ------------------------------------------- |
 | Product source and architecture                           | Reusable orchestration skills and playbooks |
 | `CONTEXT.md` product language and boundaries              | Development-agent roles and model routing   |
-| Repository-specific `AGENTS.md` contribution contract     | Harness-specific agent configuration        |
+| Repository-specific `AGENTS.md` / `CLAUDE.md` contracts     | Harness-specific agent configuration        |
 | ADRs and product security invariants                      | Optional local hooks and evidence receipts  |
 | Issue and pull request templates                          | Cross-repository workflow automation        |
 | CI, deterministic verification, and release gates         | Curated operator or team workflow memory    |
@@ -49,10 +49,20 @@ These documents are complementary and must not silently replace one another:
 
 ## Existing Keiko integration
 
-The current installer and skills were built for Existing Keiko. The installer uses
-live symlinks for `AGENTS.md`, `.agents`, `.codex`, `.claude`, and related harness
-files. That remains the existing Keiko integration contract; it must not be
-assumed to be a generic integration contract for another product repository.
+The current installer and skills were built for Existing Keiko. Web integration
+uses live symlinks for `.agents`, `.codex`, `.claude`, and related optional harness
+files. Both Web and Native retain their own root `AGENTS.md` and `CLAUDE.md`:
+installation and worktree linking preserve existing regular files and symlinks,
+including dangling links. They never create authority documents from workflow
+defaults or add Git excludes for those target-owned documents. Missing or
+unreadable documents produce a warning; restore any authority document the target
+requires before agent work. A missing optional harness document adds no new requirement. Existing local Git excludes are not rewritten, so an installation migrated
+from the old Web overlay should also review and remove its obsolete `/AGENTS.md`
+and `/CLAUDE.md` excludes. A prior overlay's target-owned backup must be restored
+by the operator rather than guessed by the installer.
+
+This optional harness integration must not be assumed to be a generic integration
+contract for another product repository.
 
 Memories, gates, roles, paths, and product assumptions accumulated for Existing
 Keiko require an explicit assessment before use with another target.
@@ -78,9 +88,9 @@ The [Keiko Native profile](../profiles/keiko-native.md) and its integration must
 - keep development-agent roles separate from the roles, authority, lifecycle, and
   runtime abstractions implemented by the Native product.
 
-The installer now detects Native and preserves its root `AGENTS.md` / `CLAUDE.md`
-while linking optional harness files. It does not enforce immutable version pinning:
-install Native from a separate checkout at the chosen commit and disable automatic
+The installer detects Native and, as with Web, preserves its root `AGENTS.md` /
+`CLAUDE.md` while linking optional harness files. It does not enforce immutable
+version pinning: install Native from a separate checkout at the chosen commit and disable automatic
 updates there. Do not treat a mutable live checkout as a pinned integration.
 See [local editing](local-editing.md) for the supported pinning procedure.
 

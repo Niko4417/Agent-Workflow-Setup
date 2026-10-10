@@ -4,9 +4,9 @@
 #
 # A linked worktree (`git worktree add`) is a fresh working directory and does
 # NOT inherit the git-ignored workflow symlinks that live in the main clone. So
-# an agent launched in a worktree would be missing CLAUDE.md/AGENTS.md, .claude
-# (settings + skills + hooks), .agents (memory) and .keiko-scripts (verify.sh,
-# audit-gate.sh) — i.e. the whole governance harness. This recreates them.
+# an agent launched in a worktree would be missing .claude (settings + skills +
+# hooks), .agents (memory) and .keiko-scripts (verify.sh, audit-gate.sh). This
+# recreates optional harness links while preserving target authority documents.
 #
 # Invoked automatically by the post-checkout hook (installed by install.sh), and
 # safe to run by hand:  scripts/link-worktree.sh [worktree-dir]
@@ -51,9 +51,14 @@ link() {
 link "$REPO_DIR/codex"           "$TOP/.codex"
 link "$REPO_DIR/claude"          "$TOP/.claude"
 link "$REPO_DIR/.agents"         "$TOP/.agents"
-link "$REPO_DIR/AGENTS.md"       "$TOP/AGENTS.md"
-link "$REPO_DIR/CLAUDE.md"       "$TOP/CLAUDE.md"
 link "$REPO_DIR/claude/mcp.json" "$TOP/.mcp.json"
 link "$REPO_DIR/scripts"         "$TOP/.keiko-scripts"
+
+# Authority is target-owned, even when its documents are symlinks or missing.
+for doc in AGENTS.md CLAUDE.md; do
+  if [[ ! -f "$TOP/$doc" || ! -r "$TOP/$doc" ]]; then
+    echo "WARNING: target authority document unavailable: $doc; consult the target contract; no workflow authority document was installed." >&2
+  fi
+done
 
 exit 0

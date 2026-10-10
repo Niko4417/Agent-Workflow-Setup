@@ -11,6 +11,7 @@ trap 'rm -rf "$T"' EXIT
 mkdir -p "$T/bin"
 cd "$T"
 git init -q
+printf '/bin/\n' >> .git/info/exclude
 git commit -q --allow-empty -m init
 
 pass=0 fail=0

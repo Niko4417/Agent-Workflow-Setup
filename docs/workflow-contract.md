@@ -97,7 +97,7 @@ commands itself; a `--fast` smoke is not a full verify receipt.
 | `verify-gate.sh` | Green verify receipt at HEAD for PR create/ready on `issue/*`, `epic/*`, or `codex/*` work branches |
 | `audit-gate.sh` | Audit at HEAD with known `findings=0`, known UI applicability, and green UI receipt when required |
 | `ready-gate.sh` | Current `<!-- keiko:manual-test-plan sha=<HEAD> -->` comment before readying user-facing work-branch PRs, including children |
-| `push-gate.sh` | Fresh verify/audit/UI receipts and current plan comment for fix repushes to all open work-branch PRs, including children |
+| `push-gate.sh` | ADR-0145 Web first implementation push: fresh verify; unchanged existing base bootstrap allowed. Open work-PR pushes: fresh verify/audit/UI receipts and current plan comment, including children |
 | `epic-merge-gate.sh` | Full current-head target required-check matrix, settled review findings, matching verify/clean-audit/UI evidence and current plan; target/user merge authority |
 
 Receipt writers are explicit workflow steps; hooks check them, they do not create

@@ -18,7 +18,10 @@ nothing here is authoritative on its own.
 ## Definition of Ready
 
 **Heuristic.** An issue is ready when it has acceptance criteria **and** a
-verification command; missing either → triage first. Acceptance criteria +
+verification command; missing either → triage first. Accepted `New`/`Triaged`
+issues meeting those requirements are executable (the target epic template uses
+both states for executable children). Actual `Blocked`/`Waiting for User` states
+require resolution or the requested decision before resuming. Acceptance criteria +
 verification together cover the test dimensions (happy path, negative paths,
 accessibility + design-system fidelity, security/governance, integration).
 
@@ -29,9 +32,10 @@ ADR-0145, it executes the current individual minimum-loop and selected touched-a
 commands from `AGENTS.md`, including the mandatory local Sonar gate; it never
 revives a retired aggregate. Older targets retain their existing compatibility
 path. Delivery receipts require full verification of a clean, unchanged tracked
-HEAD; `--fast` is a smoke run and cannot mint a delivery receipt. Select any
-additional touched-area gates from the current target contract/accepted plan with
-repeatable `--also <current npm checking script>` on `verify.sh` or
+HEAD, with all nonignored delivery inputs committed; only ignored local notes and
+artifacts may remain outside that proof. `--fast` is a smoke run and cannot mint a delivery receipt. Select all
+applicable touched-area gates from the current target contract/accepted Quality Plan
+with repeatable `--also <current npm checking script>` on `verify.sh` or
 `verify-receipt.sh <N>`; the receipt runs and records those commands itself.
 
 ## Templates (target-owned)
@@ -56,10 +60,20 @@ checks proof itself and executes argv at the same validated Git root.
   Direct pushes, force pushes, and gate bypasses remain forbidden. Honor an
   explicit procedural final epic review hold; otherwise use human final review only where
   the target/user has not authorized another path.
+- **Integration baseline** — evaluate the applicable current-HEAD integration run.
+  ADR-0178's canonical resolver may reuse a complete successful PR run for the
+  exact merged PR's byte-identical tree; record the integration run and evidence
+  identity. Coverage and SonarCloud branch analysis still execute on every `dev`
+  push. Missing/unproven evidence or a failed executed check remains blocking.
+  Reuse applies only to integration runs, never to a required PR check.
+- **Push proof (ADR-0145 Web targets)** — an unchanged accepted base-ref creation
+  push matching the exact existing `origin/dev` or canonical origin epic commit
+  may establish a branch. First implementation push requires fresh full verify
+  proof at HEAD; audit/UI proof is required before PR creation and for open-PR
+  fix pushes. Native delivery authority remains profile-owned.
 - **child → accepted epic branch auto-merge** — the full current-head target required-check
-  matrix, settled review findings, and matching SHA-bound verify/audit receipts.
-  A user-facing child also
-  needs a green `ui-verify-receipt` and a posted `keiko:manual-test-plan` comment.
+  matrix (no absent or skipped required PR checks), settled review findings, and
+  matching SHA-bound verify/audit receipts. A user-facing child also needs a green `ui-verify-receipt` and a posted `keiko:manual-test-plan` comment.
 
 Epic-branch server-side protection follows the target contract; stronger
 protection is optional unless required there. Its absence alone does not block

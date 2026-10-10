@@ -45,7 +45,13 @@ def plan(root, paths, additional=()):
         if name not in scripts or name.startswith('generate:'):
             raise ValueError('selected touched-area command is not a current checking script: ' + name)
         result.append(['npm','run',name])
-    return list(dict.fromkeys(tuple(args) for args in result))
+    ordered = list(dict.fromkeys(tuple(args) for args in result))
+    # Target AGENTS §9: assembly prunes LIVE dependencies, so it must run last.
+    surface = ('npm', 'run', 'check:package-surface:assembled')
+    if surface in ordered:
+        ordered.remove(surface)
+        ordered.append(surface)
+    return ordered
 
 
 def options(args):

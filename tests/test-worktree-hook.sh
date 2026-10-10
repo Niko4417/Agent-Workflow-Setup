@@ -6,18 +6,6 @@
 # fake harness repo and a fake target git repo, exercises the scripts, then
 # cleans up. Exits non-zero if any case fails.
 #
-# Design note on hermetic isolation:
-#   install.sh mirrors skills into ~/.codex/skills/ and writes to the target's
-#   .git/info/exclude. Mocking those side-effects across all 5 cases would
-#   require patching install.sh itself. Instead:
-#     Cases 1-4 invoke link-worktree.sh and the post-checkout hook directly,
-#     bypassing full install.sh. This keeps them completely hermetic.
-#     Case 5 (M1 regression) exercises only the hook-install block of install.sh
-#     against a temp target repo — the skill-mirror step will touch ~/.codex/skills/
-#     with symlinks pointing into the temp harness (harmless) and write .git/info/exclude
-#     (also harmless). We accept those side-effects rather than patching install.sh,
-#     since the fix being tested lives squarely in the hook-install block.
-
 set -euo pipefail
 
 HARNESS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -32,6 +20,7 @@ fail() { echo "FAIL: $1"; FAIL=$((FAIL + 1)); }
 # --------------------------------------------------------------------------
 
 TMPDIR_ROOT="$(mktemp -d)"
+TMPDIR_ROOT="$(cd -P "$TMPDIR_ROOT" && pwd)"
 trap 'rm -rf "$TMPDIR_ROOT"' EXIT
 
 # Fake harness layout — mirrors the real one just enough for link-worktree.sh.
@@ -54,62 +43,37 @@ touch "$FAKE_TARGET/init.txt"
 git -C "$FAKE_TARGET" add init.txt
 git -C "$FAKE_TARGET" commit -q -m "init"
 
-# A small wrapper that calls the REAL link-worktree.sh with REPO_DIR overridden
-# to the fake harness so we don't need the real harness present.
-# We do this by temporarily patching REPO_DIR via env: link-worktree.sh computes
-# REPO_DIR internally, so we inject it by wrapping the script in a subshell that
-# sources just the relevant logic. Instead, we build a thin shim.
-SHIM="$TMPDIR_ROOT/shim-link-worktree.sh"
-cat > "$SHIM" <<SHIM_EOF
-#!/usr/bin/env bash
-# Shim: override REPO_DIR to the fake harness for testing.
-SELF="\${BASH_SOURCE[0]}"
-while [[ -L "\$SELF" ]]; do
-  DIR="\$(cd -P "\$(dirname "\$SELF")" && pwd)"
-  SELF="\$(readlink "\$SELF")"
-  [[ "\$SELF" != /* ]] && SELF="\$DIR/\$SELF"
-done
-REPO_DIR="$FAKE_HARNESS"
-TARGET="\${1:-\$PWD}"
-TOP="\$(git -C "\$TARGET" rev-parse --show-toplevel 2>/dev/null || echo "\$TARGET")"
-[[ -d "\$TOP" ]] || exit 0
-link() {
-  local src="\$1" dst="\$2"
-  if [[ -L "\$dst" ]]; then
-    [[ "\$(readlink "\$dst" 2>/dev/null || true)" == "\$src" ]] && return 0
-    rm -f "\$dst" 2>/dev/null || return 0
-  elif [[ -e "\$dst" ]]; then
-    return 0
-  fi
-  ln -s "\$src" "\$dst" 2>/dev/null || true
-}
-link "\$REPO_DIR/codex"           "\$TOP/.codex"
-link "\$REPO_DIR/claude"          "\$TOP/.claude"
-link "\$REPO_DIR/.agents"         "\$TOP/.agents"
-link "\$REPO_DIR/AGENTS.md"       "\$TOP/AGENTS.md"
-link "\$REPO_DIR/CLAUDE.md"       "\$TOP/CLAUDE.md"
-link "\$REPO_DIR/claude/mcp.json" "\$TOP/.mcp.json"
-link "\$REPO_DIR/scripts"         "\$TOP/.keiko-scripts"
-exit 0
-SHIM_EOF
+# Run the production linker from the fake harness; do not copy its logic.
+SHIM="$FAKE_HARNESS/scripts/link-worktree.sh"
+cp "$HARNESS_DIR/scripts/link-worktree.sh" "$SHIM"
 chmod +x "$SHIM"
+TEST_HOME="$TMPDIR_ROOT/home"
+mkdir -p "$TEST_HOME"
 
 # --------------------------------------------------------------------------
-# Case 1: git worktree add creates all 7 expected symlinks
+# Case 1: git worktree add creates all 5 optional harness symlinks
 # --------------------------------------------------------------------------
 
 WORKTREE1="$TMPDIR_ROOT/wt1"
 git -C "$FAKE_TARGET" worktree add -q "$WORKTREE1"
 
 # Simulate what the post-checkout hook would do — call the shim directly.
-"$SHIM" "$WORKTREE1"
+"$SHIM" "$WORKTREE1" 2>"$TMPDIR_ROOT/absent-output"
 
-EXPECTED=( .codex .claude .agents AGENTS.md CLAUDE.md .mcp.json .keiko-scripts )
+if [[ ! -e "$WORKTREE1/AGENTS.md" && ! -L "$WORKTREE1/AGENTS.md" && ! -e "$WORKTREE1/CLAUDE.md" && ! -L "$WORKTREE1/CLAUDE.md" ]] &&
+   grep -qF "WARNING: target authority document unavailable: AGENTS.md" "$TMPDIR_ROOT/absent-output" &&
+   grep -qF "WARNING: target authority document unavailable: CLAUDE.md" "$TMPDIR_ROOT/absent-output"; then
+  pass "Case 1: absent authority remains absent and is reported"
+else
+  fail "Case 1: absent authority replaced or not reported"
+fi
+
+EXPECTED=( .codex .claude .agents .mcp.json .keiko-scripts )
 ALL_PRESENT=true
 for name in "${EXPECTED[@]}"; do
   [[ -L "$WORKTREE1/$name" ]] || { echo "  missing symlink: $name"; ALL_PRESENT=false; }
 done
-$ALL_PRESENT && pass "Case 1: all 7 symlinks created in new worktree" \
+$ALL_PRESENT && pass "Case 1: all 5 optional harness symlinks created in new worktree" \
              || fail "Case 1: not all symlinks created"
 
 # --------------------------------------------------------------------------
@@ -192,13 +156,13 @@ FOREIGN_HOOK
 chmod +x "$HOOK_DIR5/post-checkout"
 
 # First install.
-"$HARNESS_DIR/scripts/install.sh" "$FAKE_TARGET5" >/dev/null 2>&1
+env HOME="$TEST_HOME" "$HARNESS_DIR/scripts/install.sh" "$FAKE_TARGET5" >/dev/null 2>&1
 
 CHAIN_AFTER_FIRST=false
 grep -qF "post-checkout.pre-keiko" "$HOOK_DIR5/post-checkout" 2>/dev/null && CHAIN_AFTER_FIRST=true
 
 # Second install (M1: the marker is now present, so the backup block is skipped).
-"$HARNESS_DIR/scripts/install.sh" "$FAKE_TARGET5" >/dev/null 2>&1
+env HOME="$TEST_HOME" "$HARNESS_DIR/scripts/install.sh" "$FAKE_TARGET5" >/dev/null 2>&1
 
 CHAIN_AFTER_SECOND=false
 grep -qF "post-checkout.pre-keiko" "$HOOK_DIR5/post-checkout" 2>/dev/null && CHAIN_AFTER_SECOND=true
@@ -210,6 +174,57 @@ elif ! $CHAIN_AFTER_FIRST; then
 else
   fail "Case 5 (M1): chain call was DROPPED after second install (M1 regression)"
 fi
+
+# The installed hook must surface missing authority instead of hiding warnings.
+(cd "$FAKE_TARGET5" && env HOME="$TEST_HOME" bash "$HOOK_DIR5/post-checkout" 0 0 1) \
+  >"$TMPDIR_ROOT/hook-output" 2>&1
+if grep -qF "WARNING: target authority document unavailable: AGENTS.md" "$TMPDIR_ROOT/hook-output" &&
+   grep -qF "WARNING: target authority document unavailable: CLAUDE.md" "$TMPDIR_ROOT/hook-output" &&
+   [[ ! -e "$FAKE_TARGET5/AGENTS.md" && ! -L "$FAKE_TARGET5/AGENTS.md" ]]; then
+  pass "Case 5: installed hook reports absent authority without replacing it"
+else
+  fail "Case 5: installed hook hides absence or creates authority"
+fi
+
+# Case 6: target-owned authority files and symlinks survive every linker run.
+for kind in regular symlink dangling; do
+  AUTHORITY_TARGET="$TMPDIR_ROOT/authority-$kind"
+  mkdir -p "$AUTHORITY_TARGET"
+  git -C "$AUTHORITY_TARGET" init -q
+  for doc in AGENTS.md CLAUDE.md; do
+    case "$kind" in
+      regular) printf 'target-owned\n' > "$AUTHORITY_TARGET/$doc" ;;
+      symlink)
+        printf 'target-owned\n' > "$AUTHORITY_TARGET/owned-$doc"
+        ln -s "owned-$doc" "$AUTHORITY_TARGET/$doc"
+        ;;
+      dangling) ln -s "missing-$doc" "$AUTHORITY_TARGET/$doc" ;;
+    esac
+  done
+  "$SHIM" "$AUTHORITY_TARGET" 2>"$TMPDIR_ROOT/authority-output"
+  "$SHIM" "$AUTHORITY_TARGET" 2>>"$TMPDIR_ROOT/authority-output"
+  for doc in AGENTS.md CLAUDE.md; do
+    case "$kind" in
+      regular)
+        if [[ ! -L "$AUTHORITY_TARGET/$doc" ]] && grep -qxF 'target-owned' "$AUTHORITY_TARGET/$doc"; then
+          pass "Case 6: regular $doc preserved"
+        else fail "Case 6: regular $doc replaced"; fi
+        ;;
+      symlink|dangling)
+        expected="owned-$doc"
+        [[ "$kind" == "dangling" ]] && expected="missing-$doc"
+        if [[ -L "$AUTHORITY_TARGET/$doc" && "$(readlink "$AUTHORITY_TARGET/$doc")" == "$expected" ]]; then
+          pass "Case 6: $kind $doc preserved"
+        else fail "Case 6: $kind $doc replaced"; fi
+        if [[ "$kind" == "dangling" ]]; then
+          if grep -qF "WARNING: target authority document unavailable: $doc" "$TMPDIR_ROOT/authority-output"; then
+            pass "Case 6: dangling $doc reported"
+          else fail "Case 6: dangling $doc not reported"; fi
+        fi
+        ;;
+    esac
+  done
+done
 
 # --------------------------------------------------------------------------
 # Summary

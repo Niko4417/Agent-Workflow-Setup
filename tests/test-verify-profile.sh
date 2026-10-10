@@ -26,6 +26,7 @@ export PATH="$T/bin:$PATH"
 
 cd "$T"
 git init -q
+printf '/bin/\n/*.log\n' >> .git/info/exclude
 printf '{"scripts":{"typecheck":"true","lint":"true","quality":"true"}}\n' > package.json
 
 pass=0 fail=0
@@ -53,7 +54,8 @@ check "web: verify runs legacy 'npm run typecheck'" grep -q "run typecheck" "$NP
 check "web: verify does NOT run 'npm run quality'"  bash -c '! grep -q "run quality" "$1"' _ "$NPM_LOG"
 
 # --- ui-verify-receipt.sh Playwright guard ---
-git commit -q --allow-empty -m init
+git add package.json
+git commit -qm init
 UIV="$ROOT/scripts/ui-verify-receipt.sh"
 
 # keiko-web: a non-Playwright command is rejected (exit 2), Playwright accepted.
@@ -63,6 +65,8 @@ check "web: non-Playwright journey command rejected" [ "$?" -eq 2 ]
 
 # keiko-native: a non-Playwright desktop journey command is accepted and stamps a receipt.
 native_markers
+git add CONTEXT.md docs quality
+git commit -qm 'native contract'
 KEIKO_PROFILE=keiko-native bash "$UIV" 42 -- true >/dev/null 2>&1
 g=$?
 check "native: non-Playwright journey command accepted" [ "$g" -eq 0 ]

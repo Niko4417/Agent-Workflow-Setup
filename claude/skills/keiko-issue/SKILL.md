@@ -38,8 +38,10 @@ where the target and user have not authorized another path.
 
 Fetch `#N` (body, labels, comments, linked PRs/children). Apply the **active
 profile's Definition of Ready**. **keiko-web:** the issue must have acceptance
-criteria + a verification command. **keiko-native:** it must be a machine-validated
-accepted contract — a single `type:*` label, `status: ready` with a matching
+criteria + a verification command; accepted `New`/`Triaged` work is executable
+when those are complete. Actual `Blocked`/`Waiting for User` states require
+resolution or the requested decision before resuming. **keiko-native:** it must be
+a machine-validated accepted contract — a single `type:*` label, `status: ready` with a matching
 readiness record (validated `Planning contract` version + fingerprint), and a
 complete **Execution Authority** + **Quality Plan**; an instruction to consult the
 private Fachkonzept or infer omitted requirements is a missing-requirement defect
@@ -120,7 +122,13 @@ or product decisions, not routine test placement.
 
 Commit the scoped implementation before SHA-bound receipt generation, using a
 Conventional Commit referencing `#N`. Audit fixes or generated evidence may require
-another commit; refresh all affected proof at that new HEAD.
+another commit; refresh all affected proof at that new HEAD. For ADR-0145 Web
+targets, an unchanged accepted base-ref creation push matching the exact existing
+`origin/dev` or canonical origin epic commit may establish the branch before
+implementation. The first implementation push requires fresh full verify proof at
+HEAD; it does not require an early audit when no PR exists. PR creation and
+subsequent open-PR pushes require the audit and applicable UI proof below. Native
+retains its accepted Execution Authority and target-owned delivery contract.
 
 ## 5. Verify, audit, ship (per target contract)
 
@@ -128,8 +136,10 @@ another commit; refresh all affected proof at that new HEAD.
    **current target-required commands** through `verify.sh` (ADR-0145 targets use
    individual commands; older accepted wrappers remain compatibility paths) and
    writes the verify receipt **only if
-   green**. If red, fix and re-run, **looping until green** (bounded by 3 distinct
-   attempts → escalate). The PR-create **verify-gate** blocks `gh pr create`/`gh pr
+   green**. Include every applicable target/accepted Quality Plan obligation,
+   selecting semantic touched-area gates with repeatable `--also <script>`;
+   default command selection alone does not prove those obligations. If red, fix
+   and re-run, **looping until green** (bounded by 3 distinct attempts → escalate). The PR-create **verify-gate** blocks `gh pr create`/`gh pr
 ready` until a green verify receipt exists at HEAD.
    **Cross-layer issue (spans ≥2 layers/packages):** a green unit suite is _not_
    sufficient — tests have passed while production wiring was broken (e.g. a
@@ -139,7 +149,10 @@ ready` until a green verify receipt exists at HEAD.
    just fixtures), and **at least one real request-path smoke** exercising the actual
    production path end-to-end. Use the target's current commands and add the real
    request-path smoke explicitly.
-2. **Audit-clean loop.** Run `keiko-issue-audit` `#N` — mandatory. If it reports
+2. **Audit-clean loop.** Run `keiko-issue-audit` `#N` — mandatory before PR
+   creation. Accepted scope stages may be audited separately against their own
+   acceptance boundaries; name the audited stage and remaining stages explicitly.
+   Stage evidence does not authorize closing the whole issue. If it reports
    confirmed findings, fix them and re-audit, **looping until `findings=0`**
    (bounded by 3 attempts → escalate). The audit re-verifies and writes the audit
    receipt at HEAD as its final verification step. **User-facing web issue:** write a runnable
@@ -173,7 +186,9 @@ ready` until a green verify receipt exists at HEAD.
    runnable Playwright plan), then `gh pr ready` — the **ready-gate** blocks `ready`
    until a comment naming the current commit exists.
    (Non-user-facing PRs open ready directly.) **Every merge requires the full
-   current-head target check matrix and settled review findings.** Arm native auto-merge only when target/run authority permits it.
+   current-head target check matrix and settled review findings; absent or skipped
+   required PR checks never qualify through integration-only proven-tree reuse.**
+   Arm native auto-merge only when target/run authority permits it.
    `pr-shepherd` drives CI/review to merge-ready; bounded CI repair (stop after 3
    distinct failed attempts). **Each CI-repair repush re-runs the QA:** the
    **push-gate** blocks a `git push` to any open work-branch PR, including a child,
@@ -186,7 +201,8 @@ ready` until a green verify receipt exists at HEAD.
    not stop here — it proceeds to AFK auto-merge under `keiko-epic`.)
 7. **Close as done on merge.** When the issue's linked PR is **merged** — a child
    auto-merged into its **epic branch**, or an authorized standalone PR merged into
-   `dev` — transition the issue to the profile's **done** state and **close it**.
+   `dev` — and **all accepted scope stages are complete with evidence**, transition
+   the issue to the profile's **done** state and **close it**.
    **keiko-native:** the issue is closed with reason `completed` carrying exactly
    **`status: done`** (every other `status:*` removed), as a **projection** of the
    target's `docs/qa/issue-lifecycle.md` (done = closed + `status: done`; reopen →
@@ -197,8 +213,15 @@ ready` until a green verify receipt exists at HEAD.
 
 ## Escalate (stop, report)
 
-Security-sensitive change; breaking public API; data/schema migration; >10% perf
-regression; scope >2×; 3 distinct failed CI repairs; security-auditor critical/high.
+Escalate missing or contradictory acceptance criteria, unresolved product or
+architecture decisions, authority conflicts, material scope expansion, overlapping
+write ownership, prohibited sensitive artifacts, or exhaustion of 3 materially
+distinct repair attempts. Accepted in-scope security, breaking public-API, and
+migration work proceeds with the target-required audits and Quality Plan; its
+category alone does not require another approval. Confirmed unsafe findings block
+delivery until repaired and re-audited. A performance regression outside the
+accepted budget must be repaired; escalate when safe resolution needs a missing
+decision, additional authority, or exceeds the bounded recovery attempts.
 
 ## Final report
 

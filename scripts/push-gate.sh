@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 #
 # push-gate.sh — require fresh local QA before updating any open work-branch PR.
-# Explicit successful empty GitHub PR inventory permits a pre-PR WIP push.
+# ADR-0145 web targets require verify proof even before PR creation; only an
+# unchanged existing dev/epic base commit may bootstrap a branch without proof.
 # API errors, malformed responses, and multiple open PRs fail closed. Child
 # updates into an epic receive the same verify/audit/UI checks as dev updates.
 
@@ -25,7 +26,25 @@ if ! printf '%s' "$info" | jq -e 'type == "array" and all(.[]; .state == "OPEN" 
   printf '[push-gate] BLOCKED: malformed open PR lookup.\n' >&2
   exit 1
 fi
-[ "$(printf '%s' "$info" | jq 'length')" = 0 ] && exit 0
+if [ "$(printf '%s' "$info" | jq 'length')" = 0 ]; then
+  # Older targets and Native retain their own pre-PR policy. ADR-0145 requires
+  # local checks before implementation pushes, without moving the audit earlier.
+  [ -f docs/adr/ADR-0145-retire-the-agent-pre-pr-aggregate-gate.md ] || exit 0
+  bash "$here/proof-worktree.sh" || exit 1
+  head="$(git rev-parse HEAD)" || exit 1
+  bases="$(git for-each-ref --format='%(refname) %(objectname)' refs/remotes/origin)" || exit 1
+  while read -r ref base_sha; do
+    case "$ref" in
+      refs/remotes/origin/dev|refs/remotes/origin/epic/?*|refs/remotes/origin/codex/epic-?*)
+        if [ "$base_sha" = "$head" ]; then
+          printf '[push-gate] OK: unchanged existing integration base; branch bootstrap only.\n'
+          exit 0
+        fi ;;
+    esac
+  done <<< "$bases"
+  bash "$here/verify-gate.sh" || exit 1
+  exit 0
+fi
 [ "$(printf '%s' "$info" | jq 'length')" = 1 ] || {
   printf '[push-gate] BLOCKED: ambiguous multiple open PRs.\n' >&2
   exit 1

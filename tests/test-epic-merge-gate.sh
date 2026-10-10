@@ -8,6 +8,7 @@ trap 'rm -rf "$T"' EXIT
 mkdir -p "$T/bin"
 cd "$T"
 git init -q
+printf '/bin/\n' >> .git/info/exclude
 git commit -q --allow-empty -m init
 git checkout -q -b issue/999-demo
 
@@ -142,6 +143,8 @@ mkdir -p docs/adr
 touch docs/adr/ADR-0135-deterministic-dev-delivery-and-keiko-for-quality.md
 stubgh ok dev success absent; ready_non_ui; expect 'ADR without AGENTS reference does not alter generic dev policy' 1
 printf '%s\n' 'Accepted repository delivery follows ADR-0135.' > AGENTS.md
+git add AGENTS.md docs
+git commit -qm 'target authority'
 stubgh ok dev success absent; ready_non_ui; expect 'accepted checked issue bootstrap can target dev without extra receipts' 0
 stubgh ok dev other-required-missing absent; ready_non_ui; expect 'bootstrap still needs every required check' 1
 stubgh ok dev success absent codex/epic-anti-slop-quality; ready_non_ui

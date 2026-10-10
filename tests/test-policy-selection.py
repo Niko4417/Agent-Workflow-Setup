@@ -70,6 +70,12 @@ npm run format:check
         for path in ('packages/keiko-tools/src/tool.test.ts','packages/keiko-tools/src/__tests__/tool.ts'):
             self.assertNotIn(('npm','run','check:activity-log'),policy.plan(self.root,[path]))
 
+    def test_destructive_surface_check_runs_after_dependency_consumers(self):
+        planned=policy.plan(self.root,['packages/keiko-tools/src/index.ts'],['check:package-surface:assembled','test:coverage:quality'])
+        self.assertEqual(planned[-1],('npm','run','check:package-surface:assembled'))
+        self.assertLess(planned.index(('npm','run','test:coverage:quality')),len(planned)-1)
+        self.assertLess(planned.index(('npm','run','check:activity-log')),len(planned)-1)
+
     def test_unknown_plan_command_cannot_disappear(self):
         with self.assertRaises(ValueError): policy.plan(self.root,[],['missing-required-gate'])
 

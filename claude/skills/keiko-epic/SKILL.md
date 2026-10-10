@@ -43,7 +43,16 @@ Fetch `#E`: body, comments, labels, child issues (sub-issues + linked), linked
 PRs, board state. Build the execution plan:
 
 - list every child with state, labels, area, likely file ownership, dependencies, verification, **and current GitHub assignee**;
-- classify each by the profile's lifecycle state — **executable** (`ready`, or in-flight `in progress`/`pr open`) vs **non-executable** (`new`, `triaged`, `blocked`, `waiting for user`) vs `done`. **keiko-native:** these are the target's `status:*` states (`profiles/keiko-native.md` → Issue lifecycle); **`triaged` is planned-but-not-yet-ready — non-executable**, and readiness is judged independently of the label. **Never start non-executable work.** Treat a child already assigned to someone other than the operator as **owned — skip it**;
+- classify readiness using the selected profile. **keiko-web:** accepted children in
+  `New` or `Triaged` are executable when acceptance criteria and verification are
+  complete; those states alone do not block intake. Resume `In Progress`/`PR Open`
+  work only within its accepted scope. Actual `Blocked` or `Waiting for User`
+  states remain non-executable until the blocker is resolved or the requested
+  decision arrives. **keiko-native:** follow the target's validated lifecycle
+  (`profiles/keiko-native.md` → Issue lifecycle); `new`/`triaged` remain
+  non-executable, and a current accepted readiness record does not bypass state
+  action limits. Treat `done` as completed, and a child assigned to someone other
+  than the operator as **owned — skip it**;
 - respect the epic's required order; detect safe parallelism **only** when children have disjoint file ownership, independent acceptance criteria, and no ordering dependency.
   If the epic has no executable children and scope isn't clear enough to create them, stop and report.
 
@@ -52,19 +61,29 @@ claims, and skips any child that's already assigned to someone else.
 
 ## 2. Epic branch
 
-**Dev-baseline preflight (before committing to a long epic).** Confirm the target
-branch is **currently green** — its required checks are passing at `dev` HEAD — before
-you sink days into an epic branched off it. Building a multi-issue epic on a red `dev`
-(e.g. a failing Sonar branch gate) means the final `epic → dev` PR inherits that
-failure and can't close out clean. If `dev` is red, surface it and resolve or wait
-before starting.
+**Dev-baseline preflight (before committing to a long Web epic).** Check the
+applicable integration run at the current `dev` HEAD against the target's current
+contract. Under ADR-0178, the canonical resolver may reuse complete successful
+pull-request evidence for the exact merged PR's byte-identical tree. Record the
+integration run and its proven-tree evidence identity; sanctioned reused jobs do
+not need duplicate check runs on the squash SHA. The coverage chain and SonarCloud
+branch analysis still run on every `dev` push. A failed executed check remains red;
+missing, pending, or unproven evidence is not green. Resolve or wait before starting.
+This integration-only reuse never permits missing, skipped, or stale required
+checks on a child or final epic PR: every PR needs the full exact-head matrix.
+Native uses its frozen accepted delivery target and current activation contract.
 
 Create one long-lived `epic/<name>` or `codex/epic-<name>` off the latest `dev`.
 Record it on the board and an epic comment before implementation starts. Child
 branches `issue/<id>-<short>` or `codex/issue-<id>-<short>` are cut **off the epic
-branch**, not off `dev`.
+branch**, not off `dev`. On ADR-0145 Web targets, an unchanged accepted base-ref
+creation push matching the exact existing `origin/dev` or canonical origin epic
+commit may establish the branch before implementation. Before the first
+implementation push, obtain fresh full verify proof at HEAD; the audit is required
+before PR creation, not for that first push alone. Native retains its accepted
+Execution Authority and target-owned delivery contract.
 
-## 3. Child loop (per `ready` child)
+## 3. Child loop (per executable child)
 
 **Children run AFK (no human-in-the-loop per child).** A child integrates into the
 epic branch **autonomously** — there is no per-child human review or sign-off. The
@@ -76,8 +95,8 @@ either **auto-merges on green machine evidence**, or it **escalates as an except
 1. Run **`keiko-issue` `#child`** on its branch off the epic branch (it runs
    `verify.sh` + `keiko-issue-audit` as part of its flow).
 2. The child PR targets the **epic branch**. Auto-merge requires a completed,
-   successful full target required-check matrix on the exact PR head, settled
-   review findings, **and** matching SHA-bound local verify/audit evidence:
+   successful full target required-check matrix on the exact PR head (no skipped
+   or absent required checks), settled review findings, **and** matching SHA-bound local verify/audit evidence:
    - **Non-user-facing child (no UI):** run `keiko-issue-audit`; when it reports
      confirmed findings, **fix them and re-audit, looping until the audit is clean**
      (`findings=0`), wait for the full exact-head target check matrix and settled
@@ -130,12 +149,13 @@ either **auto-merges on green machine evidence**, or it **escalates as an except
    - [ ] **Merge** landed (auto-merge gate passed, or human-merged).
    - [ ] **Post-merge verification:** epic branch still builds (`verify.sh`) at the new epic HEAD.
    - [ ] **Close the child as done.** With the child PR **merged into the epic branch**
-         and its evidence complete, transition the child to the profile's **done** state
-         and **close it**. **keiko-native:** close with reason `completed` carrying
+         and all accepted scope stages and their evidence complete, transition the
+         child to the profile's **done** state and **close it**. **keiko-native:** close with reason `completed` carrying
          exactly **`status: done`** (other `status:*` removed), a projection of
          `docs/qa/issue-lifecycle.md` — read it at runtime and **fail closed** if
          labels/contract are missing/stale; never let the board grant the transition.
-         **keiko-web:** close + `status: done`. Never close a child whose PR is not merged.
+         **keiko-web:** close + `status: done`. Never close a child whose PR is not
+         merged or whose accepted stages remain. Separately audited stages do not complete the whole issue.
    - [ ] **Closure evidence** recorded: child comment linking PR/commit + verification/audit evidence; board updated (a projection of the closed/`done` state).
          Any unchecked box → stop and resolve before moving on.
 4. Rebase/merge `dev` into the epic branch regularly (esp. before the final PR).
@@ -183,16 +203,22 @@ When all required children are integrated on the epic branch:
    otherwise retain the generic final human-review default.
 6. **Closure evidence — capture the post-merge baseline.** After the authorized
    merge of the epic into `dev`, the epic is only truly closed out when `dev` is green **at the new
-   HEAD**: record the **post-merge branch analysis** (e.g. the `dev` Sonar branch run
-   and any other required post-merge check) as closure evidence on the epic. A merged
+   HEAD** under the applicable integration contract (including canonical ADR-0178
+   reuse, never a skipped PR matrix): record the **post-merge branch analysis**
+   (e.g. the `dev` Sonar branch run and any other required post-merge check) as closure evidence on the epic. A merged
    epic whose post-merge `dev` run is red is **merged but not closed out** — track the
    failing check as follow-up, don't mark the epic done on a red post-merge baseline.
 
 ## Escalate (stop, report)
 
-Children contradict the epic or each other; missing required architecture/product
-decision; parallel work would need overlapping ownership; CI repair exceeds 3
-distinct attempts; security-auditor critical/high; public-API or data migration.
+Escalate missing or contradictory acceptance criteria, unresolved product or
+architecture decisions, authority conflicts, material scope expansion, overlapping
+write ownership, prohibited sensitive artifacts, or exhaustion of 3 materially
+distinct repair attempts. Accepted in-scope security, public-API, and migration work
+proceeds with the target-required audits and Quality Plan; its category alone does
+not require another approval. Confirmed unsafe findings block delivery until
+repaired and re-audited; escalate when safe resolution needs a missing decision,
+additional authority, or exceeds the bounded recovery attempts.
 
 ## Final report
 

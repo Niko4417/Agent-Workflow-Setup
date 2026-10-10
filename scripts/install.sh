@@ -31,9 +31,8 @@ if [[ ! -d "$TARGET/.git" ]]; then
   echo "WARNING: $TARGET does not look like a git repo (no .git)." >&2
 fi
 
-# Detect the target's product profile (honors a KEIKO_PROFILE override). keiko-native
-# owns its own AGENTS.md / CLAUDE.md (machine-checked contract), so we AUGMENT — never
-# overlay those — per docs/target-repository-boundary.md.
+# Detect the target's product profile (honors a KEIKO_PROFILE override). Both
+# profiles own their authority documents; only the optional harness is linked.
 PROFILE="$(cd "$TARGET" && KEIKO_PROFILE="${KEIKO_PROFILE:-}" bash "$REPO_DIR/scripts/profile-detect.sh")"
 
 echo "Installing Agent Workflow Setup"
@@ -66,16 +65,15 @@ link_one "$REPO_DIR/codex"   "$TARGET/.codex"
 link_one "$REPO_DIR/claude"  "$TARGET/.claude"
 link_one "$REPO_DIR/.agents" "$TARGET/.agents"
 
-# Root entry docs both harnesses read at the repo root.
-# (Codex reads AGENTS.md as its project doc; Claude reads CLAUDE.md.)
-# keiko-native owns these — do NOT overlay them; the target's own contract governs
-# and our orchestration is delivered via the skills + .codex/.claude configs (augment).
-if [[ "$PROFILE" == "keiko-native" ]]; then
-  echo "  = keiko-native: preserving the repo's own AGENTS.md / CLAUDE.md (augment, not replace)"
-else
-  link_one "$REPO_DIR/AGENTS.md" "$TARGET/AGENTS.md"
-  link_one "$REPO_DIR/CLAUDE.md" "$TARGET/CLAUDE.md"
-fi
+# Root authority documents belong to the target in every profile. Preserve regular
+# files and symlinks (including dangling links); absence is not workflow authority.
+for doc in AGENTS.md CLAUDE.md; do
+  if [[ -f "$TARGET/$doc" && -r "$TARGET/$doc" ]]; then
+    echo "  = preserving target authority document: $doc"
+  else
+    echo "WARNING: target authority document unavailable: $doc; consult the target contract; no workflow authority document was installed." >&2
+  fi
+done
 
 # Project MCP servers for Claude Code (read from the project root).
 link_one "$REPO_DIR/claude/mcp.json" "$TARGET/.mcp.json"
@@ -109,9 +107,7 @@ if [[ -d "$TARGET/.git" ]]; then
   mkdir -p "$(dirname "$EXCLUDE")"
   # No trailing slash: must match symlinks, not just real directories.
   exclude_entries=("/.codex" "/.claude" "/.agents" "/.mcp.json" "/.keiko-scripts" "/.claude.bak" "/.codex.bak")
-  # Only exclude the root docs when we actually overlay them (keiko-web). On
-  # keiko-native they are the repo's own tracked files — never exclude them.
-  [[ "$PROFILE" != "keiko-native" ]] && exclude_entries+=("/AGENTS.md" "/CLAUDE.md")
+  # Target-owned authority documents must remain visible to Git in every profile.
   for entry in "${exclude_entries[@]}"; do
     if ! grep -qxF "$entry" "$EXCLUDE" 2>/dev/null; then
       echo "$entry" >> "$EXCLUDE"
@@ -160,7 +156,7 @@ $MARKER
 # Args: \$1 old-HEAD  \$2 new-HEAD  \$3 flag (1 = branch checkout incl. worktree add).
 $CHAIN
 [ "\$3" = "1" ] || exit 0
-"$REPO_DIR/scripts/link-worktree.sh" "\$(git rev-parse --show-toplevel 2>/dev/null || pwd)" >/dev/null 2>&1 || true
+"$REPO_DIR/scripts/link-worktree.sh" "\$(git rev-parse --show-toplevel 2>/dev/null || pwd)" >/dev/null || true
 exit 0
 EOF
     chmod +x "$HOOK"

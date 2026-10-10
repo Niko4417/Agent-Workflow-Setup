@@ -82,9 +82,10 @@ out of target commits. Web can follow a live merged checkout; Native must use a
 separate immutable checkout (see [pinning](docs/local-editing.md#pinning-an-optional-native-integration)):
 
 - `<target>/.codex`, `.claude`, `.agents`, `.mcp.json`, `.keiko-scripts` → this repo
-- **keiko-web:** `AGENTS.md` and `CLAUDE.md` are also symlinked in (overlay).
-  **keiko-native:** they are **left alone** — Native owns its machine-checked
-  `AGENTS.md`/`CLAUDE.md`, so the installer **augments** and never overlays them.
+- **Both profiles:** target-owned `AGENTS.md` and `CLAUDE.md` files and symlinks
+  are preserved. Missing or unreadable authority documents are reported, never
+  filled with workflow defaults; restore documents required by the target contract
+  before agent work. Missing optional harness documents add no requirement.
 - skills mirrored into `~/.codex/skills/` so Codex and Claude invoke them by the same name
 - `.claude/settings.local.json` (per-machine) is preserved
 - a `post-checkout` hook re-links the harness on every `git worktree add` (a fresh
@@ -170,6 +171,7 @@ shell/API calls or replace server-side required checks.
 | open / ready a PR          | `verify-gate`     | the target's canonical command selected by `verify.sh` passed **green** at HEAD                 |
 | open / ready a PR          | `audit-gate`      | the audit **ran and is clean** — `findings=0`, plus a green **ui-verify** receipt (real UI-journey run) when user-facing |
 | ready a user-facing PR     | `ready-gate`      | a **SHA-bound test-plan comment** for the current commit is posted                                                       |
+| first implementation push (ADR-0145 Web) | `push-gate` | current full verify proof; unchanged existing dev/epic base creation is permitted |
 | repush a fix to any open work PR | `push-gate`       | the fix re-passes verify + clean-audit (+ ui-verify + reposted plan)                                                     |
 | authorized auto-merge | `epic-merge-gate` | full current-head target matrix + settled reviews + matching clean audit/verify + applicable UI journey/comment; target merge authority |
 

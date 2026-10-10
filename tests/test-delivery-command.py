@@ -26,6 +26,7 @@ class ExplicitRootDelivery(unittest.TestCase):
             subprocess.run([self.real_git,'-c','user.name=Test','-c','user.email=test@example.test',
                             'commit','-q','--allow-empty','-m','init'],cwd=folder,check=True)
             (folder/'.keiko-scripts').symlink_to(ROOT/'scripts')
+            (folder/'.git/info/exclude').write_text('/.keiko-scripts\n')
         subprocess.run([self.real_git,'checkout','-q','-b',BRANCH],cwd=self.root,check=True)
         subprocess.run([self.real_git,'checkout','-q','--detach'],cwd=self.other,check=True)
         self.sha = subprocess.check_output([self.real_git,'rev-parse','HEAD'],cwd=self.root,text=True).strip()
