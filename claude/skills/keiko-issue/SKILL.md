@@ -1,12 +1,12 @@
 ---
 name: keiko-issue
-description: Drive a single GitHub issue (task / feature / bug / user-finding) end-to-end from origin/dev to a green PR, the standard Keiko way — Definition-of-Ready gate, task-shaped agent team, quality bars, mandatory keiko-issue-audit, target-authorized delivery. Use when the operator selects one issue to work on. Takes an issue number.
+description: Drive a single GitHub issue (task / feature / bug / user-finding) end-to-end from origin/dev to a green PR, the standard Keiko way — Definition-of-Ready gate, task-shaped execution, quality bars, mandatory keiko-issue-audit, target-authorized delivery. Use when the operator selects one issue to work on. Takes an issue number.
 ---
 
 # keiko-issue
 
 Canonical, parameterized single-issue workflow for both harnesses. Replaces the
-old `codex-task-prompt.md` / `claude-issue-prompt.md` run-cards. **Composes the 16
+old `codex-task-prompt.md` / `claude-issue-prompt.md` run-cards. **Selects relevant
 canonical roles** (`.agents/roles.yaml`), **defers to** `docs/workflow-contract.md`
 for branching, gates, and target-owned delivery authority — follow them, do not
 restate.
@@ -16,7 +16,9 @@ restate.
 
 ## Role
 
-You are the lead session — the sole orchestrator. Do not edit code yourself.
+You are the lead session — the sole orchestrator. You may implement small, clearly
+scoped work directly. Delegate when independent execution, specialist judgment, or
+safe parallelism materially helps; keep required audit independent of the author.
 
 ## 0. Select the product profile (before intake)
 
@@ -30,16 +32,20 @@ clarification. The accepted target contract governs product requirements.
 Target `AGENTS.md`, scoped instructions, ADRs, and explicit user choices override
 generic workflow defaults. For Keiko, ADR-0135 authorizes accepted, checked
 `dev` delivery through native auto-merge; ADR-0145 retires `agent:pre-pr`.
-An explicit final epic review hold is a procedural instruction for that run,
-not a universal helper-enforced restriction, and adds no per-child approval. Otherwise retain the generic final human-review default
-where the target and user have not authorized another path.
+An explicit final epic human-review hold overrides target-authorized final auto-merge
+for that run and adds no per-child approval. Preserve it until the human explicitly
+authorizes final delivery; a green PR or an approval from another agent does not
+lift it. Otherwise retain the generic final human-review default where the target
+and user have not authorized another path.
 
 ## 1. Intake (Definition-of-Ready gate)
 
 Fetch `#N` (body, labels, comments, linked PRs/children). Apply the **active
 profile's Definition of Ready**. **keiko-web:** the issue must have acceptance
-criteria + a verification command. **keiko-native:** it must be a machine-validated
-accepted contract — a single `type:*` label, `status: ready` with a matching
+criteria + a verification command; accepted `New`/`Triaged` work is executable
+when those are complete. Actual `Blocked`/`Waiting for User` states require
+resolution or the requested decision before resuming. **keiko-native:** it must be
+a machine-validated accepted contract — a single `type:*` label, `status: ready` with a matching
 readiness record (validated `Planning contract` version + fingerprint), and a
 complete **Execution Authority** + **Quality Plan**; an instruction to consult the
 private Fachkonzept or infer omitted requirements is a missing-requirement defect
@@ -77,14 +83,26 @@ required parent commits before they write; a default-branch worktree is not enou
 
 ## 3. Route (task-shaped)
 
-Smallest effective shape:
+Use the smallest effective shape; these routes are choices based on the actual
+change, not a mandatory roster:
 
-- `fix` with unclear root cause → execute the reproduction below, then debug fan-out with competing hypotheses before any fix.
-- `fix` known/scoped → `implementor` (minimal diff).
-- `feature` single-scope → `developer` (spec-first, TDD); cross-layer → feature team with strict, disjoint file ownership.
-- **User-facing component** change → `ui-engineer` builds against the active profile's UI standard (keiko-web: Keiko Design System `docs/design-system/`; **keiko-native:** `docs/planning/native-design-baseline.md`, evidence generated anew); `a11y-auditor` reviews **WCAG 2.2 AA** plus that standard's fidelity and the issue's **Acceptance Journey** checkpoints.
-- Add `security-triage`→`security-auditor`, `performance-engineer`, `a11y-auditor`, `architect`, `docs` only when the changed surface creates that risk.
-  Assign explicit, disjoint file ownership before any write agent starts.
+- Small, clearly scoped work → the lead may inspect, implement and test directly.
+- `fix` with unclear root cause → execute the reproduction below; use competing
+  hypotheses or debug fan-out when bounded investigation needs it.
+- A delegated known/scoped fix → `implementor`; a delegated feature → `developer`.
+  Cross-layer work needs production-wiring evidence, not automatically more agents.
+- User-facing changes retain the active profile's UI standard and accepted journey.
+  Use `ui-engineer` for material implementation work and an independent
+  `a11y-auditor` where the target or accepted plan requires fidelity/accessibility
+  review (Web design system; Native design baseline and Acceptance Journey).
+- Select `security-triage`→`security-auditor`, `performance-engineer`, `architect`,
+  `test-engineer` or `docs` for material risks or target-required role separation.
+  An area label alone is not a reason to add every associated role.
+
+Assign explicit, disjoint ownership to delegated writers. Run the independent
+issue audit even when the lead implements; self-review is not that audit. An
+accepted spec and implementation authority do not need another plan approval.
+Ask only for an unresolved product decision or a change to scope/authority.
 
 ## 4. Implement
 
@@ -118,75 +136,55 @@ the requirement or an independent oracle, not the same computation as production
 Use the accepted plan's authority; seek clarification only for unresolved scope
 or product decisions, not routine test placement.
 
-Commit the scoped implementation before SHA-bound receipt generation, using a
-Conventional Commit referencing `#N`. Audit fixes or generated evidence may require
-another commit; refresh all affected proof at that new HEAD.
+Commit scoped implementation with a Conventional Commit referencing `#N`.
+Run applicable local checks before pushing; Native retains its frozen Execution
+Authority and target-owned delivery contract.
 
 ## 5. Verify, audit, ship (per target contract)
 
-1. **Verify-green loop.** Run `.keiko-scripts/verify-receipt.sh #N` — it runs the
-   **current target-required commands** through `verify.sh` (ADR-0145 targets use
-   individual commands; older accepted wrappers remain compatibility paths) and
-   writes the verify receipt **only if
-   green**. If red, fix and re-run, **looping until green** (bounded by 3 distinct
-   attempts → escalate). The PR-create **verify-gate** blocks `gh pr create`/`gh pr
-ready` until a green verify receipt exists at HEAD.
-   **Cross-layer issue (spans ≥2 layers/packages):** a green unit suite is _not_
-   sufficient — tests have passed while production wiring was broken (e.g. a
-   composition silently dropping a configured Model-Gateway URL). Beyond tests, the
-   verify-green loop must cover **root typecheck**, the **architecture check**, a
-   **non-test production-composition build** (the real wiring compiles/loads, not
-   just fixtures), and **at least one real request-path smoke** exercising the actual
-   production path end-to-end. Use the target's current commands and add the real
-   request-path smoke explicitly.
-2. **Audit-clean loop.** Run `keiko-issue-audit` `#N` — mandatory. If it reports
-   confirmed findings, fix them and re-audit, **looping until `findings=0`**
-   (bounded by 3 attempts → escalate). The audit re-verifies and writes the audit
-   receipt at HEAD as its final verification step. **User-facing web issue:** write a runnable
-   Playwright plan and run it via `.keiko-scripts/ui-verify-receipt.sh #N -- <playwright cmd>`
-   (it stamps the ui-verify receipt only on green). Publish the SHA-bound plan
-   comment after opening the draft PR (step 5); repost on every HEAD change.
-   In Native, use the Acceptance Journey's native harness through the same receipt
-   wrapper; do not assume Playwright can test the desktop host.
-3. The lead uses `verifier`'s proposed evidence in the
-   PR "Verification evidence" section. For a user-facing change, capture the
-   profile's evidence (keiko-web: design-system evidence under
-   `docs/design-system/evidence/<N>/` — theme screenshots + `*-fidelity-proof.json` +
-   `a11y-proof.json`, ADR-0049/0051; **keiko-native:** the issue's **Acceptance
-   Journey** automated/a11y/visual/recovery/platform evidence, machine-evaluated and
-   bound to the exact head).
-4. **PR gates.** Before opening the PR, two PreToolUse gates must pass and
-   **block `gh pr create`** otherwise: `verify-gate` (green verify @ HEAD) and
-   `audit-gate` (a **clean** audit @ HEAD — ran, `findings=0`, **and** a green
-   ui-verify receipt when user-facing). Same for every PR, any target. If you
-   committed after the audit, re-run the audit/verify (receipts are SHA-bound and
-   go stale). **One verifier owns a given SHA:** on any new commit, **cancel
-   superseded verification runs and close their agents** (their receipts are stale
-   by design) — never leave duplicate or orphaned verification agents running
-   against an outdated HEAD.
-5. Open PR. **Know which mode you're in — issues run AFK:** an **epic child**
-   (PR → the epic branch) has **no human-in-the-loop** — `keiko-epic` auto-merges it
-   on green machine evidence or escalates as an exception; there is no per-child human
-   review, no `Ready for Human Review` handoff. A **standalone** issue (PR → `dev`) is
-   delivered under the target's authority or an explicit review hold.
-   **User-facing PRs (including children):** open `--draft`, post the `<!-- keiko:manual-test-plan sha=<HEAD> -->` comment (the
-   runnable Playwright plan), then `gh pr ready` — the **ready-gate** blocks `ready`
-   until a comment naming the current commit exists.
-   (Non-user-facing PRs open ready directly.) **Every merge requires the full
-   current-head target check matrix and settled review findings.** Arm native auto-merge only when target/run authority permits it.
-   `pr-shepherd` drives CI/review to merge-ready; bounded CI repair (stop after 3
-   distinct failed attempts). **Each CI-repair repush re-runs the QA:** the
-   **push-gate** blocks a `git push` to any open work-branch PR, including a child,
-   unless fresh verify + clean-audit (+ ui-verify) receipts exist at the new HEAD — and, for a
-   user-facing PR, the `keiko:manual-test-plan sha=<HEAD>` comment reposted for the
-   new commit — so fix → re-run the loops → repost the comment → push.
-6. **Standalone → `dev` only:** use `Ready for Human Review` when the target or
-   run requires a hold; otherwise continue authorized checked delivery. Flush
-   current-state + next-action to the issue/PR. (An **epic child** does
-   not stop here — it proceeds to AFK auto-merge under `keiko-epic`.)
+1. **Verify.** Run the target's applicable minimum-loop and touched-area commands,
+   including mandatory local Sonar where required. `.keiko-scripts/verify.sh` is
+   an optional convenient runner; select semantic obligations from the target
+   contract/Quality Plan using repeatable `--also <script>`. Package-surface
+   assembly runs last because it prunes live dependencies. A fast smoke does not
+   replace required checks. Fix confirmed failures and rerun, with at most three
+   materially distinct repair attempts before escalation.
+   **Cross-layer issue (≥2 layers/packages):** cover root typecheck, architecture,
+   a non-test production-composition build, and a real request-path smoke. Unit
+   tests alone cannot prove production wiring.
+2. **Independent audit.** Run `keiko-issue-audit #N` before PR creation; repair
+   confirmed findings and re-audit until clean, within the same bounded recovery.
+   Accepted stages may be audited separately: name the audited stage and remaining
+   stages. Stage evidence never authorizes closing the whole issue.
+3. **UI evidence.** Execute the accepted user journey and report actual results
+   at the exact head. Web uses runnable Playwright journeys and target-required
+   design-system fidelity/a11y evidence under `docs/design-system/evidence/<N>/`
+   (theme screenshots, fidelity/a11y proof files under ADR-0049/0051). Native uses
+   its Acceptance Journey's automated/a11y/visual/recovery/platform evidence;
+   a browser test cannot substitute for the desktop host.
+4. **Publish evidence.** The lead records the exact current PR head, actual
+   commands/results, independent audit findings/resolution, UI journey results,
+   limitations, and CI links in the target PR template or a PR comment. After a
+   new commit, refresh affected checks, audit and journeys and update that record.
+   Cancel superseded verifier runs; never attribute old-head results to new code.
+5. **Open and deliver.** Use ordinary `git`/`gh` commands from the deliberately
+   chosen target workdir. An epic child targets its accepted epic branch and
+   proceeds without per-child human approval. A standalone PR follows target/run
+   authority. Every merge requires the full exact-head target required-check
+   matrix and settled review findings; missing/skipped PR checks never qualify
+   through integration-only evidence reuse. When authorized, arm native auto-merge
+   with `gh pr merge <N> --auto --squash --match-head-commit <exact-head-sha>`.
+   Native merge operations remain with its accepted automation identity.
+   The lead or delegated `pr-shepherd` drives CI/review; reproduce failures locally,
+   repair, rerun affected QA/audit/journeys, push, and update exact-head evidence. Never bypass
+   checks, force-push or push directly to `dev`.
+6. **Standalone → `dev`:** honor a target/run hold with `Ready for Human Review`;
+   otherwise continue authorized delivery. Flush current state + next action to
+   the issue/PR. Epic children continue their accepted integration loop.
 7. **Close as done on merge.** When the issue's linked PR is **merged** — a child
    auto-merged into its **epic branch**, or an authorized standalone PR merged into
-   `dev` — transition the issue to the profile's **done** state and **close it**.
+   `dev` — and **all accepted scope stages are complete with evidence**, transition
+   the issue to the profile's **done** state and **close it**.
    **keiko-native:** the issue is closed with reason `completed` carrying exactly
    **`status: done`** (every other `status:*` removed), as a **projection** of the
    target's `docs/qa/issue-lifecycle.md` (done = closed + `status: done`; reopen →
@@ -197,8 +195,15 @@ ready` until a green verify receipt exists at HEAD.
 
 ## Escalate (stop, report)
 
-Security-sensitive change; breaking public API; data/schema migration; >10% perf
-regression; scope >2×; 3 distinct failed CI repairs; security-auditor critical/high.
+Escalate missing or contradictory acceptance criteria, unresolved product or
+architecture decisions, authority conflicts, material scope expansion, overlapping
+write ownership, prohibited sensitive artifacts, or exhaustion of 3 materially
+distinct repair attempts. Accepted in-scope security, breaking public-API, and
+migration work proceeds with the target-required audits and Quality Plan; its
+category alone does not require another approval. Confirmed unsafe findings block
+delivery until repaired and re-audited. A performance regression outside the
+accepted budget must be repaired; escalate when safe resolution needs a missing
+decision, additional authority, or exceeds the bounded recovery attempts.
 
 ## Final report
 

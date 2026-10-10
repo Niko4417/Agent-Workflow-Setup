@@ -1,66 +1,49 @@
 # Feature Team — Cross-Layer Feature Delivery
 
-**Use case**: a feature spans backend + frontend + tests, and the three layers can be implemented in parallel by different teammates without touching the same files.
+Use when independent work across backend, UI and tests benefits from parallel
+execution. The lead may implement a small task directly or own a disjoint slice.
+Choose only the roles the accepted scope needs; this template is not a fixed roster.
 
-**Members**: 3 writing teammates with strict file-ownership boundaries.
+| Teammate | Role | Model / effort | Example Keiko ownership |
+| --- | --- | --- | --- |
+| `dev` | `developer` | Opus 5.5 / high | Named domain files under `packages/` and composition files under `src/` |
+| `test` | `test-engineer` | Opus 5.5 / high | Named co-located tests or cross-package / e2e files under `tests/` |
+| `ui` | `ui-engineer` | Opus 5.5 / medium | Named component and CSS Module files under `packages/keiko-ui/` |
 
-| Teammate | Subagent type | Model | Owns |
-|----------|---------------|-------|------|
-| `dev` | `developer` | Opus 5.5 | Backend / service code: `services/**`, `libs/**` |
-| `test` | `test-engineer` | Opus 5.5 | All test files: `**/*.{test,spec}.{ts,tsx}`, `__tests__/`, `tests/`, `e2e/` |
-| `ui` | `ui-engineer` | Opus 5.5 | Component code: `apps/**/components/**`, `*.tsx`, `*.css` |
+These are ownership examples, not broad write grants. Assign exact files after
+inspection; test and UI scopes must not overlap another worker's files. Native
+uses its own accepted paths, Quality Plan and Acceptance Journey.
 
-**Cost**: 3× Opus 5.5; developer/test use high effort and UI uses medium.
-Parallelism may reduce wall time but adds coordination tokens. There is no
-mixed-model discount; compare total accepted-task cost using the
-[cost/effort assessment](../../docs/model-cost-effort.md).
+## Before spawning
 
-## Pre-flight checklist (lead does this BEFORE spawning)
-
-1. **Spec exists**: a written spec with Acceptance Criteria, in the issue or in-conversation.
-2. **File boundaries clear**: each teammate's files do not overlap. If they do, sequence the work instead.
-3. **Plan approval required**: each teammate must submit a plan and wait for lead approval before implementing.
-4. **Verification gate defined**: which `make` target or `pnpm` script proves the feature works end-to-end.
+- Read the accepted spec, acceptance criteria and unresolved decisions.
+- Assign disjoint files, dependencies, expected evidence and stop conditions.
+- Resolve shared API contracts before dependent writes; sequence overlapping work.
+- Select current target commands and platform checks. Keiko uses npm workspaces;
+  its `AGENTS.md` owns the local minimum loop and applicable touched-area gates.
+- Request a new decision only for unresolved scope/authority or product choices.
+  Approved scope and ownership do not require another universal plan-approval round.
 
 ## Spawn prompt
 
 ```text
-We have an approved spec for <FEATURE-NAME> (issue #<NUMBER>). Create an agent
-team of three teammates to implement it in parallel. Each teammate must submit
-a plan and wait for my approval before implementing. Use these subagent
-definitions and file boundaries:
-
-- Teammate "dev" using the developer agent type.
-  Owns: services/**, libs/**. Backend logic + APIs.
-  Must NOT touch: apps/**, **/*.test.ts, **/*.spec.ts.
-
-- Teammate "test" using the test-engineer agent type.
-  Owns: all test files matching **/*.{test,spec}.{ts,tsx} and tests/**, e2e/**.
-  Must write tests for the new backend and UI behaviour.
-
-- Teammate "ui" using the ui-engineer agent type.
-  Owns: apps/**/components/**, related .tsx and .css.
-  Must NOT touch: services/**, libs/**, test files.
-
-Coordination rules:
-- "dev" goes first (test and ui depend on the API contract).
-- "ui" and "test" may run in parallel once the API contract is committed.
-- Only approve plans that explicitly list the files the teammate will touch.
-- Reject any plan that modifies files outside the teammate's owned scope.
-- Verification gate: `make ci-checks` must pass before the team is done.
+Implement the accepted slice of issue #<NUMBER> using the <ROLE> role.
+Own only: <EXACT FILES>.
+Dependencies: <ACCEPTED CONTRACT OR PREDECESSOR>.
+You are not alone; preserve others' edits. Do not expand scope or delegate.
+Verification: <CURRENT TARGET COMMANDS AND ACCEPTANCE CHECKPOINTS>.
+Return changed files, actual command/journey results, and limitations.
+Stop and report missing decisions, authority or conflicting ownership.
 ```
 
-## What the lead does during
+## Lead responsibilities
 
-1. Review and approve each teammate's plan (or reject with feedback).
-2. Watch for `dev` finishing the API contract — then unblock `test` and `ui`.
-3. If a teammate gets stuck or proposes scope creep, redirect immediately.
-4. Run `make ci-checks` after the team reports done.
-5. Clean up the team.
+Verify dependency readiness and worker evidence, integrate the composition and
+run applicable target checks. Complete the required independent issue audit and
+accepted UI/platform journeys before delivery. Record actual results at the exact
+PR head, then clean up the team. Lead writes must remain disjoint from active
+workers; never overwrite their files.
 
-## Anti-patterns
-
-- **Don't** let two teammates own the same path. If you cannot draw a clean boundary, sequence the work with sub-agents instead.
-- **Don't** spawn this team for tasks under ~30 minutes of total work — coordination overhead beats parallelism savings.
-- **Don't** skip plan approval. Without it, three writing teammates can produce three incompatible designs in parallel.
-- **Don't** assume teammates will read each other's commits — use the shared task list for cross-references.
+Parallelism adds coordination cost; choose it for independent work, not to satisfy
+a fixed team size or elapsed-time threshold. Detailed cost comparisons belong to
+routing qualification or a requested experiment.

@@ -17,7 +17,7 @@ class PolicySelection(unittest.TestCase):
         self.tmp=tempfile.TemporaryDirectory();self.addCleanup(self.tmp.cleanup)
         self.root=Path(self.tmp.name)
         self.git('init','-q')
-        commands=['typecheck','format:check','check:activity-log','list:workflow-consumers','check:zizmor-anchors','check:e2e-suite-wiring','check:retrieval-quality','gates:sonar','test:coverage:quality','check:package-surface:assembled','check:eslint-lane']
+        commands=['typecheck','format:check','check:activity-log','list:workflow-consumers','check:zizmor-anchors','check:e2e-suite-wiring','check:retrieval-quality','gates:sonar','test:coverage:quality','check:package-surface:assembled','check:eslint-lane','lint','test:coverage:ui','check:editor-release-evidence','check:update-ui-evidence']
         (self.root/'package.json').write_text(json.dumps({'scripts':dict.fromkeys(commands,'true')}))
         (self.root/'AGENTS.md').write_text('''### Minimum loop for any change
 ```bash
@@ -69,6 +69,24 @@ npm run format:check
     def test_test_only_diff_does_not_invent_runtime_activity_change(self):
         for path in ('packages/keiko-tools/src/tool.test.ts','packages/keiko-tools/src/__tests__/tool.ts'):
             self.assertNotIn(('npm','run','check:activity-log'),policy.plan(self.root,[path]))
+
+    def test_destructive_surface_check_runs_after_dependency_consumers(self):
+        planned=policy.plan(self.root,['packages/keiko-tools/src/index.ts'],['check:package-surface:assembled','test:coverage:quality'])
+        self.assertEqual(planned[-1],('npm','run','check:package-surface:assembled'))
+        self.assertLess(planned.index(('npm','run','test:coverage:quality')),len(planned)-1)
+        self.assertLess(planned.index(('npm','run','check:activity-log')),len(planned)-1)
+
+    def test_ui_scope_runs_workspace_and_release_checks(self):
+        planned = policy.plan(self.root, ['packages/keiko-ui/src/component.tsx'])
+        self.assertIn(('npm', 'run', 'typecheck', '--workspace', '@oscharko-dev/keiko-ui'), planned)
+        self.assertIn(('npm', 'run', 'lint', '--workspace', '@oscharko-dev/keiko-ui'), planned)
+        self.assertIn(('npm', 'run', 'test:coverage:ui'), planned)
+        self.assertIn(('npm', 'run', 'check:editor-release-evidence'), planned)
+        self.assertNotIn(('npm', 'run', 'check:update-ui-evidence'), planned)
+
+    def test_updater_scope_adds_freshness_check(self):
+        planned = policy.plan(self.root, ['packages/keiko-ui/src/lib/api.ts'])
+        self.assertIn(('npm', 'run', 'check:update-ui-evidence'), planned)
 
     def test_unknown_plan_command_cannot_disappear(self):
         with self.assertRaises(ValueError): policy.plan(self.root,[],['missing-required-gate'])

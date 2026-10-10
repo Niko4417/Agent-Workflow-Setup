@@ -1,10 +1,7 @@
 #!/usr/bin/env bash
 #
-# test-verify-profile.sh — profile-aware behavior of verify.sh and
-# ui-verify-receipt.sh. Proves keiko-native routes verify to `npm run quality`
-# (+ audit) while keiko-web keeps its legacy CI-mirror steps, and that the
-# ui-verify Playwright guard applies to keiko-web but not to keiko-native's
-# desktop journey. Uses a stub `npm` so no real project is needed.
+# test-verify-profile.sh — ordinary verify routing for Native and older web
+# targets. Uses a stub npm so no real project or receipt state is needed.
 # Run: bash tests/test-verify-profile.sh
 
 set -uo pipefail
@@ -26,6 +23,7 @@ export PATH="$T/bin:$PATH"
 
 cd "$T"
 git init -q
+printf '/bin/\n/*.log\n' >> .git/info/exclude
 printf '{"scripts":{"typecheck":"true","lint":"true","quality":"true"}}\n' > package.json
 
 pass=0 fail=0
@@ -45,28 +43,19 @@ check "native: verify runs 'npm run quality'"   grep -q "run quality" "$NPM_LOG"
 check "native: verify runs 'npm audit'"          grep -q "audit --audit-level=high" "$NPM_LOG"
 check "native: verify does NOT run legacy typecheck" bash -c '! grep -q "run typecheck" "$1"' _ "$NPM_LOG"
 
+# A web ADR marker must not redirect the accepted Native quality plan.
+mkdir -p docs/adr
+touch docs/adr/ADR-0145-retire-the-agent-pre-pr-aggregate-gate.md
+export NPM_LOG="$T/native-adr.log"; : > "$NPM_LOG"
+bash "$ROOT/scripts/verify.sh" >/dev/null 2>&1
+check "native: web ADR marker does not replace Native verification" grep -q "run quality" "$NPM_LOG"
+
 # keiko-web (no native markers) -> legacy CI-mirror steps, never `run quality`
 rm -rf CONTEXT.md docs quality
 export NPM_LOG="$T/web.log"; : > "$NPM_LOG"
 bash "$ROOT/scripts/verify.sh" >/dev/null 2>&1
 check "web: verify runs legacy 'npm run typecheck'" grep -q "run typecheck" "$NPM_LOG"
 check "web: verify does NOT run 'npm run quality'"  bash -c '! grep -q "run quality" "$1"' _ "$NPM_LOG"
-
-# --- ui-verify-receipt.sh Playwright guard ---
-git commit -q --allow-empty -m init
-UIV="$ROOT/scripts/ui-verify-receipt.sh"
-
-# keiko-web: a non-Playwright command is rejected (exit 2), Playwright accepted.
-rm -rf CONTEXT.md docs quality
-KEIKO_PROFILE=keiko-web bash "$UIV" 42 -- true >/dev/null 2>&1
-check "web: non-Playwright journey command rejected" [ "$?" -eq 2 ]
-
-# keiko-native: a non-Playwright desktop journey command is accepted and stamps a receipt.
-native_markers
-KEIKO_PROFILE=keiko-native bash "$UIV" 42 -- true >/dev/null 2>&1
-g=$?
-check "native: non-Playwright journey command accepted" [ "$g" -eq 0 ]
-check "native: ui-verify receipt written" bash -c 'ls .git/keiko-ui-verify/*.json >/dev/null 2>&1'
 
 # --- agent:pre-pr precedence (issue #12) ---
 printf '{"scripts":{"typecheck":"true","quality":"true","codex:pre-pr":"true","agent:pre-pr":"true"}}\n' > package.json
@@ -88,7 +77,7 @@ check "web: agent:pre-pr takes precedence"             grep -q "run agent:pre-pr
 check "web: agent:pre-pr present -> no codex:pre-pr"    bash -c '! grep -q "codex:pre-pr" "$1"' _ "$NPM_LOG"
 check "web: agent:pre-pr present -> no legacy typecheck" bash -c '! grep -q "run typecheck" "$1"' _ "$NPM_LOG"
 
-# non-zero agent:pre-pr -> verification fails (no green receipt)
+# non-zero agent:pre-pr -> verification fails
 export NPM_LOG="$T/ap-fail.log"; : > "$NPM_LOG"
 NPM_FAIL="agent:pre-pr" bash "$ROOT/scripts/verify.sh" >/dev/null 2>&1
 check "agent:pre-pr non-zero -> verify.sh fails" [ "$?" -ne 0 ]

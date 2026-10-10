@@ -6,7 +6,7 @@ description: Audit an implemented GitHub issue against its accepted requirements
 # keiko-issue-audit
 
 Canonical, parameterized issue-audit procedure for both harnesses (Codex primary,
-Claude backup). Replaces the old copy-paste audit prompts. It **composes the 16
+Claude backup). Replaces the old copy-paste audit prompts. It **selects relevant
 canonical roles** (`.agents/roles.yaml`) and **defers to the governance contract**
 (`docs/workflow-contract.md`) for branching, gates, and the delivery model — do
 not restate those rules here, follow them.
@@ -15,8 +15,9 @@ not restate those rules here, follow them.
 
 ## Role
 
-You are the lead session (the sole orchestrator). Drive this as a read-first
-audit wave, then a scoped fix wave. Do not edit code yourself.
+You are the lead session (the sole orchestrator). Start with independent read-first
+review, then scoped repairs. The lead may fix a small confirmed gap; a reviewer
+who did not author that change must independently confirm the repaired head.
 
 ## 0. Select the product profile (before anything else)
 
@@ -30,9 +31,11 @@ clarification. The accepted target contract governs product requirements.
 Target `AGENTS.md`, scoped instructions, ADRs, and explicit user choices override
 generic workflow defaults. For Keiko, ADR-0135 authorizes accepted, checked
 `dev` delivery through native auto-merge; ADR-0145 retires `agent:pre-pr`.
-An explicit final epic review hold is a procedural instruction for that run,
-not a universal helper-enforced restriction, and adds no per-child approval. Otherwise retain the generic final human-review default
-where the target and user have not authorized another path.
+An explicit final epic human-review hold overrides target-authorized final auto-merge
+for that run and adds no per-child approval. Preserve it until the human explicitly
+authorizes final delivery; a green PR or an approval from another agent does not
+lift it. Otherwise retain the generic final human-review default where the target
+and user have not authorized another path.
 
 ## Source of truth
 
@@ -52,7 +55,11 @@ where the target and user have not authorized another path.
 
 Cover the entire accepted scope using the smallest relevant review wave. Select
 specialists for the changed surface; an irrelevant review dimension is not a
-reason to spawn another agent.
+reason to spawn another agent. At least one reviewer who did not author the
+implementation covers requirements and repository standards. A single qualified
+`verifier` or `pr-reviewer` may cover both axes for a small change; self-review and
+green checks alone do not satisfy the independent audit. Add specialists for
+material risks and any target-required separation of duties.
 
 Keep two review axes distinct in the existing reviewers' findings:
 
@@ -69,20 +76,19 @@ profile and accepted contract to resolve authority; unresolved conflicts are
 blockers to surface, not rules to silently choose. These axes do not require two
 additional agents.
 
-1. `explorer` — map the changed code, tests, and runtime paths.
-2. `architect` — architecture, contracts, scope boundaries, ADR alignment.
-3. `security-auditor` — trust boundaries, secrets, auth, model access, unsafe
-   data flows (escalated from `security-triage` when the issue is security-light).
-4. `performance-engineer` — measurable performance risk, when relevant.
-5. `a11y-auditor` — when the issue touches **user-facing UI**, audit **WCAG 2.2 AA**
-   plus the active profile's UI-fidelity + evidence obligation (keiko-web: Keiko
-   Design System fidelity against `docs/design-system/` — token conformance,
-   `state-matrix.md` coverage, `docs/design-system/evidence/<N>/` populated per
-   ADR-0049/0051; **keiko-native:** `native-design-baseline.md` fidelity + the
-   issue's **Acceptance Journey** evidence). A user-facing change with no required
-   evidence is a blocker in either profile.
-6. `pr-reviewer` — review the implementation diff for correctness and regression
-   risk (8-dimension).
+Choose the roles needed for the changed surface, with explicit read scope:
+
+- `verifier` or `pr-reviewer` — independent acceptance, correctness, regression and
+  repository-standard review; one may cover a small change completely.
+- `explorer` — when mapping unfamiliar production paths is needed.
+- `architect` — material architecture, contracts, or ADR changes.
+- `security-auditor` — material trust-boundary, secret, auth, model-access or unsafe
+  data-flow risks; `security-triage` may handle an appropriate first pass.
+- `performance-engineer` — measurable performance risk.
+- `a11y-auditor` — target-required independent UI accessibility/fidelity review.
+  User-facing changes always retain the active profile's required evidence:
+  Web design-system fidelity and evidence under ADR-0049/0051; Native design
+  baseline and Acceptance Journey. Missing required evidence blocks the audit.
 
 Convert **only confirmed, evidence-cited findings** into fix slices. Speculative
 findings are not blockers.
@@ -93,21 +99,24 @@ In standalone mode, create the profile's source branch **before fixes** (web:
 `issue/<N>-audit` or `codex/issue-<N>-audit` from `dev`; Native: runner-managed issue branch from the frozen
 accepted target). Embedded audits keep fixes on their parent's branch.
 
-1. Assign **disjoint** file ownership to `implementor` (small) or `developer`
-   (needs design) for each confirmed gap.
-2. `test-engineer` for missing or weak regression coverage.
+1. Fix a small scoped gap directly, or assign **disjoint** ownership to
+   `implementor` / `developer` when delegated repairs materially help.
+2. Add `test-engineer` when regression coverage needs specialist work; ordinary
+   focused tests may be written by the repair author.
 3. Preserve behavior unless the issue explicitly required a change. Preserve the
    deterministic-first architecture; keep model calls behind the Model Gateway;
    keep CI/tests/release-gates/CSP/security-scans/evidence at least as strict.
 
 ## Verify and record evidence
 
-1. Run `.keiko-scripts/verify.sh` green locally; it selects the target's
-   current required commands first (ADR-0145 individual commands); older accepted
-   wrappers remain compatibility paths. Verify required
+1. Run applicable target checks locally. The optional `.keiko-scripts/verify.sh`
+   runner selects current required commands first (ADR-0145 individual commands);
+   older accepted paths remain compatibility options. Verify required
    platform evidence on the authoritative runners named by the accepted plan.
-2. `verifier` confirms every accepted checklist item with evidence and **returns the
-   proposed PR "Verification evidence" section to the lead for publication**. For a **user-facing** change, the
+2. The independent reviewer confirms every accepted checklist item with evidence
+   and returns the proposed PR "Verification evidence" section to the lead for
+   publication. The same reviewer may perform this confirmation without another
+   mandatory handoff. For a **user-facing** change, the
    audit is not complete until the profile's evidence is captured (keiko-web:
    design-system fidelity + `docs/design-system/evidence/<N>/` — theme screenshots +
    `*-fidelity-proof.json` + `a11y-proof.json`, ADR-0049/0051; **keiko-native:** the
@@ -115,58 +124,31 @@ accepted target). Embedded audits keep fixes on their parent's branch.
    the exact head).
 3. Commit all scoped fixes with `#N` (`Refs #N`, or `Resolves #N` only when the
    accepted lifecycle should close on merge). Refresh evidence at this committed
-   HEAD with the proof steps below; do not create/ready the PR first.
+   HEAD and report the actual results before opening/readying the PR.
 
-## Proof of audit (REQUIRED — before PR creation/readiness)
+## Publish audit evidence
 
-As the **final verification** step, after every audit fix is committed and before
-opening/readying the PR, **re-verify** and write
-both receipts at the post-fix HEAD (audit fixes change HEAD, so the verify receipt
-must be refreshed — the epic-merge gate requires a green verify receipt at the
-audited commit):
-
-```
-.keiko-scripts/verify-receipt.sh <N>                          # re-runs verify.sh; writes the verify receipt only if green
-# user-facing only — web Playwright or the Native accepted journey at post-fix HEAD:
-.keiko-scripts/ui-verify-receipt.sh <N> -- <journey cmd>      # runs the accepted harness; writes the ui-verify receipt only on green
-.keiko-scripts/audit-receipt.sh  <N> --findings <unresolved-count> --user-facing <true|false>
-```
-
-- `--findings` = number of **unresolved confirmed** findings after the fix wave (`0` when clean).
-- `--user-facing` = `true` if the issue touches user-facing UI / requires journey evidence, else `false`.
-
-Always provide known `--findings` and `--user-facing` values when claiming a clean
-audit, including standalone mode. Their `unknown` defaults cannot pass the PR
-gate. They also feed the **epic auto-merge** decision
-(`.keiko-scripts/epic-merge-gate.sh`): an `issue/*` or `codex/issue-*` child PR into an
-accepted `epic/*` or `codex/epic-*` branch may auto-merge **only** when the full target required-check
-matrix is green on the exact PR head and review findings are settled, the merge
-command carries
-`--match-head-commit <audited-sha>`, a matching green verify receipt and
-`findings=0` hold, **and** either `user_facing=false`, or
-`user_facing=true` with a **green ui-verify receipt at this commit** (the Playwright
-plan actually ran green — not self-reported) and a marked
-`<!-- keiko:manual-test-plan sha=<HEAD> -->` comment on the PR. Otherwise resolve
-the missing evidence or escalate; do not substitute a per-child human merge.
-Native merge authority remains target-owned. Fail-closed: `unknown`, missing GitHub state, noncanonical branches,
-repository overrides, and admin bypasses never auto-merge.
-
-This binds the audit to the current HEAD commit. The PR gate
-(`.keiko-scripts/audit-gate.sh`, wired into a PreToolUse hook) **blocks any
-issue/epic PR** whose HEAD has no matching receipt — so an issue cannot become
-PR-ready without proof the audit ran against the exact code being shipped. If you
-commit again after this, re-run the audit (the receipt goes stale by design).
+After scoped fixes are committed, rerun the affected target checks and accepted
+journeys, then independently confirm the corrected requirements at that head.
+The lead publishes the inspected commit, actual commands/results, confirmed
+findings and their fixes, remaining limitations, and required UI/platform results
+in the PR body or a PR comment. A clean audit means no unresolved confirmed
+findings; do not substitute an assertion of completion for executed evidence.
+A changed head requires refreshed affected verification and audit evidence.
 
 ## Open/update and handoff
 
-After proof is current, the lead publishes the proposed evidence in the target's
-PR template. In embedded mode, return to the parent delivery skill; it opens or
-updates the PR. In standalone mode, follow `keiko-issue`'s profile-aware PR gates,
-draft → current SHA-bound plan → ready flow for UI, and target-authorized `dev`
-delivery or an explicit final review hold.
-Use `pr-shepherd` for required exact-head CI and actionable feedback; stop after
-three materially distinct failed repair attempts. Any new fix commit invalidates
-these receipts and requires refreshed audit/verification before publication/push.
+In embedded mode return the proposed evidence to the parent delivery skill.
+Standalone mode follows `keiko-issue`'s target-authorized PR delivery and any
+explicit final review hold. Use ordinary Git/GitHub commands in the chosen target
+workdir. Required CI must pass on the exact current PR head and every review
+finding must be settled before merge; missing or skipped required PR checks do
+not qualify. Authorized Web auto-merge uses `gh pr merge <N> --auto --squash
+--match-head-commit <exact-head-sha>`; Native retains its own delivery identity
+and frozen authority. Do not add per-child human approvals.
+The lead or delegated `pr-shepherd` handles bounded repairs; stop after three
+materially distinct failed attempts and report the blocker. Refresh affected checks/audit/journeys after fixes
+and update the PR evidence for the new head.
 
 ## Memory
 

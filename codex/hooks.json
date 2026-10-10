@@ -1,48 +1,5 @@
 {
     "hooks": {
-        "PreToolUse": [
-            {
-                "matcher": "Bash",
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": "python3 \"$(git rev-parse --show-toplevel)/.keiko-scripts/delivery-hook.py\" audit-gate",
-                        "timeout": 10,
-                        "statusMessage": "Audit gate"
-                    },
-                    {
-                        "type": "command",
-                        "command": "python3 \"$(git rev-parse --show-toplevel)/.keiko-scripts/delivery-hook.py\" verify-gate",
-                        "timeout": 10,
-                        "statusMessage": "Verify gate"
-                    },
-                    {
-                        "type": "command",
-                        "command": "cmd=$(jq -r '.tool_input.command // empty'); printf '%s' \"$cmd\" | grep -qE '(>>?|tee)[^|;&]*agent-memory' && { echo '[memory-path] BLOCKED: write agent memory to .agents/memory/<role>/, not the legacy .claude/agent-memory/.' >&2; exit 2; }; exit 0",
-                        "timeout": 10,
-                        "statusMessage": "Memory path guard"
-                    },
-                    {
-                        "type": "command",
-                        "command": "python3 \"$(git rev-parse --show-toplevel)/.keiko-scripts/delivery-hook.py\" epic-merge-gate",
-                        "timeout": 15,
-                        "statusMessage": "Epic merge gate"
-                    },
-                    {
-                        "type": "command",
-                        "command": "python3 \"$(git rev-parse --show-toplevel)/.keiko-scripts/delivery-hook.py\" ready-gate",
-                        "timeout": 15,
-                        "statusMessage": "Ready gate"
-                    },
-                    {
-                        "type": "command",
-                        "command": "python3 \"$(git rev-parse --show-toplevel)/.keiko-scripts/delivery-hook.py\" push-gate",
-                        "timeout": 25,
-                        "statusMessage": "Push gate"
-                    }
-                ]
-            }
-        ],
         "SessionStart": [
             {
                 "matcher": "startup|resume",

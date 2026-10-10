@@ -110,7 +110,7 @@ Every epic carries a **release-acceptance QA gate** that qualifies the whole epi
 - **Real production-composition functional tests** — the actually-wired runtime/product, not fixtures. **(CORE — never dropped.)**
 - **User-facing surface:** full **Playwright** per top-level journey; **packaged-product** coverage on the reference install (e.g. macOS arm64 via Computer Use); **cross-platform release-gate equivalents** (Windows x64, macOS x64) — packaged / native / functional / Playwright-equivalent.
 - **NFR matrices** as the surface warrants: security, accessibility, responsive, visual, performance, memory, backpressure.
-- **Machine enforcement** — the gate **rejects manual-only, mock-only, screenshot-only, or fixture-only** coverage; every claim is backed by a real reproducible run (ties to `ui-verify`/`verify` receipts, never self-reported). **(CORE — never dropped.)**
+- **Machine enforcement** — the gate **rejects manual-only, mock-only, screenshot-only, or fixture-only** coverage; every claim is backed by a real reproducible run (actual command and journey results recorded at the inspected head). **(CORE — never dropped.)**
 
 **Scale rule:** a backend-only epic omits Playwright / Computer-Use / responsive / visual but keeps contract + integration + real production-composition + performance/backpressure + security + machine enforcement. Match the matrix to the real surface; never force irrelevant rows, never drop the two CORE rows.
 

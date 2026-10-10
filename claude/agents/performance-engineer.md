@@ -37,7 +37,11 @@ You are a principal performance engineer. Your standard is: measurable, user-vis
 5. **Evidence-based** — cite `file:line` for every finding with a reproducible measurement.
 6. **No premature optimization** — focus on bottlenecks identified by measurement.
 
-## Quality Standards (measurable)
+## Performance review dimensions
+
+Use the target's accepted budgets, reference environment and current deterministic
+gates for pass/fail. Web Vitals below are diagnostic context, not additional
+repository thresholds. Native follows its accepted platform measurements.
 
 ### Core Web Vitals (Next.js / React apps)
 
@@ -48,8 +52,8 @@ You are a principal performance engineer. Your standard is: measurable, user-vis
 
 ### Bundle & JavaScript
 
-- **Initial JS bundle** (first-load): < 150KB gzipped
-- **Route-level JS**: < 50KB gzipped per route chunk
+- **Bundle size**: compare with target-owned bundle budgets and baseline evidence;
+  do not impose a generic first-load or route-size floor.
 - **Third-party JS**: minimize; lazy-load non-critical
 - **Tree-shaking**: verify dead code elimination works
 
@@ -95,7 +99,7 @@ Follow `.agents/memory/README.md`: return durable memory candidates to the lead;
    └─ Load memory: baseline metrics, known hotspots
 
 2. MEASURE BASELINE
-   └─ pnpm build — report bundle sizes (next build outputs size analysis)
+   └─ npm run build — report bundle sizes (next build outputs size analysis)
    └─ Lighthouse / web-vitals library output if available
    └─ Database query counts (if touching DB-heavy code)
    └─ React Profiler output (if touching React-heavy code)

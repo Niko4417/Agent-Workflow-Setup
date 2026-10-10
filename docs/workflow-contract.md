@@ -11,8 +11,11 @@ Target `AGENTS.md`, scoped instructions, ADRs, and explicit user choices overrid
 generic workflow defaults. For Keiko, ADR-0135 authorizes accepted, checked
 `dev` delivery through native auto-merge; ADR-0145 retires `agent:pre-pr`.
 An explicit final epic review hold is a procedural instruction for that run,
-not a universal helper-enforced restriction, and adds no per-child approval. Otherwise retain the generic final human-review default
-where the target and user have not authorized another path.
+not a universal helper-enforced restriction, and adds no per-child approval.
+Record it in the epic's existing GitHub state and carry it through resumes and
+final PR updates. Green checks do not lift that hold; only the human does.
+Otherwise retain the generic final human-review default where the target and
+user have not authorized another path.
 
 ## Roles and authorization
 
@@ -38,6 +41,11 @@ from the accepted Execution Authority; merge-capable operations belong to the
 profile's dedicated automation identity. Validate isolated worker bases before
 writes, since a temporary worktree may start from the default branch.
 
+For a new long-lived integration branch, inspect the target's workflow wiring
+before child delivery. Register it in required trigger lists and branch allowlists
+and run the target's workflow validation. This supplies the full child CI matrix;
+it does not require optional new protection or permit weakening existing checks.
+
 Every issue ships through a PR. Children integrate into their accepted epic branch
 after all applicable current-head evidence and the full target required-check
 matrix are green and review findings are settled. Children execute AFK; missing
@@ -62,12 +70,12 @@ and record post-merge results before claiming closure.
    the reported symptom before fixing and rerun it afterward. Map accepted
    behaviors to public test seams and their catches/misses in the existing plan.
 4. **Verify and audit:** commit fixes, run the canonical verify command and the
-   issue-scoped `keiko-issue-audit`, then record exact-head receipts. Separate
+   issue-scoped `keiko-issue-audit`, then report actual results at the exact current PR head. Separate
    accepted-requirement gaps from repository-standard violations; only confirmed,
    cited defects block. Required UI/platform evidence must actually run.
 5. **PR and handoff:** fill the target template with actual evidence. User-facing
-   PRs open draft, receive the current SHA-bound journey-plan comment, then become
-   ready. Child PRs continue to machine-gated integration; `dev` PRs follow the
+   PRs include actual accepted journey results at the current head. Child PRs
+   continue to checked integration; `dev` PRs follow the
    target's delivery authority or an explicit final review hold after required CI
    is green.
 6. **Report and close:** flush current state + next action to the issue/PR at each
@@ -79,37 +87,30 @@ Use [keiko-issue](../claude/skills/keiko-issue/SKILL.md) for the full single-iss
 procedure and [keiko-epic](../claude/skills/keiko-epic/SKILL.md) for child ordering,
 integration, and final handoff.
 
-## Verification and gate stack
+## Verification and delivery
 
-`verify-receipt.sh <N>` invokes `verify.sh`: follow current target instructions
-first. Keiko ADR-0145 uses individual minimum-loop and touched-area commands,
-including mandatory local Sonar, without reviving a retired wrapper. Older targets
-may use `agent:pre-pr`, Native `quality` + audit, web `codex:pre-pr`, or the legacy
-CI-mirror fallback only where their current contract still accepts that path.
-Follow the target's current toolchain, dependency setup, and
-required platform runners. Select additional touched-area gates from that contract
-and the accepted plan using repeatable `--also <current npm checking script>` on
-`verify.sh` or `verify-receipt.sh <N>`. The receipt runs and records selected
-commands itself; a `--fast` smoke is not a full verify receipt.
+Run the target's applicable local checks and independent `keiko-issue-audit`.
+The optional `verify.sh` runner follows current target instructions: ADR-0145
+uses individual minimum-loop and touched-area commands, including mandatory
+local Sonar; older accepted paths remain compatibility options. Select semantic
+obligations from the accepted plan with repeatable `--also <checking-script>`.
+Package-surface assembly runs last. A fast smoke cannot replace required checks.
+Use the target's toolchain, dependency setup and authoritative platform runners.
 
-| Gate | Evidence checked / scope |
-| --- | --- |
-| `verify-gate.sh` | Green verify receipt at HEAD for PR create/ready on `issue/*`, `epic/*`, or `codex/*` work branches |
-| `audit-gate.sh` | Audit at HEAD with known `findings=0`, known UI applicability, and green UI receipt when required |
-| `ready-gate.sh` | Current `<!-- keiko:manual-test-plan sha=<HEAD> -->` comment before readying user-facing work-branch PRs, including children |
-| `push-gate.sh` | Fresh verify/audit/UI receipts and current plan comment for fix repushes to all open work-branch PRs, including children |
-| `epic-merge-gate.sh` | Full current-head target required-check matrix, settled review findings, matching verify/clean-audit/UI evidence and current plan; target/user merge authority |
+Publish actual commands/results, audit findings and resolution, accepted UI
+journey results and limitations with the exact current PR head in the PR body or
+a comment. After fixes rerun affected verification, audit and journeys and update
+that evidence. Cancel superseded verifier runs instead of accepting stale output.
+Use the existing GitHub evidence record for delivery.
 
-Receipt writers are explicit workflow steps; hooks check them, they do not create
-proof. After any fix commit, reverify/re-audit, rerun applicable UI journeys,
-repost the SHA-bound plan on an existing PR, and push. One verifier owns a SHA;
-cancel superseded runs instead of accepting stale output.
-
-The web epic merge command is exactly `gh pr merge <N> --auto --squash
---match-head-commit <audited-sha>` (optional `--delete-branch`). The gate rejects
-repository/content overrides, shell chaining, missing/stale evidence, and admin
-bypass. Native's accepted contract and dedicated automation remain authoritative;
-the web command is not a grant of Native merge authority.
+Use ordinary Git/GitHub commands in the deliberately chosen target workdir.
+Before merge require the full exact-head target matrix and settled review
+findings. The optional read-only `required-checks-gate.py <PR-number> <base-branch>
+<head-sha>` checks Web App-bound CI and review settlement. Native remains governed
+by its accepted authority and quality control plane. Authorized Web auto-merge
+uses `gh pr merge <N> --auto --squash --match-head-commit <exact-head-sha>`.
+Never bypass gates, force-push or push directly to `dev`; honor explicit final
+review holds without per-child approvals.
 
 Local pre-commit hooks are target-owned (see [template snippets](../templates/README.md));
 do not assume every target installed lint-staged or a secret scan. Every agent
