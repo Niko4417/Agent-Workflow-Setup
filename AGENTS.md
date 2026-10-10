@@ -37,9 +37,11 @@ the ownership split.
 
 - **Definition-of-Ready**: do not start an issue without acceptance criteria and a verification command. Triage first if
   either is missing.
-- **`dev` is sacred**: every issue ships as a pull request. The only auto-merge is `issue -> epic-branch` on green CI.
-  Every merge into `dev` — epic or standalone — needs a human reviewer and green CI.
-- Treat `dev` as the integration target and require a green `ci` check before merge.
+- **Target-owned delivery authority**: every issue ships as a pull request. Follow the target's current
+  `AGENTS.md`, ADRs, and explicit user choices for merge authority. Default to final human review only when
+  neither authorizes another path; preserve an explicit run-specific final epic review hold.
+- Treat `dev` as the integration target for the web profile and require the target's complete current-head
+  required-check matrix and settled review findings before merge.
 - Never mark work complete without evidence (`file:line`, command output).
 
 ## Quality and completion

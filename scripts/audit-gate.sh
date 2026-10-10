@@ -7,7 +7,7 @@
 #   - receipt exists and audited_sha == HEAD, AND
 #   - findings == 0, AND
 #   - when user-facing, a green ui-verify (Playwright) receipt exists at HEAD.
-# Enforced on issue/* and epic/* branches; other branches pass through.
+# Enforced on issue/*, epic/*, and codex/* branches; other branches pass through.
 #
 # This is uniform for every PR an agent opens from a work branch — there is no
 # per-target distinction; the child->epic auto-merge re-checks the same at merge.
@@ -19,9 +19,12 @@ set -uo pipefail
 
 branch="$(git symbolic-ref --quiet --short HEAD 2>/dev/null || echo)"
 case "$branch" in
-  issue/*|epic/*) ;;                 # enforce only on issue/epic branches
+  issue/*|epic/*|codex/*) ;;                 # enforce only on issue/epic branches
   *) exit 0 ;;
 esac
+
+here="$(cd "$(dirname "$0")" && pwd -P)"
+bash "$here/proof-worktree.sh" || exit 1
 
 gd="$(git rev-parse --git-dir 2>/dev/null)"
 slug="$(printf '%s' "$branch" | tr '/' '_')"

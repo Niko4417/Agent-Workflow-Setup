@@ -19,7 +19,7 @@ mkverify() { # verified_sha  ("" => remove)
   local b slug; b="$(git symbolic-ref --short HEAD)"; slug="$(printf '%s' "$b" | tr '/' '_')"
   mkdir -p .git/keiko-verify
   if [ -z "${1:-}" ]; then rm -f ".git/keiko-verify/$slug.json"; return; fi
-  printf '{"branch":"%s","verified_sha":"%s","ts":"t"}\n' "$b" "$1" > ".git/keiko-verify/$slug.json"
+  printf '{"branch":"%s","mode":"full","verified_sha":"%s","ts":"t"}\n' "$b" "$1" > ".git/keiko-verify/$slug.json"
 }
 mkaudit() { # audited_sha findings user_facing
   local b slug; b="$(git symbolic-ref --short HEAD)"; slug="$(printf '%s' "$b" | tr '/' '_')"
@@ -33,7 +33,7 @@ mkuiverify() { # ui_verified_sha  ("" => remove)
   printf '{"branch":"%s","ui_verified_sha":"%s","ts":"t"}\n' "$b" "$1" > ".git/keiko-ui-verify/$slug.json"
 }
 stubgh() { # state base [comment_sha]   (state="" => no PR)
-  if [ -z "$1" ]; then printf '#!/usr/bin/env bash\n' > bin/gh; chmod +x bin/gh; return; fi
+  if [ -z "$1" ]; then printf '#!/usr/bin/env bash\nprintf "[]\\n"\n' > bin/gh; chmod +x bin/gh; return; fi
   local cbody='(no plan)'
   [ -n "${3:-}" ] && cbody="<!-- keiko:manual-test-plan sha=$3 -->"
   cat > bin/gh <<EOF
@@ -41,7 +41,7 @@ stubgh() { # state base [comment_sha]   (state="" => no PR)
 for a in "\$@"; do
   case "\$a" in
     *comments*) printf '%s\n' '$cbody'; exit 0 ;;
-    *state*|*baseRefName*) echo '{"state":"$1","baseRefName":"$2"}'; exit 0 ;;
+    *state*|*baseRefName*) [ '$1' = OPEN ] && echo '[{"state":"$1","baseRefName":"$2"}]' || echo '[]'; exit 0 ;;
   esac
 done
 EOF
@@ -62,7 +62,7 @@ git checkout -q -b issue/2-x
 H="$(git rev-parse HEAD)"
 stubgh "";            expect "no PR -> pass through" 0
 stubgh MERGED dev;    expect "merged PR -> pass through" 0
-stubgh OPEN epic/foo; expect "open PR to epic (non-dev) -> pass through" 0
+stubgh OPEN epic/foo; expect "open PR to epic without receipts -> block" 1
 
 mkverify "$H"; mkaudit "$H" 0 false; stubgh OPEN dev
 expect "open ->dev PR, verify+clean audit -> allow" 0

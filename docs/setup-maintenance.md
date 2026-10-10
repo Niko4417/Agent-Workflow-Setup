@@ -25,8 +25,9 @@ brevity is not permission to weaken them.
 
 Reviewed [Matt Pocock's skills](https://github.com/mattpocock/skills/tree/49dd158d1076134a641b33efb035946536778336),
 commit `49dd158d1076134a641b33efb035946536778336`. These are scoped adaptations;
-they preserve Keiko's accepted contracts, profile authority, and human-only `dev`
-merges rather than importing the upstream bundle or its delivery policy.
+they preserve Keiko's accepted contracts, target-owned merge authority, full
+current-head required-check matrix, settled reviews, and explicit run review
+holds rather than importing the upstream bundle or its delivery policy.
 
 | Adaptation | Keiko procedure | Why it helps |
 | --- | --- | --- |

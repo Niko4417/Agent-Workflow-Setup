@@ -6,13 +6,13 @@
                 "hooks": [
                     {
                         "type": "command",
-                        "command": "cmd=$(jq -r '.tool_input.command // empty'); printf '%s' \"$cmd\" | grep -qiE 'gh pr (create|ready)' || exit 0; gate=\"$(git rev-parse --show-toplevel)/.keiko-scripts/audit-gate.sh\"; [ -x \"$gate\" ] || exit 0; \"$gate\" >&2 || exit 2; exit 0",
+                        "command": "python3 \"$(git rev-parse --show-toplevel)/.keiko-scripts/delivery-hook.py\" audit-gate",
                         "timeout": 10,
                         "statusMessage": "Audit gate"
                     },
                     {
                         "type": "command",
-                        "command": "cmd=$(jq -r '.tool_input.command // empty'); printf '%s' \"$cmd\" | grep -qiE 'gh pr (create|ready)' || exit 0; gate=\"$(git rev-parse --show-toplevel)/.keiko-scripts/verify-gate.sh\"; [ -x \"$gate\" ] || exit 0; \"$gate\" >&2 || exit 2; exit 0",
+                        "command": "python3 \"$(git rev-parse --show-toplevel)/.keiko-scripts/delivery-hook.py\" verify-gate",
                         "timeout": 10,
                         "statusMessage": "Verify gate"
                     },
@@ -24,19 +24,19 @@
                     },
                     {
                         "type": "command",
-                        "command": "cmd=$(jq -r '.tool_input.command // empty'); printf '%s' \"$cmd\" | grep -qiE 'gh pr merge' || exit 0; gate=\"$(git rev-parse --show-toplevel)/.keiko-scripts/epic-merge-gate.sh\"; [ -x \"$gate\" ] || exit 0; \"$gate\" \"$cmd\" >&2 || exit 2; exit 0",
+                        "command": "python3 \"$(git rev-parse --show-toplevel)/.keiko-scripts/delivery-hook.py\" epic-merge-gate",
                         "timeout": 15,
                         "statusMessage": "Epic merge gate"
                     },
                     {
                         "type": "command",
-                        "command": "cmd=$(jq -r '.tool_input.command // empty'); printf '%s' \"$cmd\" | grep -qiE 'gh pr ready' || exit 0; gate=\"$(git rev-parse --show-toplevel)/.keiko-scripts/ready-gate.sh\"; [ -x \"$gate\" ] || exit 0; \"$gate\" \"$cmd\" >&2 || exit 2; exit 0",
+                        "command": "python3 \"$(git rev-parse --show-toplevel)/.keiko-scripts/delivery-hook.py\" ready-gate",
                         "timeout": 15,
                         "statusMessage": "Ready gate"
                     },
                     {
                         "type": "command",
-                        "command": "cmd=$(jq -r '.tool_input.command // empty'); printf '%s' \"$cmd\" | grep -qE 'git +push' || exit 0; gate=\"$(git rev-parse --show-toplevel)/.keiko-scripts/push-gate.sh\"; [ -x \"$gate\" ] || exit 0; \"$gate\" >&2 || exit 2; exit 0",
+                        "command": "python3 \"$(git rev-parse --show-toplevel)/.keiko-scripts/delivery-hook.py\" push-gate",
                         "timeout": 25,
                         "statusMessage": "Push gate"
                     }

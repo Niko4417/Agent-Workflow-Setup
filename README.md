@@ -1,7 +1,8 @@
 # Agent Workflow Setup
 
 Reusable delivery workflows for Codex and Claude Code: plan accepted work, delegate
-bounded tasks, verify exact-head evidence, and hand off a PR for human review.
+bounded tasks, verify exact-head evidence, and deliver a PR under target authority
+and explicit run review choices.
 Local hooks provide early checks; the target's protected branches and required
 checks remain the authoritative merge controls.
 
@@ -54,7 +55,7 @@ never loads Keiko-Web's rules, and vice versa, so nothing bleeds across.
 | Verify command         | `verify.sh` → target-owned gate           | `verify.sh` → target-owned gate / Native fallback                                            |
 | UI evidence            | Design-System fidelity + a11y proofs   | **Acceptance Journey** (native desktop harness, not browser Playwright)                   |
 | Platforms              | web                                    | Windows + macOS (Linux deferred)                                                          |
-| Merge into `dev`       | human-only                             | human-only                                                                                |
+| Merge into `dev`       | target authority + explicit run holds                             | human-only                                                                                |
 | Private source         | —                                      | **never touched** — planners restate from the repo-owned planning baseline                |
 
 Scripts default to **keiko-web**; skills ask when product context is ambiguous.
@@ -169,14 +170,15 @@ shell/API calls or replace server-side required checks.
 | open / ready a PR          | `verify-gate`     | the target's canonical command selected by `verify.sh` passed **green** at HEAD                 |
 | open / ready a PR          | `audit-gate`      | the audit **ran and is clean** — `findings=0`, plus a green **ui-verify** receipt (real UI-journey run) when user-facing |
 | ready a user-facing PR     | `ready-gate`      | a **SHA-bound test-plan comment** for the current commit is posted                                                       |
-| repush a fix to a `dev` PR | `push-gate`       | the fix re-passes verify + clean-audit (+ ui-verify + reposted plan)                                                     |
-| auto-merge into an epic    | `epic-merge-gate` | exact-head GitHub `ci` + matching clean audit/verify + (UI) journey/comment; **never** into `dev`/`main`/`release`       |
+| repush a fix to any open work PR | `push-gate`       | the fix re-passes verify + clean-audit (+ ui-verify + reposted plan)                                                     |
+| authorized auto-merge | `epic-merge-gate` | full current-head target matrix + settled reviews + matching clean audit/verify + applicable UI journey/comment; target merge authority |
 
-**`dev` is sacred:** the only agent auto-merge is a child into its canonical
-`epic/*` branch after every applicable gate passes. Everything into `dev` —
-standalone issue or accumulated epic — needs a
-**human reviewer + green GitHub CI**. Local gates are fast feedback; the target's
-protected `dev` is the authoritative backstop.
+**Target-owned delivery:** target `AGENTS.md`, ADRs, and explicit user choices
+override generic defaults. Keiko ADR-0135 permits accepted issue and epic delivery
+through native auto-merge after the full current-head required-check matrix is
+green and reviews are settled. Preserve a requested final epic review hold
+without child approvals; default to final human review where neither target nor
+user authorizes another path. Local gates provide earlier feedback.
 
 ---
 
@@ -305,15 +307,14 @@ templates/   target-side gate snippets (husky / lint-staged / PR evidence)
 
 ---
 
-## Server-side prerequisite (repo admin)
+## Target-owned server-side controls
 
-Configure protected branches and required checks/reviews before relying on the
-merge backstop; this needs `admin` on the target repo. Full local access still
-permits filesystem changes, regardless of branch protection. On [`oscharko-dev/Keiko`](https://github.com/oscharko-dev/Keiko),
-protect `dev`: require a PR, the green `ci` check, and human review. Until then the local gates are fast feedback but
-the _authoritative_ backstop is absent — treat agent merges toward `dev` with care.
-The airtight form of proof-of-audit lives here too: emit PR-visible evidence and make
-it a **required status check** on `dev`.
+Follow the target's existing branch controls and required checks/reviews; do not
+introduce new administrative prerequisites or workflow status checks. Keiko's
+current `AGENTS.md` and ADR-0135 own its app-bound required-check matrix and native
+auto-merge authority. Stronger epic protection is optional unless the target
+requires it, and its absence alone is not a workflow blocker. Full local access
+still permits filesystem changes, regardless of branch protection.
 
 ## Sharing
 

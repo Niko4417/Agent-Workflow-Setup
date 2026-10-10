@@ -33,6 +33,12 @@ here="$(cd "$(dirname "$0")" && pwd -P)"
 # Does the repo define a given npm script? (node is always present in this repo.)
 has_script() { node -e "process.exit(((require('./package.json').scripts)||{})['$1']?0:1)" 2>/dev/null; }
 
+# ADR-0145 targets explicitly retired the aggregate. Read their current individual
+# commands before considering compatibility aggregates for older installations.
+if [[ $FAST -eq 0 ]] && [[ -f docs/adr/ADR-0145-retire-the-agent-pre-pr-aggregate-gate.md ]]; then
+  exec python3 "$here/verify-web-policy.py" "$@"
+fi
+
 # Repository-owned canonical gate (issue #12): when the target exposes `agent:pre-pr`
 # it owns its full gate list — run it EXACTLY ONCE and defer entirely to it, in either
 # profile, before any profile-specific or codex:pre-pr fallback. A non-zero result is a

@@ -1,6 +1,6 @@
 ---
 name: keiko-issue
-description: Drive a single GitHub issue (task / feature / bug / user-finding) end-to-end from origin/dev to a green PR, the standard Keiko way — Definition-of-Ready gate, task-shaped agent team, quality bars, mandatory keiko-issue-audit, sacred-dev delivery. Use when the operator selects one issue to work on. Takes an issue number.
+description: Drive a single GitHub issue (task / feature / bug / user-finding) end-to-end from origin/dev to a green PR, the standard Keiko way — Definition-of-Ready gate, task-shaped agent team, quality bars, mandatory keiko-issue-audit, target-authorized delivery. Use when the operator selects one issue to work on. Takes an issue number.
 ---
 
 # keiko-issue
@@ -8,7 +8,8 @@ description: Drive a single GitHub issue (task / feature / bug / user-finding) e
 Canonical, parameterized single-issue workflow for both harnesses. Replaces the
 old `codex-task-prompt.md` / `claude-issue-prompt.md` run-cards. **Composes the 16
 canonical roles** (`.agents/roles.yaml`), **defers to** `docs/workflow-contract.md`
-for branching, gates, and the sacred-`dev` rule — follow them, do not restate.
+for branching, gates, and target-owned delivery authority — follow them, do not
+restate.
 
 **Argument:** the issue number `#N` (optionally a mode: `feature` adds behavior,
 `fix` repairs a defect/regression/finding).
@@ -25,6 +26,13 @@ Load only the selected profile and its task-relevant authority docs, including t
 target's `AGENTS.md` and `CONTEXT.md` when present. Take readiness, verification,
 templates, evidence, exclusions, and merge authority from it; ambiguity requires
 clarification. The accepted target contract governs product requirements.
+
+Target `AGENTS.md`, scoped instructions, ADRs, and explicit user choices override
+generic workflow defaults. For Keiko, ADR-0135 authorizes accepted, checked
+`dev` delivery through native auto-merge; ADR-0145 retires `agent:pre-pr`.
+An explicit final epic review hold is a procedural instruction for that run,
+not a universal helper-enforced restriction, and adds no per-child approval. Otherwise retain the generic final human-review default
+where the target and user have not authorized another path.
 
 ## 1. Intake (Definition-of-Ready gate)
 
@@ -58,10 +66,11 @@ Claiming is mandatory before any implementation:
   `In Progress`. **keiko-native:** **do not hand-write the derived `status: in
 progress` label** — it is a reconciled effect the target owns; board / project fields
   are **one-way projections**, never authority. In both: `Owner / Agent` = active agent;
-  `Human Review Required` = `Yes` for any PR targeting `dev`; fill `Branch` once created.
+  `Human Review Required` reflects target requirements and explicit run holds;
+  fill `Branch` once created.
 
-Create the source branch before implementation: web `issue/<N>-<short>` from
-`dev` (epic children from their epic branch); Native a runner-managed branch
+Create the source branch before implementation: web `issue/<N>-<short>` or
+`codex/issue-<N>-<short>` from `dev` (epic children from their epic branch); Native a runner-managed branch
 including the issue number, from its frozen accepted delivery target. Record the
 branch on the board. For isolated workers, verify their actual base includes the
 required parent commits before they write; a default-branch worktree is not enough.
@@ -113,11 +122,12 @@ Commit the scoped implementation before SHA-bound receipt generation, using a
 Conventional Commit referencing `#N`. Audit fixes or generated evidence may require
 another commit; refresh all affected proof at that new HEAD.
 
-## 5. Verify, audit, ship (per contract — sacred-`dev`)
+## 5. Verify, audit, ship (per target contract)
 
 1. **Verify-green loop.** Run `.keiko-scripts/verify-receipt.sh #N` — it runs the
-   **target-owned canonical gate** through `verify.sh` (`agent:pre-pr` first;
-   otherwise the selected profile's fallback) and writes the verify receipt **only if
+   **current target-required commands** through `verify.sh` (ADR-0145 targets use
+   individual commands; older accepted wrappers remain compatibility paths) and
+   writes the verify receipt **only if
    green**. If red, fix and re-run, **looping until green** (bounded by 3 distinct
    attempts → escalate). The PR-create **verify-gate** blocks `gh pr create`/`gh pr
 ready` until a green verify receipt exists at HEAD.
@@ -127,8 +137,8 @@ ready` until a green verify receipt exists at HEAD.
    verify-green loop must cover **root typecheck**, the **architecture check**, a
    **non-test production-composition build** (the real wiring compiles/loads, not
    just fixtures), and **at least one real request-path smoke** exercising the actual
-   production path end-to-end. (`codex:pre-pr` covers typecheck/arch/build; add the
-   real request-path smoke explicitly.)
+   production path end-to-end. Use the target's current commands and add the real
+   request-path smoke explicitly.
 2. **Audit-clean loop.** Run `keiko-issue-audit` `#N` — mandatory. If it reports
    confirmed findings, fix them and re-audit, **looping until `findings=0`**
    (bounded by 3 attempts → escalate). The audit re-verifies and writes the audit
@@ -158,32 +168,32 @@ ready` until a green verify receipt exists at HEAD.
    (PR → the epic branch) has **no human-in-the-loop** — `keiko-epic` auto-merges it
    on green machine evidence or escalates as an exception; there is no per-child human
    review, no `Ready for Human Review` handoff. A **standalone** issue (PR → `dev`) is
-   itself the full-feature unit the human reviews (sacred-`dev`); the handoff flow
-   below applies to it. **User-facing → handoff flow (standalone → `dev`):** open it
-   `--draft`, post the `<!-- keiko:manual-test-plan sha=<HEAD> -->` comment (the
+   delivered under the target's authority or an explicit review hold.
+   **User-facing PRs (including children):** open `--draft`, post the `<!-- keiko:manual-test-plan sha=<HEAD> -->` comment (the
    runnable Playwright plan), then `gh pr ready` — the **ready-gate** blocks `ready`
    until a comment naming the current commit exists.
-   (Non-user-facing PRs open ready directly.) **Every merge into `dev` is
-   human-gated + green CI** — never auto-merge to `dev`, never enable auto-merge.
+   (Non-user-facing PRs open ready directly.) **Every merge requires the full
+   current-head target check matrix and settled review findings.** Arm native auto-merge only when target/run authority permits it.
    `pr-shepherd` drives CI/review to merge-ready; bounded CI repair (stop after 3
    distinct failed attempts). **Each CI-repair repush re-runs the QA:** the
-   **push-gate** blocks a `git push` to an open `-> dev` PR unless fresh verify +
-   clean-audit (+ ui-verify) receipts exist at the new HEAD — and, for a
+   **push-gate** blocks a `git push` to any open work-branch PR, including a child,
+   unless fresh verify + clean-audit (+ ui-verify) receipts exist at the new HEAD — and, for a
    user-facing PR, the `keiko:manual-test-plan sha=<HEAD>` comment reposted for the
    new commit — so fix → re-run the loops → repost the comment → push.
-6. **Standalone → `dev` only:** set `Workflow State` = `PR Open` → `Ready for Human
-Review`; flush current-state + next-action to the issue/PR. (An **epic child** does
+6. **Standalone → `dev` only:** use `Ready for Human Review` when the target or
+   run requires a hold; otherwise continue authorized checked delivery. Flush
+   current-state + next-action to the issue/PR. (An **epic child** does
    not stop here — it proceeds to AFK auto-merge under `keiko-epic`.)
 7. **Close as done on merge.** When the issue's linked PR is **merged** — a child
-   auto-merged into its **epic branch**, or a standalone PR merged into `dev` by a
-   human — transition the issue to the profile's **done** state and **close it**.
+   auto-merged into its **epic branch**, or an authorized standalone PR merged into
+   `dev` — transition the issue to the profile's **done** state and **close it**.
    **keiko-native:** the issue is closed with reason `completed` carrying exactly
    **`status: done`** (every other `status:*` removed), as a **projection** of the
    target's `docs/qa/issue-lifecycle.md` (done = closed + `status: done`; reopen →
    `new`) — read it at runtime and **fail closed** if labels/contract are missing/stale.
    **keiko-web:** close + `status: done` per the Keiko taxonomy. Only a **merged** PR
-   closes an issue as done — never on `Ready for Human Review` alone, and never merge
-   `dev` yourself.
+   closes an issue as done — never on `Ready for Human Review` alone. Follow the
+   target's permitted merge path.
 
 ## Escalate (stop, report)
 

@@ -43,8 +43,18 @@ if [ "$KEIKO_PROFILE" != "keiko-native" ]; then
   }
 fi
 
+bash "$here/proof-worktree.sh" || exit 1
+start_sha="$(git rev-parse HEAD)" || exit 1
+start_branch="$(git symbolic-ref --quiet --short HEAD)" || exit 1
+
 if ! "$@"; then
   printf '[ui-verify-receipt] journey plan FAILED — no receipt written. Fix and re-run, or hand to human review.\n' >&2
+  exit 1
+fi
+
+bash "$here/proof-worktree.sh" || exit 1
+if [ "$(git rev-parse HEAD)" != "$start_sha" ] || [ "$(git symbolic-ref --quiet --short HEAD)" != "$start_branch" ]; then
+  printf '[ui-verify-receipt] HEAD/branch changed during the journey; no receipt written.\n' >&2
   exit 1
 fi
 

@@ -1,19 +1,9 @@
 #!/usr/bin/env bash
 #
-# push-gate.sh — re-run the QA gates when pushing a fix onto an OPEN PR that
-# targets `dev`.
-#
-# `-> dev` PRs are the ones with GitHub CI, so they're the ones with a
-# watch-CI-then-fix-then-repush loop (pr-shepherd / keiko-issue / keiko-epic), and
-# the ones a human tells the agent to fix after an external review. GitHub CI
-# re-runs verify on each push, but NOT the keiko audit or the ui-verify Playwright
-# plan — so a repush must re-qualify those locally before it lands.
-#
-# It delegates to verify-gate + audit-gate (same checks as PR-open) at the new
-# HEAD, so there is no duplicated logic. Pre-PR pushes and non-`dev` PRs (e.g.
-# child -> epic) pass through untouched.
-#
-# Fires via a PreToolUse hook on `git push`. exit 0 = ok / n-a, exit 1 = blocked.
+# push-gate.sh — require fresh local QA before updating any open work-branch PR.
+# Explicit successful empty GitHub PR inventory permits a pre-PR WIP push.
+# API errors, malformed responses, and multiple open PRs fail closed. Child
+# updates into an epic receive the same verify/audit/UI checks as dev updates.
 
 set -uo pipefail
 
@@ -21,29 +11,41 @@ here="$(cd "$(dirname "$0")" && pwd -P)"
 
 branch="$(git symbolic-ref --quiet --short HEAD 2>/dev/null || echo)"
 case "$branch" in
-  issue/*|epic/*) ;;
+  issue/*|epic/*|codex/*) ;;
   *) exit 0 ;;
 esac
 
-# Only gate when this branch has an OPEN PR whose base is dev.
-info="$(gh pr view --json state,baseRefName 2>/dev/null || true)"
-[ -n "$info" ] || exit 0     # no PR yet -> pre-PR WIP push, free
-state="$(printf '%s' "$info" | sed -n 's/.*"state":"\([^"]*\)".*/\1/p')"
-base="$(printf '%s' "$info" | sed -n 's/.*"baseRefName":"\([^"]*\)".*/\1/p')"
-{ [ "$state" = "OPEN" ] && [ "$base" = "dev" ]; } || exit 0
+# A failed lookup is not proof that a branch has no PR. Query the explicit list;
+# only a successful empty result permits a pre-PR WIP push.
+if ! info="$(gh pr list --head "$branch" --state open --json state,baseRefName 2>/dev/null)"; then
+  printf '[push-gate] BLOCKED: cannot establish open PR state.\n' >&2
+  exit 1
+fi
+if ! printf '%s' "$info" | jq -e 'type == "array" and all(.[]; .state == "OPEN" and (.baseRefName | type == "string"))' >/dev/null 2>&1; then
+  printf '[push-gate] BLOCKED: malformed open PR lookup.\n' >&2
+  exit 1
+fi
+[ "$(printf '%s' "$info" | jq 'length')" = 0 ] && exit 0
+[ "$(printf '%s' "$info" | jq 'length')" = 1 ] || {
+  printf '[push-gate] BLOCKED: ambiguous multiple open PRs.\n' >&2
+  exit 1
+}
 
 # Re-apply the PR-open QA at the current HEAD by delegating to the existing gates.
 if ! "$here/verify-gate.sh"; then
-  printf '[push-gate] fix push blocked — verify not green at HEAD. Re-run verify-receipt.sh before repushing to the ->dev PR.\n' >&2
+  printf '[push-gate] fix push blocked — verify not green at HEAD. Re-run verify-receipt.sh before repushing to the delivery PR.\n' >&2
   exit 1
 fi
 if ! "$here/audit-gate.sh"; then
-  printf '[push-gate] fix push blocked — audit not clean at HEAD. Re-run keiko-issue-audit (+ ui-verify when user-facing) before repushing to the ->dev PR.\n' >&2
+  printf '[push-gate] fix push blocked — audit not clean at HEAD. Re-run keiko-issue-audit (+ ui-verify when user-facing) before repushing to the delivery PR.\n' >&2
   exit 1
 fi
 
 # A user-facing fix changes the UI, so its sha-bound test-plan comment must be
 # reposted for the new commit (the automated ui-verify already re-ran via audit-gate).
+here="$(cd "$(dirname "$0")" && pwd -P)"
+bash "$here/proof-worktree.sh" || exit 1
+
 gd="$(git rev-parse --git-dir 2>/dev/null)"
 slug="$(printf '%s' "$branch" | tr '/' '_')"
 head="$(git rev-parse HEAD 2>/dev/null)"
@@ -56,5 +58,5 @@ if [ "$user_facing" = "true" ]; then
   fi
 fi
 
-printf '[push-gate] OK: verify + clean audit at HEAD for the ->dev PR update.\n'
+printf '[push-gate] OK: verify + clean audit at HEAD for the delivery PR update.\n'
 exit 0

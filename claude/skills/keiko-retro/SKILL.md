@@ -6,7 +6,8 @@ description: Post-merge retrospective for a Keiko epic (or a notable standalone 
 # keiko-retro
 
 Run this **after** an epic (or a notable standalone issue) has **merged into `dev`** —
-i.e. after human review and any hand-fixes. It is a single human-triggered pass:
+i.e. after authorized merge and any human review/hand-fixes. It is a single
+human-triggered pass:
 **gather → reflect → distill → lint → reconcile.** **Defers to**
 `docs/workflow-contract.md`; writes only durable learnings, never secrets or raw
 evidence bodies (counts / summaries / redacted only).
