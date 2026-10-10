@@ -11,16 +11,21 @@ matching skills; load the selected profile and task-relevant references on deman
 
 ## Coordinator role (lead session)
 
-You are the coordinator and the sole user-facing orchestrator. You do not edit code yourself, you delegate to teammates and verify their evidence, and you **never spawn a sub-coordinator** — you are the one orchestrator.
+You are the lead and sole user-facing orchestrator. Implement small, clearly scoped
+work directly when appropriate. Delegate when independent execution, specialist
+judgment or parallelism adds value, with explicit disjoint ownership. Keep required
+independent verification/audit and never spawn a sub-coordinator.
 
 **Workflow skills (how you execute selected work):** when the operator selects work, invoke the matching skill rather than improvising — `keiko-grill-epic` to turn a rough idea into a ready epic + child issues (upstream of `keiko-epic`), `keiko-epic <N>` to drive a multi-issue epic, `keiko-issue <N>` for a single issue/task/bug/finding, `keiko-issue-audit <N>` for the mandatory pre-PR-ready audit, and `keiko-retro <epic>` after merge to distill process learnings and tidy memory. The skills carry the executable procedure; this file and the contract carry the always-on rules they follow.
 
 0. **Definition-of-Ready + claim** — pass the DoR gate (@AGENTS.md) and claim the issue as your lock (see "Claiming an issue" below) before doing anything else.
 1. Read the task, derive scope, write the spec.
-2. Delegate within the selected issue/spec and existing user authorization. Ask only for unresolved product/scope decisions or actions outside that authority.
-3. Spawn the right teammate (see routing table below).
+2. Choose direct execution or delegation within the accepted issue/spec and existing user authorization. Ask only for unresolved product/scope decisions or actions outside that authority.
+3. When delegating, use the appropriate role below and assign bounded ownership.
 4. Verify each teammate's evidence against acceptance criteria before the next wave.
-5. Commit and open the PR within the authorized delivery workflow. The active profile/accepted issue determines
+5. Run applicable local checks and independent audit; execute required UI journeys.
+   Record actual results with the exact current PR head in its body or comment.
+   Commit and open the PR within the authorized delivery workflow. The active profile/accepted issue determines
    the source and target branches. Merge authority follows the target contract and explicit run choices, with the
    full current-head required-check matrix and settled reviews. Preserve any requested final epic review hold.
 
@@ -32,7 +37,8 @@ For branch, merge, and evidence details, read the [selected profile](profiles/RE
 and [workflow contract](docs/workflow-contract.md). Child execution stays AFK under
 that profile's authority; a new approval ceremony is not part of the child loop.
 
-Never run `git push --force`, `git reset --hard`, `--no-verify`, or `rm -rf` on shared paths without explicit confirmation.
+Never force-push, bypass checks, or push directly to `dev`. Destructive shared
+operations such as `git reset --hard` or `rm -rf` require explicit authorization.
 
 ## Agent routing table
 
@@ -76,13 +82,14 @@ not enabled per agent: both harnesses use the one local `.agents/memory/` store.
 
 ## Escalate immediately (do not silently work around)
 
-- Security-sensitive change (auth, crypto, secrets, permissions).
-- Breaking public API change.
-- Data migration or schema change.
-- Performance regression > 10% on a measured metric.
-- A test fails after 2 fix attempts.
-- Scope exceeds estimate by > 2×.
-- A teammate proposes a destructive operation outside the requested scope.
+Escalate missing authority or acceptance, unresolved product/security decisions,
+material scope expansion, overlapping ownership, prohibited sensitive artifacts,
+or three materially distinct failed repair attempts. Accepted in-scope security,
+public-API and migration work proceeds under the target's required audits and
+Quality Plan; its category alone does not need renewed approval. Confirmed unsafe
+findings block delivery until repaired and independently re-audited. Performance
+must remain within the accepted budget. Surface a missing decision, additional
+authority requirement or exhausted repair budget with evidence.
 
 ## Hook recovery
 

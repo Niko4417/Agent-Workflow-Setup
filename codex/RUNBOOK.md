@@ -27,13 +27,19 @@ A board field or lingering ready label cannot grant Native readiness. Check the
 assignee before claiming; do not take another operator's work.
 
 Use `keiko-issue` / `keiko-epic` for claim, source branch, dependency ordering,
-implementation, verification, audit receipts, UI journeys, and closure. Preserve
+implementation, verification, audit evidence, UI journeys, and closure. Preserve
 Native's frozen target and automation identity; web board/Playwright examples are
 not Native policy. Every issue gets a PR. Child→epic execution stays AFK after
 exact-head evidence; missing proof requires repair or escalation. Delivery follows
 the target's authority, full current-head required-check matrix, settled reviews,
 and explicit run review holds. Hand off at `Ready for Human Review` when a hold
 applies; close only after merge and the target's completion predicates hold.
+A request for autonomous execution until the final green epic PR already chooses
+that final hold: children continue autonomously, while the final PR must not merge
+or have auto-merge armed until the human explicitly authorizes it. Do not re-ask
+that choice or insert routine per-child approval rounds. Record the choice in the
+existing epic issue milestone comment and final PR, read it on resume, and retain
+it after every final push. Keep auto-merge unarmed on the held final PR.
 
 Post one-line heartbeats at wave/milestones and flush current state + next action
 to the issue/PR. GitHub is the durable delivery record. Record only reusable memory
@@ -45,43 +51,53 @@ for detailed gate scope and recovery budgets, not a duplicated lifecycle here.
 Route on the repo's actual label taxonomy (`gh label list`). Type labels use a
 space (`type: task`); area labels do not (`area:model-gateway`).
 
+**Execution shape:** the lead may handle small, clearly scoped work directly.
+Delegate for useful independent execution, specialist judgment or safe parallelism.
+Every delivery still needs an independent issue audit; an implementation author
+cannot supply that independence through self-review. One qualified reviewer may
+cover a small change without a fixed explorer/implementor/test/verifier roster.
+Target-required role separation and accepted Quality Plans still apply. An accepted
+spec does not need another routine plan approval.
+
 **By type:**
 
-- `type: epic`: the lead coordinates with `architect`; do not implement the whole
-  epic unless a child issue is selected.
-- `type: task` or `type: feature`: the lead drives `explorer`, then
-  `implementor`/`developer`, `test-engineer`, `verifier`. Bug work and follow-ups
-  arrive as `type: task` — read the area labels below for the shape.
+- `type: epic`: compose `keiko-issue` for each executable child; use `architect`
+  when material architecture decisions need it. Do not implement unaccepted scope.
+- `type: task` or `type: feature`: choose direct lead execution or bounded writers
+  based on the change. Add exploration and specialist testing when needed.
 
-**By area** (add these agents on top of the type baseline):
+**By area** (risk-based role suggestions, not an automatic roster):
 
-- `area:user-interface`: add `ui-engineer`, `a11y-auditor`, and
-  `performance-engineer` when UI risk is material. For user-facing components,
-  `ui-engineer` builds against the Keiko Design System (`docs/design-system/`) and
-  `a11y-auditor` audits **WCAG + design-system fidelity** (token conformance,
-  `state-matrix.md` coverage, evidence dir populated).
-- `area:tooling-security`: add `security-triage` first-pass, escalating to
+Choose the relevant expertise below when material to the change or required by the
+target. Apply the selected profile’s UI/verification contracts; a label does not
+require all listed agents.
+
+- `area:user-interface`: `ui-engineer` for substantial UI implementation;
+  `a11y-auditor` for required independent accessibility/fidelity review;
+  `performance-engineer` for material performance risk. Web uses its design system
+  and target-required evidence; Native uses its design baseline and Acceptance Journey.
+- `area:tooling-security`: consider `security-triage` first-pass, escalating to
   `security-auditor` for tool-execution / patch-safety / command-boundary changes.
-- `area:model-gateway`: add `architect` and `security-auditor` (provider
+- `area:model-gateway`: consider `architect` and `security-auditor` (provider
   abstraction, routing, capability metadata, model access boundaries).
-- `area:agent-runtime`: add `architect` and `security-auditor` (agent loop, task
+- `area:agent-runtime`: consider `architect` and `security-auditor` (agent loop, task
   state, runtime limits, orchestration).
-- `area:repository-context`: add `explorer` and `security-auditor` (workspace
+- `area:repository-context`: consider `explorer` and `security-auditor` (workspace
   discovery, safe file access, context selection).
-- `area:platform-foundation`: add `architect` and `refactor-specialist` (project
+- `area:platform-foundation`: consider `architect` and `refactor-specialist` (project
   foundation, package structure, repo hygiene).
-- `area:bug-investigation`: `explorer` first, `browser-debugger` when UI-visible,
-  then `implementor`, `test-engineer`, `verifier`.
-- `area:unit-tests`: add `test-engineer` (generation workflow, regression coverage).
-- `area:verification`: add `verifier` and `test-engineer` (tests, type/build
+- `area:bug-investigation`: reproduction and bounded investigation first; consider
+  `explorer` or `browser-debugger` when needed, then a scoped repair and independent audit.
+- `area:unit-tests`: consider `test-engineer` (generation workflow, regression coverage).
+- `area:verification`: consider `verifier` and `test-engineer` (tests, type/build
   checks, verification evidence).
-- `area:audit-evidence`: add `security-auditor` and `verifier` (run ledger,
+- `area:audit-evidence`: consider `security-auditor` and `verifier` (run ledger,
   evidence manifests, redaction, compliance traceability).
-- `area:evaluation`: add `performance-engineer` and `test-engineer` (eval
+- `area:evaluation`: consider `performance-engineer` and `test-engineer` (eval
   harnesses, benchmark fixtures, model-performance measurement).
-- `area:test-intelligence`: add `architect`, `test-engineer`, and
+- `area:test-intelligence`: consider `architect`, `test-engineer`, and
   `security-auditor` (native quality intelligence, test gen/validation/review, TMS).
-- `area:packaging-docs`: add `docs` and `architect` (npm packaging, documentation,
+- `area:packaging-docs`: consider `docs` and `architect` (npm packaging, documentation,
   customer runbooks).
 
 ## Model and reasoning-effort routing
@@ -185,6 +201,7 @@ Every agent performs the two-pass self-review; role definitions add domain check
 
 A task is done only when, for each acceptance criterion, there is concrete
 evidence (file:line, test name, command output, or observed behavior). "Implemented"
-or "appears fixed" is not sufficient. Run `.keiko-scripts/verify-receipt.sh <N>` green at the committed HEAD before
-opening the PR; `verify.sh` selects the target-owned canonical command before
-profile fallbacks. CI confirms required server/platform checks.
+or "appears fixed" is not sufficient. Run applicable target local checks and independent audit before opening the PR;
+`verify.sh` is an optional convenient runner. Record actual command/audit/UI
+results with the exact current PR head in the PR body or comment. Full target
+required CI and settled reviews remain mandatory before authorized merge.

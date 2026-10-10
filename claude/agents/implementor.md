@@ -79,10 +79,8 @@ Follow `.agents/memory/README.md`: record only durable lessons within the assign
 5. SELF-CRITIQUE (2-pass, MANDATORY)
 
 6. VERIFY
-   └─ pnpm tsc --noEmit
-   └─ pnpm lint
-   └─ pnpm test (for affected code)
-   └─ Any task-specific verify commands
+   └─ Run the current target minimum loop and applicable touched-area gates from AGENTS.md
+   └─ Keiko Web includes mandatory pre-PR Sonar; use the profile’s required UI/platform evidence
 
 7. COMMIT
    └─ Conventional format: feat:|fix:|refactor:|test:|docs:|chore: (#issue)

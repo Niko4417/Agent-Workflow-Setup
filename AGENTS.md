@@ -48,8 +48,10 @@ the ownership split.
 
 Use the active profile and target's accepted Quality Plan as the authority. For
 TypeScript code, use strict types and `unknown` with narrowing, never `any`.
-Shared defaults: complexity ≤10, functions ≤50 LOC, files ≤400 LOC; target-owned
-standards take precedence. Handle relevant boundary/error/concurrency cases.
+Numerical limits, coverage floors and styling rules come from the target's current
+contract and configured gates; do not add workflow-only thresholds. Keiko allows
+complexity 10 and functions of 50 counted lines. Handle relevant boundary, error
+and concurrency cases.
 Keep error handling at system boundaries and comments focused on non-obvious reasons.
 Use failing behavioral tests for new behavior and bug regressions; assert public
 contracts with independent expectations rather than copying implementation logic.

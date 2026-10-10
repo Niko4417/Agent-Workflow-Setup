@@ -78,7 +78,7 @@ done
 # Project MCP servers for Claude Code (read from the project root).
 link_one "$REPO_DIR/claude/mcp.json" "$TARGET/.mcp.json"
 
-# Scripts reachable from the target root (verify.sh, keiko-watch, audit-gate, ...).
+# Scripts reachable from the target root (verify.sh, keiko-watch, required-checks-gate.py, ...).
 # Hooks and skills call them as .keiko-scripts/<name>.
 link_one "$REPO_DIR/scripts" "$TARGET/.keiko-scripts"
 

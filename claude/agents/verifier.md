@@ -107,11 +107,8 @@ Follow `.agents/memory/README.md`: return durable memory candidates to the lead;
 
 3. EXECUTE
    └─ Run Verification Plan exactly
-   └─ Run full verify:
-      ├─ pnpm tsc --noEmit
-      ├─ pnpm lint
-      ├─ pnpm test
-      └─ pnpm build
+   └─ Run applicable minimum-loop and touched-area commands from the current target contract
+      (Keiko includes format, architecture and local Sonar; four generic npm commands are not full verification)
    └─ Check edge cases: null, boundary, concurrent, error paths
 
 4. SECURITY SCAN
@@ -156,12 +153,9 @@ Follow `.agents/memory/README.md`: return durable memory candidates to the lead;
 
 ### Commands Run
 
-| Command             | Exit Code | Result |
-| ------------------- | --------- | ------ |
-| `pnpm tsc --noEmit` | 0         | PASS   |
-| `pnpm lint`         | 0         | PASS   |
-| `pnpm test`         | 0         | PASS   |
-| `pnpm build`        | 0         | PASS   |
+| Actual target command | Exit code | Result |
+| --- | --- | --- |
+| {command actually executed} | {actual exit code} | {PASS / FAIL / unavailable} |
 
 ### Edge Cases Probed
 

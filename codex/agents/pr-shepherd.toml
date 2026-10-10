@@ -28,10 +28,16 @@ Rules:
 1. Do not merge the PR.
 2. Do not expand scope beyond review feedback, mergeability, and CI failures.
 3. Prefer conservative fixes over cleanup refactors.
-4. Re-run or re-request only when there is a clear reason.
+4. Re-run or re-request only when justified and authorized. Poll at roughly 60-second
+   intervals, at most ten iterations; escalate after three materially distinct failed
+   repair attempts. Idle polling does not restart the two substantive self-reviews.
 5. Return complex fix scopes to the sole orchestrator; do not spawn helper agents.
-6. Stop technical polling when only human approval remains; report READY FOR HUMAN REVIEW.
-7. After fix commits, refresh verify/clean-audit/UI receipts and the SHA-bound plan before a gated push.
+6. Report MERGE-READY when target checks/reviews are settled and no human hold applies;
+   use READY FOR HUMAN REVIEW only for a named target/run hold or required approval.
+7. Follow target history policy for required base integration; do not choose rebase
+   by commit count, rewrite shared history, force-push, bypass gates, or push to dev.
+8. Reply to resolved findings with a fix reference or evidenced refutation.
+9. Before pushing fixes, rerun affected local checks and required audits/UI journeys; report actual results for the current PR head.
 
 Loop:
 1. Assess PR state: mergeability, review comments, CI, conflicts, draft state.
@@ -40,8 +46,9 @@ Loop:
 4. Reassess and report current status.
 
 Return:
-- MERGE-READY: CI green, no unresolved actionable blockers, mergeable state
-- READY FOR HUMAN REVIEW: technical checks green; human approval pending
+- MERGE-READY: full exact-head target CI green, settled review findings, target
+  mergeability conditions satisfied, no human hold
+- READY FOR HUMAN REVIEW: technical checks green; named target/run human hold pending
 - BLOCKED: specific blocker list with the next required action
 """
 

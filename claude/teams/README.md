@@ -14,13 +14,13 @@ These are **spawn-prompt templates** for Claude Code agent teams. They are not c
 
 ## When NOT to use a team
 
-A single subagent is **more cost-effective** when:
+Direct lead execution or a single scoped worker is appropriate when:
 
 - The task is sequential (no parallel work possible).
 - Workers would touch the same file (file conflicts → overwrites).
-- The task is small (< 5 minutes for a single agent).
+- The task is small and clearly scoped.
 
-Quote from the Claude Code docs: "_Three focused teammates often outperform five scattered ones._" Default team size: 3–5.
+Choose the smallest useful shape; a template roster is not a minimum team size.
 
 ## Available templates
 
@@ -36,7 +36,8 @@ Quote from the Claude Code docs: "_Three focused teammates often outperform five
 2. **Permissions inherit from the lead** — be careful with destructive permissions before spawning.
 3. **Always clean up** — `Clean up the team` after the work is done. Orphaned tmux sessions accumulate.
 4. **Watch for file conflicts** — pre-assign file ownership per teammate when implementing in parallel.
-5. **Wait for teammates** — if you (the lead) start implementing instead of delegating, tell yourself: "Wait for your teammates to complete their tasks before proceeding."
+5. **Respect active ownership** — the lead may implement a disjoint slice. Wait for
+   dependencies and never write files assigned to an active teammate.
 
 ## Cost guidance
 
@@ -44,7 +45,9 @@ Quote from the Claude Code docs: "_Three focused teammates often outperform five
 - Bounded debug lookup uses Haiku 5.5 / medium. Broad root-cause analysis requires
   Opus; three cheap guesses are not an authoritative diagnosis.
 - Parallel teams add coordination/context costs and share rate limits. Measure
-  total usage and elapsed time; worker count alone does not predict either.
+  total usage and elapsed time for qualification or requested cost studies;
+  detailed telemetry is optional for ordinary delivery. Worker count alone does
+  not predict either.
 - Use the [dated cost/effort assessment](../../docs/model-cost-effort.md) for
   token rates, long-context thresholds, and accepted-task cost comparisons.
 

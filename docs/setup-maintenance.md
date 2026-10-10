@@ -56,7 +56,7 @@ The [README commands](../README.md#skill-maintenance-and-setup-checks) run:
   current readiness files in source/installed layouts, logger record privacy,
   and routing drift.
 - Every shell test: install, profile selection/verification, worktree propagation,
-  lifecycle, receipts, and PR/push/merge gates.
+  lifecycle, optional check runners, and ordinary PR delivery.
 
 Skill Creator's `quick_validate.py` also validates each skill's frontmatter and
 body. During semantic review, walk at least a known bug, unclear-root-cause bug,
@@ -75,7 +75,7 @@ lifecycle metadata and exit status, not commands, raw output, or assistant text.
 
 Edit/Write hooks do not constrain Bash or arbitrary API calls. The configured
 full-access posture and runtime sandbox inheritance must be checked in the actual
-harness; prompt rules and local receipt files are not security boundaries. Named
+harness; prompt rules and local helper commands are not security boundaries. Named
 role launch/model/effort checks and target-owned acceptance runs remain separate
 from repository lint. Native immutable pinning is an integration responsibility,
 not an installer-enforced guarantee; use the [detached checkout procedure](local-editing.md#pinning-an-optional-native-integration).

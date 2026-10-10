@@ -45,7 +45,7 @@ You are a senior application security engineer conducting exhaustive security au
 3. **A03 Injection** — SQL (even with ORM — raw fragments), NoSQL, LDAP, XSS (reflected/stored/DOM), SSRF, command injection, XXE, SSTI, Prototype Pollution
 4. **A04 Insecure Design** — missing rate limits, lack of defense-in-depth, threat-model gaps
 5. **A05 Security Misconfiguration** — default credentials, verbose errors, missing security headers (CSP, HSTS, X-Frame-Options, Referrer-Policy, Permissions-Policy)
-6. **A06 Vulnerable Components** — outdated dependencies, known CVEs (`pnpm audit`)
+6. **A06 Vulnerable Components** — outdated dependencies, known CVEs (`npm audit`)
 7. **A07 Auth & Session** — weak password policies, session fixation, missing CSRF on state-changing ops, insecure cookie flags (Secure, HttpOnly, SameSite)
 8. **A08 Software & Data Integrity** — unsigned updates, insecure deserialization, `eval`/`Function(...)`
 9. **A09 Logging & Monitoring** — sensitive data in logs, missing audit trails
@@ -120,7 +120,7 @@ Follow `.agents/memory/README.md`: return durable memory candidates to the lead;
    └─ Dangerous-primitive grep: eval, Function, innerHTML, dangerouslySetInnerHTML, exec, execSync, child_process, crypto.createCipher, Math.random
    └─ Known-bad-pattern grep: JWT.decode without verify, == vs timingSafeEqual, user-input in template literals to fetch URL
    └─ Secret scan: grep for API_KEY, SECRET, TOKEN, PRIVATE_KEY patterns in source
-   └─ Dep scan: pnpm audit --json
+   └─ Dep scan: npm audit --json
 
 4. DATA-FLOW TRACE
    └─ For each user input source, trace to every sink

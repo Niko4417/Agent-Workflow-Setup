@@ -12,21 +12,12 @@ You can drive it two ways — both end up running the same skill:
   `keiko-issue` skill.
 - **Explicit:** invoke the skill directly — `keiko-issue 178`.
 
-**You do not need to ask for the audit or the gates.** `keiko-issue` / `keiko-epic`
-invoke `keiko-issue-audit` themselves, and a set of **PreToolUse gates** enforce
-quality on recognized `gh` / `git` commands — the configured hooks check open, ready,
-merge, or repush through the recognized commands without matching evidence:
-
-- **`verify-gate`** blocks a PR unless `verify.sh` (CI mirror) passed **green** at HEAD.
-- **`audit-gate`** blocks a PR unless the audit ran **and is clean** (`findings=0`,
-  plus a real Playwright **ui-verify** run when the change is user-facing).
-- **`ready-gate`** blocks marking a user-facing PR ready until its SHA-bound
-  test-plan comment is posted.
-- **`epic-merge-gate` / `push-gate`** re-check the same at child→epic auto-merge and
-  on any fix repushed to an open work-branch PR, including children.
-
-All receipts are SHA-bound: commit after auditing and they go stale — you must
-re-run. Invoke `keiko-issue-audit` directly only for a standalone audit (Example C).
+`keiko-issue` and `keiko-epic` invoke the independent `keiko-issue-audit`
+automatically. They run applicable target local checks and required UI journeys,
+then record actual command/audit/UI results at the exact current PR head in its
+body or a comment. Required CI and settled reviews govern authorized merge.
+After changes, refresh affected evidence. Invoke the audit directly for a
+standalone audit (Example C).
 
 ---
 
@@ -68,14 +59,15 @@ keiko-issue 178
 - **Intake (Definition-of-Ready).** Fetches #178; confirms acceptance criteria +
   a verification command. If missing → triages first, doesn't start.
 - **Claim.** Marks the issue `In Progress` on the delivery board, sets owner and
-  `Human Review Required = Yes`.
+  `Human Review Required` to reflect target/run authority.
 - **Route (task-shaped).** Smallest effective team — `explorer` to map the code,
   then `implementor` (small) or `developer` (needs design); adds `security-*`,
   `performance-engineer`, `a11y-auditor`, `test-engineer` only if the changed
   surface warrants it.
 - **Implement.** On the claimed `issue/178-<short>` branch off `dev`, apply quality bars
   (no `any`, complexity ≤10, TDD); each agent runs a 2-pass self-critique.
-- **Verify + audit.** `verify.sh` (current target-required commands) must be green; then
+- **Verify + audit.** Applicable target local checks must pass (optionally via
+  `verify.sh`); then
   **`keiko-issue-audit 178`** runs the read-first audit wave — mandatory even if
   it finds nothing.
 - **Ship.** The lead publishes `verifier`'s proposed evidence section; PR opens targeting `dev`;
@@ -115,11 +107,10 @@ keiko-epic 532
   board.
 - **Child loop.** For each ready child, runs **`keiko-issue <child>`** (which runs
   its own **`keiko-issue-audit <child>`**) on a branch off the epic branch. Each
-  child PR targets the **epic branch**. The child→epic gate requires exact-head
-  full target required-check matrix and settled reviews plus matching SHA-bound
-  verify/audit evidence: a _non-user-facing_ child **auto-merges** only after all
-  are green (no human per child); a _user-facing_ child additionally needs a green
-  **ui-verify** Playwright run + a test-plan comment. Re-syncs `dev` regularly.
+  child PR targets the **epic branch**. Applicable local checks, independent
+  audit and required UI journeys run and are reported at the exact PR head.
+  Auto-merge waits for the full successful target required-check matrix and
+  settled reviews, without per-child human approval. Re-syncs `dev` regularly.
 - **Heartbeat.** Posts a one-line status at each child/milestone and flushes state
   to GitHub so either harness can resume.
 - **Final PR.** Once children are integrated, runs **`keiko-issue-audit`** on the

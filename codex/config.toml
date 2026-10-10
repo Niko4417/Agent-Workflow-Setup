@@ -10,6 +10,9 @@ execution shape), escalation, memory, and the Codex custom-agent spawn rules.
 Read it and follow it. Target AGENTS.md, ADRs, and explicit user choices override
 generic workflow defaults. Require the full current-head target check matrix and
 settled reviews; preserve explicit final epic review holds without child approvals.
+Run applicable local checks and independent audit, execute required UI journeys,
+and report actual results with the exact current PR head in its body or comment.
+Use ordinary Git/GitHub commands from the deliberately chosen repository workdir.
 """
 model_reasoning_summary = "auto"
 personality = "pragmatic"

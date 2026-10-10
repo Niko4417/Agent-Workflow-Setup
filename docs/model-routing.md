@@ -55,11 +55,12 @@ security audit. API prices do not measure subscription quota consumption.
    gates remain binding.
 4. Give reviewers acceptance criteria, the diff, relevant code, and test results.
    Require reproducible findings independent of the implementer's summary.
-5. Capture requested and actual model, effort, role, sandbox, escalation reason,
-   elapsed time, retry count, and verification outcome in delivery evidence.
-   Include billed uncached input, cache reads/writes, output including reasoning,
-   and tool fees when comparing costs; record subscription usage separately.
-   Keep raw transcripts local; exclude credentials, secrets, and private source.
+5. Keep actual command, audit and acceptance evidence honest. For routing changes
+   or qualification, validate role/model/effort/sandbox and disclose unavailable
+   runtime evidence. Collect escalation, elapsed time, retries, billing/cache/tool
+   fees and subscription usage for explicit experiments or requested cost reports;
+   detailed telemetry is optional for ordinary delivery. Keep raw transcripts local
+   and exclude credentials, secrets and private source.
 
 ## Runtime validation
 

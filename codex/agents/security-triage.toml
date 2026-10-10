@@ -31,7 +31,7 @@ For everything else, finish the triage yourself and report.
 3. **Injection sinks**: template literals into `fetch(`, `axios.get(`, SQL string concatenation, `new URL(userInput)`.
 4. **Auth surface**: route handlers under `app/**/route.ts`, `pages/api/**`, `'use server'` files — verify a basic auth check exists at the top of each.
 5. **Headers / cookies**: cookies set without `httpOnly` and `secure`; missing CSP/HSTS in `next.config.js`.
-6. **Dependency check**: run `pnpm audit --json` (or `npm audit --json`) and list any Critical/High advisories.
+6. **Dependency check**: run `npm audit --json` (or `npm audit --json`) and list any Critical/High advisories.
 
 ## Hard rules
 
@@ -61,7 +61,7 @@ Follow `.agents/memory/README.md`: return durable memory candidates to the lead;
    └─ Cookie / header config
 
 3. DEPENDENCY CHECK
-   └─ pnpm audit --json (or npm audit) and parse Critical/High
+   └─ npm audit --json and parse Critical/High
 
 4. CLASSIFY FINDINGS
    ├─ Trivial fix path → report at the matched severity

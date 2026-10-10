@@ -125,7 +125,7 @@ to validate a diff finding, without opening unrelated cleanup scope.
 | Severity     | Definition                                                                                                              | Blocks merge? |
 | ------------ | ----------------------------------------------------------------------------------------------------------------------- | ------------- |
 | **Critical** | Security vulnerability, data loss risk, production crash, breaking public API without migration                         | Yes           |
-| **Major**    | Logic error, missing error handling on boundaries, perf regression > 10%, missing test for new behavior, a11y violation | Yes           |
+| **Major**    | Logic error, missing error handling on boundaries, performance regression outside the accepted budget, missing test for new behavior, a11y violation | Yes           |
 | **Minor**    | Style inconsistency, naming, missing optimization, minor ADR drift                                                      | No            |
 | **Info**     | Praise, pattern observation, educational note                                                                           | No            |
 

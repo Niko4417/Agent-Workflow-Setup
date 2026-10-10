@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 #
-# verify.sh — local pre-PR gate. Run from the TARGET repo root before opening a PR.
+# verify.sh — optional local pre-PR runner. Run from the TARGET repo root before opening a PR.
 #
 # Precedence (drift-free — the target owns its gate list):
-#   1. `agent:pre-pr`  — the repository-owned canonical agent gate (issue #12), if present.
-#   2. keiko-native    → `npm run quality` + `npm audit`; keiko-web → `codex:pre-pr`.
-#   3. legacy inline CI-mirror steps (older Keiko branches without `codex:pre-pr`).
+#   1. ADR-0145 targets run individual current AGENTS.md commands (+ --also).
+#   2. `agent:pre-pr`  — the repository-owned canonical agent gate (issue #12), if present.
+#   3. keiko-native    → `npm run quality` + `npm audit`; keiko-web → `codex:pre-pr`.
+#   4. legacy inline CI-mirror steps (older Keiko branches without `codex:pre-pr`).
 # The highest-precedence command that exists runs EXACTLY ONCE; nothing else runs.
 #
 # Usage (from the Keiko repo root):
@@ -35,19 +36,19 @@ has_script() { node -e "process.exit(((require('./package.json').scripts)||{})['
 
 # ADR-0145 targets explicitly retired the aggregate. Read their current individual
 # commands before considering compatibility aggregates for older installations.
-if [[ $FAST -eq 0 ]] && [[ -f docs/adr/ADR-0145-retire-the-agent-pre-pr-aggregate-gate.md ]]; then
+if [[ "$KEIKO_PROFILE" == "keiko-web" ]] && [[ $FAST -eq 0 ]] && [[ -f docs/adr/ADR-0145-retire-the-agent-pre-pr-aggregate-gate.md ]]; then
   exec python3 "$here/verify-web-policy.py" "$@"
 fi
 
 # Repository-owned canonical gate (issue #12): when the target exposes `agent:pre-pr`
 # it owns its full gate list — run it EXACTLY ONCE and defer entirely to it, in either
 # profile, before any profile-specific or codex:pre-pr fallback. A non-zero result is a
-# verification failure (no green receipt). --fast keeps the quick local smoke below.
+# verification failure. --fast keeps the quick local smoke below.
 if [[ $FAST -eq 0 ]] && has_script "agent:pre-pr"; then
   echo "─── npm run agent:pre-pr (repository-owned canonical gate) ───"
   if npm run agent:pre-pr; then
     echo
-    echo "✓ verify GREEN (agent:pre-pr) — safe to open the PR"
+    echo "✓ verify GREEN (agent:pre-pr) — local checks passed"
     exit 0
   fi
   echo
@@ -73,7 +74,7 @@ if [[ "$KEIKO_PROFILE" == "keiko-native" ]]; then
     fi
   fi
   echo
-  echo "✓ verify GREEN (keiko-native: npm run quality$([[ $FAST -eq 0 ]] && echo ' + audit')) — safe to open the PR"
+  echo "✓ verify GREEN (keiko-native: npm run quality$([[ $FAST -eq 0 ]] && echo ' + audit')) — local checks passed"
   exit 0
 fi
 
@@ -83,7 +84,7 @@ if [[ $FAST -eq 0 ]] && has_script "codex:pre-pr"; then
   echo "─── npm run codex:pre-pr (canonical pre-PR gate) ───"
   if npm run codex:pre-pr; then
     echo
-    echo "✓ verify GREEN (codex:pre-pr) — safe to open the PR"
+    echo "✓ verify GREEN (codex:pre-pr) — local checks passed"
     exit 0
   fi
   echo
@@ -116,7 +117,7 @@ done
 
 echo
 if [[ $fail -eq 0 ]]; then
-  echo "✓ verify GREEN (legacy mirror$([[ $FAST -eq 1 ]] && echo ', fast: full test skipped')) — safe to open the PR"
+  echo "✓ verify GREEN (legacy mirror$([[ $FAST -eq 1 ]] && echo ', fast: full test skipped')) — local checks passed"
 else
   echo "✗ verify RED — fix before opening the PR"
 fi

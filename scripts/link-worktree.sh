@@ -5,7 +5,7 @@
 # A linked worktree (`git worktree add`) is a fresh working directory and does
 # NOT inherit the git-ignored workflow symlinks that live in the main clone. So
 # an agent launched in a worktree would be missing .claude (settings + skills +
-# hooks), .agents (memory) and .keiko-scripts (verify.sh, audit-gate.sh). This
+# hooks), .agents (memory) and .keiko-scripts (verify.sh, required-checks-gate.py). This
 # recreates optional harness links while preserving target authority documents.
 #
 # Invoked automatically by the post-checkout hook (installed by install.sh), and

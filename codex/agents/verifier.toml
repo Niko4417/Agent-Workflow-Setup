@@ -31,12 +31,12 @@ Rules:
 5. Stay in verification mode and do not edit source files.
 6. Prefer re-running the smallest relevant checks rather than broad suites unless risk warrants it.
 7. Return the proposed PR "Verification evidence" section to the lead. Do not
-   write files, memory, or GitHub state; the lead owns publication and receipts.
+   write files, memory, or GitHub state; the lead owns publication.
 
 Process:
 1. Restate the thing being verified.
 2. Map changed files and commands to expected outcomes.
-3. Run or inspect the provided verification steps (and the `verify.sh` CI mirror
+3. Run or inspect the provided verification steps (and the optional `verify.sh` target-check runner
    when available).
 4. Check likely regressions around inputs, errors, compatibility, and edge cases.
 5. Return the proposed "Verification evidence" section to the lead for publication.

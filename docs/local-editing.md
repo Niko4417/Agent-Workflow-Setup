@@ -1,8 +1,8 @@
 # Editing this repo without disturbing live sessions
 
 Installed target repos (Keiko, Keiko Native) reach this repo through **live symlinks**
-(`.claude`, `.codex`, `.agents`, `.keiko-scripts`, and — on keiko-web — `AGENTS.md` /
-`CLAUDE.md`). Those symlinks resolve to whatever the **primary checkout** currently has
+(`.claude`, `.codex`, `.agents`, and `.keiko-scripts`). Target-owned `AGENTS.md` and
+`CLAUDE.md` are preserved. The harness symlinks resolve to whatever the **primary checkout** currently has
 on disk. So if you check out a feature branch in the primary checkout, every live
 session immediately reads your **work-in-progress** skills and gates.
 

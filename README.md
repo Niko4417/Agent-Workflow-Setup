@@ -11,7 +11,7 @@ After installation, select work with `Run epic #532` or `Resolve issue #178`.
 ### Why it exists
 
 - **Trust, not vibes.** Agents are fast but forgetful. Instead of _hoping_ an agent ran
-  the tests, the configured command hooks require SHA-bound verify/audit evidence
+  the tests, applicable local checks and independent audit provide delivery evidence
   before opening work-branch PRs.
 - **One process, either assistant.** Works the same whether you drive it with **Codex**
   or **Claude Code** — same roles, same steps, same memory.
@@ -120,7 +120,7 @@ Work flows through four stages — plan → deliver → verify → learn:
 | **Plan**    | `keiko-grill-epic`      | Turn a rough idea into an implementation-ready epic + scoped child issues via one evidence-first grilling (on Native, contract/schema-driven against the machine validator). |
 | **Deliver** | `keiko-epic <N>`        | Drive a multi-issue epic: plan children, run each on the epic branch, hand off one green epic PR to `dev`.                                                                   |
 |             | `keiko-issue <N>`       | Drive one issue / task / bug / finding end-to-end to a PR.                                                                                                                   |
-| **Verify**  | `keiko-issue-audit <N>` | Read-first audit wave that fixes confirmed gaps and writes a SHA-bound audit receipt. Mandatory pre-PR.                                                                      |
+| **Verify**  | `keiko-issue-audit <N>` | Read-first audit wave that fixes confirmed gaps and reports exact-head audit evidence. Mandatory pre-PR.                                                                      |
 | **Learn**   | `keiko-retro <epic>`    | Post-merge retrospective: mine the full PR trail + the human-fix delta, distill process lessons, tidy memory.                                                                |
 
 `keiko-epic` composes `keiko-issue` per child; every issue ends with `keiko-issue-audit`.
@@ -161,33 +161,43 @@ representative model-quality evaluation, or target platform acceptance runs.
 
 ## The safety net — why you can trust what it ships
 
-Five local command gates check evidence before recognized PR/push/merge operations.
-They check receipts and GitHub state; workflow steps run the actual tests and audits.
-Hooks are scoped guardrails, not a security boundary: they cannot cover arbitrary
-shell/API calls or replace server-side required checks.
+Run applicable target local checks, an independent `keiko-issue-audit`, and the
+required UI journeys before creating/updating a PR. Record the exact current PR
+head and actual command, audit and UI results in its body or a comment. Refresh
+affected evidence after fixes. The full target required-check matrix and settled
+review findings govern merge. Hooks record lifecycle metadata and provide
+completion reminders; they do not intercept delivery or replace target controls.
 
-| Moment                     | Gate              | Blocks unless…                                                                                                           |
-| -------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| open / ready a PR          | `verify-gate`     | the target's canonical command selected by `verify.sh` passed **green** at HEAD                 |
-| open / ready a PR          | `audit-gate`      | the audit **ran and is clean** — `findings=0`, plus a green **ui-verify** receipt (real UI-journey run) when user-facing |
-| ready a user-facing PR     | `ready-gate`      | a **SHA-bound test-plan comment** for the current commit is posted                                                       |
-| first implementation push (ADR-0145 Web) | `push-gate` | current full verify proof; unchanged existing dev/epic base creation is permitted |
-| repush a fix to any open work PR | `push-gate`       | the fix re-passes verify + clean-audit (+ ui-verify + reposted plan)                                                     |
-| authorized auto-merge | `epic-merge-gate` | full current-head target matrix + settled reviews + matching clean audit/verify + applicable UI journey/comment; target merge authority |
+Use ordinary Git/GitHub commands in the target workdir, for example:
+
+```bash
+cd /path/to/target-worktree
+# After applicable local checks, independent audit and accepted UI journeys:
+git push -u origin codex/issue-123-task
+gh pr create --base dev --head codex/issue-123-task --title "Task title" --body-file /path/to/pr-body.md
+# After full exact-head target CI and review settlement, when authorized:
+gh pr merge 123 --auto --squash --match-head-commit <exact-head-sha>
+```
+
+The optional `verify.sh` runner can select current target commands (including
+Sonar and semantic `--also` gates; package assembly runs last). The optional
+read-only `required-checks-gate.py <PR-number> <base-branch> <head-sha>` checks Web
+App-bound CI/review settlement. Native retains its accepted control plane.
 
 **Target-owned delivery:** target `AGENTS.md`, ADRs, and explicit user choices
 override generic defaults. Keiko ADR-0135 permits accepted issue and epic delivery
 through native auto-merge after the full current-head required-check matrix is
 green and reviews are settled. Preserve a requested final epic review hold
 without child approvals; default to final human review where neither target nor
-user authorizes another path. Local gates provide earlier feedback.
+user authorizes another path. Local checks provide earlier feedback.
 
 ---
 
 ## How it works
 
-- **One orchestrator.** The lead session is the only agent the human talks to — it
-  plans, delegates, integrates, reports. It never spawns a sub-coordinator.
+- **One orchestrator.** The lead plans, integrates and reports. It handles small
+  scoped work directly and delegates when independent execution, specialist review
+  or parallelism adds value. It never spawns a sub-coordinator.
 - **16 canonical roles** (16 Codex agents; 15 Claude agents plus browser capability), with the lead as the non-spawnable coordinator. Work routes to roles in `.agents/roles.yaml` at the
   smallest effective shape: solo for a one-file fix, a cluster (explorer → writer →
   verifier) for epic / security / UI work. Both harnesses share one role vocabulary.
@@ -288,9 +298,8 @@ must stay on merged `main`. Edit in a worktree (`edit-worktree.sh`); the primary
 self-updates on SessionStart (`self-update.sh`). See
 [docs/local-editing.md](docs/local-editing.md).
 
-The command hooks invoke gate scripts; the skills explicitly run receipt writers
-(`verify-receipt`, `audit-receipt`, `ui-verify-receipt`) after checks. Hooks do not
-automatically generate verification proof. Each gate/writer has a test in `tests/`.
+Delivery uses ordinary Git/GitHub commands; target-required checks and independent
+audits produce evidence recorded on the PR. Hooks do not generate test proof.
 
 ---
 
@@ -302,7 +311,7 @@ docs/        workflow-contract.md (rules) · workflow-blueprint.md (design) · e
 .agents/     roles.yaml · aliases.yaml · memory/<role>/            (tool-neutral shared layer)
 codex/       config.toml · RUNBOOK.md · agents/*.toml · hooks.json · playbooks/    (primary)
 claude/      settings.json · agents/*.md · skills/<name>/SKILL.md                  (backup)
-scripts/     install.sh · profile-detect.sh · verify.sh · *-gate.sh · *-receipt.sh · keiko-watch · consolidate-memory
+scripts/     install.sh · profile-detect.sh · verify.sh · required-checks-gate.py · keiko-watch · consolidate-memory
 tests/       gate + hook test suites
 templates/   target-side gate snippets (husky / lint-staged / PR evidence)
 ```

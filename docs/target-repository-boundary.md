@@ -17,7 +17,7 @@ governed while allowing an operator to use richer local orchestration.
 | Product source and architecture                           | Reusable orchestration skills and playbooks |
 | `CONTEXT.md` product language and boundaries              | Development-agent roles and model routing   |
 | Repository-specific `AGENTS.md` / `CLAUDE.md` contracts     | Harness-specific agent configuration        |
-| ADRs and product security invariants                      | Optional local hooks and evidence receipts  |
+| ADRs and product security invariants                      | Optional local hooks and helper commands  |
 | Issue and pull request templates                          | Cross-repository workflow automation        |
 | CI, deterministic verification, and release gates         | Curated operator or team workflow memory    |
 | Product Agentic Coding lifecycle and runtime abstractions | Development delivery lifecycle              |
